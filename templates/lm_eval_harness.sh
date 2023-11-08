@@ -56,7 +56,6 @@ mkdir -p $OUTPUT_DIR
 OUTFILE=$OUTPUT_DIR/lm_eval_harness-$SLURM_JOB_ID.json
 echo Saving results to: $OUTFILE
 
-echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"
 
 # move cache and tmp to work dir so we don't run out of space
 export PIP_CACHE_DIR=$WORK_DIR/cache
@@ -67,6 +66,7 @@ mkdir -p $TMPDIR
 echo TMPDIR is $TMPDIR
 
 # setup venv
+module load cray-python
 python -m venv venv
 source venv/bin/activate
 
@@ -76,6 +76,7 @@ cd lm-evaluation-harness
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.2
 pip install --no-cache-dir -r requirements.txt
 
+echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"
 
 python main.py \
     --model hf-causal-experimental \
