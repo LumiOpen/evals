@@ -36,10 +36,6 @@ if [ -z "$WORK_DIR" ]; then
     echo "WORK_DIR is not set"
     exit 1
 fi
-if [ -z "$WORK_DIR" ]; then
-    echo "WORK_DIR is not set"
-    exit 1
-fi
 if [ -z "$OUTPUT_DIR" ]; then
     echo "WORK_DIR is not set"
     exit 1
