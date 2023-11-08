@@ -39,14 +39,13 @@ if [ -z "$NUM_FEWSHOT" ]; then
     exit 1
 fi
 if [ -z "$OUTPUT_DIR" ]; then
-    echo "WORK_DIR is not set"
+    echo "OUTPUT_DIR is not set"
     exit 1
 fi
 if [ -z "$TASK_LIST" ]; then
     echo "TASK_LIST is not set"
     exit 1
 fi
-
 
 # set up environment
 WORK_DIR=$WORK_DIR/lm_eval_harness
