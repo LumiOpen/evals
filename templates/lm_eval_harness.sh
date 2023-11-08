@@ -85,6 +85,6 @@ python main.py \
     --model_args pretrained=$MODEL,use_accelerate=True,tokenizer=$TOKENIZER,dtype=bfloat16\
     --device cuda:0 \
     --no_cache \
-    --tasks $TASK_LIST \
+    --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
     --output_path $OUTFILE
