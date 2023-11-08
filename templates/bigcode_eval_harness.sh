@@ -70,8 +70,8 @@ echo TMPDIR is $TMPDIR
 python -m venv venv
 source venv/bin/activate
 
-git clone https://github.com/jonabur/lm-evaluation-harness.git
-cd lm-evaluation-harness
+git clone https://github.com/bigcode-project/bigcode-evaluation-harness
+cd bigcode-evaluation-harness
 
 pip install --no-cache-dir -r requirements.txt
 
@@ -79,7 +79,7 @@ python main.py \
     --model $MODEL \
     --tasks $TASK_LIST \
     --precision bf16 \
-    --alow_code_execution \
+    --allow_code_execution \
     --max_memory_per_gpu=auto \
     --n_samples $N_SAMPLES \
     --metric_output_path $OUTFILE
