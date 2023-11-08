@@ -1,14 +1,14 @@
 from jinja2 import Template
 import argparse
 import copy
+import datetime
+import json
 import os
+import re
 import subprocess
 import tempfile
 
 class FinBench:
-    def __init__(self):
-        pass
-    
     def generate_script(self, slurm_config, env_vars):
         config = { }
         config["env_vars"] = env_vars
@@ -97,8 +97,6 @@ def main():
 
     args = parser.parse_args()
 
-    # TODO does work_dir need to have a subdirectory per test name?
-
     if not os.path.exists(args.output_dir):
         os.makedirs(args.output_dir)
     if not os.path.exists(args.work_dir):
@@ -135,14 +133,35 @@ def main():
             temp.write(script)
             script_name = temp.name
     print(f"Wrote script to {script_name}")
-    if not args.dryrun:
-        print(f"Running sbatch {script_name}")
-        process = subprocess.run(['sbatch', script_name], capture_output=True, text=True)
-        print(process.stdout)
+    if args.dryrun:
+        print(f"Dryrun mode enabled, not executing.  To run:\n    sbatch {script_name}")
+        return
+
+    print(f"Running sbatch {script_name}")
+    process = subprocess.run(['sbatch', script_name], capture_output=True, text=True)
+    print(process.stdout)
+
+    # parse the jobid from stdout
+    job_id_search = re.search(r"Submitted batch job (\d+)", process.stdout)
+    if job_id_search:
+        job_id = job_id_search.group(1)
     else:
-        print(f"Dryrun mode enabled, not executing.  To run: sbatch {script_name}")
+        print("Failed to parse job id from sbatch output.")
+        job_id = None
 
-
+    # save to command log to help figure out which jobs were which commands
+    log_entry = {
+        "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "job_id": job_id, 
+        "eval": args.eval,
+        "model": args.model,
+        "tokenizer": args.tokenizer,
+        "output_dir": args.output_dir,
+        "log_dir": args.log_dir,
+    }
+    with open("command_history.jsonl", "a") as f:
+        f.write(json.dumps(log_entry))
+    print(json.dumps(log_entry, indent=4))
 
 if __name__ == "__main__":
     main()

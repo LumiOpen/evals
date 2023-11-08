@@ -3,3 +3,4 @@ venv
 logs
 output
 workdir
+command_history.jsonl
