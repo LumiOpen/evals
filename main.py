@@ -156,8 +156,8 @@ def main():
         "eval": args.eval,
         "model": args.model,
         "tokenizer": args.tokenizer,
-        "output_dir": args.output_dir,
-        "log_dir": args.log_dir,
+        "output_dir": os.path.abspath(args.output_dir),
+        "log_dir": os.path.abspath(args.log_dir),
     }
     with open("command_history.jsonl", "a") as f:
         f.write(json.dumps(log_entry))
