@@ -55,10 +55,6 @@ mkdir -p $OUTPUT_DIR
 OUTFILE=$OUTPUT_DIR/finbench-$SLURM_JOB_ID.json
 echo Saving results to: $OUTFILE
 
-module load pytorch
-module load git
-
-
 echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"
 
 # move cache and tmp to work dir
@@ -77,6 +73,7 @@ source venv/bin/activate
 git clone -b finnish https://github.com/jonabur/lm-evaluation-harness.git
 cd lm-evaluation-harness
 
+pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.2
 pip install --no-cache-dir -r requirements.txt
 
 
