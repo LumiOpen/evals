@@ -64,10 +64,11 @@ def main():
         "finbench": FinBench(),
 
         "hellaswag": LMEvalHarness(["hellaswag"], num_fewshot=10),
-        "truthful_qa": LMEvalHarness(["truthful_qa"], num_fewshot=0),
+        "truthfulqa_mc": LMEvalHarness(["truthfulqa_mc"], num_fewshot=0),
         "winogrande": LMEvalHarness(["wingrande"], num_fewshot=0),
         "race": LMEvalHarness(["race"], num_fewshot=0),
         "piqa": LMEvalHarness(["piqa"], num_fewshot=0),
+        "mmlu": LMEvalHarness(["hendrycksTest-*"], num_fewshot=5),
 
         # TODO probably specify different max durations here for longer running tests
         "humaneval_pass@1": BigcodeEvaluationHarness(["humaneval"], n_samples=1),
