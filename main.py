@@ -2,6 +2,7 @@ from jinja2 import Template
 import argparse
 import copy
 import os
+import subprocess
 import tempfile
 
 class FinBench:
@@ -91,6 +92,7 @@ def main():
 
     # other options
     parser.add_argument('--script_name', type=str, default=None, help="Filename to use when writing script.")
+    parser.add_argument('--dryrun', action='store_true', default=False, help="Dry run mode, do not execute sbatch script")
 
     args = parser.parse_args()
 
@@ -132,7 +134,13 @@ def main():
             temp.write(script)
             script_name = temp.name
     print(f"Wrote script to {script_name}")
-    print(f"run:\n  sbatch {script_name}")
+    if not args.dryrun:
+        print(f"Running sbatch {script_name}")
+        process = subprocess.run(['sbatch', script_name], capture_output=True, text=True)
+        print(process.stdout)
+    else:
+        print(f"Dryrun mode enabled, not executing.  To run: sbatch {script_name}")
+
 
 
 if __name__ == "__main__":
