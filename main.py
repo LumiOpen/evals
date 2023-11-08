@@ -63,14 +63,16 @@ def main():
     evals = {
         "finbench": FinBench(),
 
+        "arc_challenge": LMEvalHarness(["arc_challenge"], num_fewshot=25),
         "hellaswag": LMEvalHarness(["hellaswag"], num_fewshot=10),
+        "mmlu": LMEvalHarness(["hendrycksTest-*"], num_fewshot=5),
+        "piqa": LMEvalHarness(["piqa"], num_fewshot=0),
+        "race": LMEvalHarness(["race"], num_fewshot=0),
         "truthfulqa_mc": LMEvalHarness(["truthfulqa_mc"], num_fewshot=0),
         "winogrande": LMEvalHarness(["wingrande"], num_fewshot=0),
-        "race": LMEvalHarness(["race"], num_fewshot=0),
-        "piqa": LMEvalHarness(["piqa"], num_fewshot=0),
-        "mmlu": LMEvalHarness(["hendrycksTest-*"], num_fewshot=5),
 
-        # TODO probably specify different max durations here for longer running tests
+        # TODO probably specify different max durations here for longer running
+        # tests. I'm not even sure we can complete a 100 sample test.
         "humaneval_pass@1": BigcodeEvaluationHarness(["humaneval"], n_samples=1),
         "humaneval_pass@10": BigcodeEvaluationHarness(["humaneval"], n_samples=10),
         "humaneval_pass@100": BigcodeEvaluationHarness(["humaneval"], n_samples=100),
