@@ -198,7 +198,7 @@ def main():
         "output_file": output_file,
     }
     with open("command_history.jsonl", "a") as f:
-        f.write(json.dumps(log_entry))
+        f.write(json.dumps(log_entry) + "\n")
     print(json.dumps(log_entry, indent=4))
 
 if __name__ == "__main__":
