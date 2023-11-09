@@ -69,7 +69,7 @@ def main():
         "gsm8k": LMEvalHarness(["gsm8k"], num_fewshot=8),   # config from llama1
         "hellaswag": LMEvalHarness(["hellaswag"], num_fewshot=10),
         "mmlu": LMEvalHarness(["hendrycksTest-*"], num_fewshot=5),
-        "nqopen": LMEvalHarness(["nqopen"], num_fewshot=0),
+        "nq_open": LMEvalHarness(["nq_open"], num_fewshot=0),
         "openbookqa": LMEvalHarness(["openbookqa"], num_fewshot=0),
         "piqa": LMEvalHarness(["piqa"], num_fewshot=0),
         "race": LMEvalHarness(["race"], num_fewshot=0),
