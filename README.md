@@ -27,5 +27,18 @@ Commands will be logged to `command_history.jsonl` to help you look up job_ids a
 }
 ```
 
+## Watching
+
 You can use the included watch.py to monitor squeue to catch when jobs
-complete.
+complete. It will monitor job status and show job results.
+
+## Summing
+
+Some tests require summing various scores together.  Here's a sample script to
+sum mmlu.
+
+```
+cat output/mistralai/Mistral-7B-v0.1/mmlu.json | jq '.results | .[] | .acc' | awk '{ sum += $1; n++ } END { if (n > 0) print sum / n; }'
+```
+
+
