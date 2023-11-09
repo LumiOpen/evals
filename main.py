@@ -63,11 +63,14 @@ def main():
     evals = {
         "finbench": FinBench(),
 
+        "arc_easy": LMEvalHarness(["arc_easy"], num_fewshot=25),
         "arc_challenge": LMEvalHarness(["arc_challenge"], num_fewshot=25),
         "hellaswag": LMEvalHarness(["hellaswag"], num_fewshot=10),
         "mmlu": LMEvalHarness(["hendrycksTest-*"], num_fewshot=5),
+        "openbookqa": LMEvalHarness(["openbookqa"], num_fewshot=0),
         "piqa": LMEvalHarness(["piqa"], num_fewshot=0),
         "race": LMEvalHarness(["race"], num_fewshot=0),
+        "triviaqa": LMEvalHarness(["triviaqa"], num_fewshot=0),
         "truthfulqa_mc": LMEvalHarness(["truthfulqa_mc"], num_fewshot=0),
         "winogrande": LMEvalHarness(["wingrande"], num_fewshot=0),
 
