@@ -89,7 +89,7 @@ def main():
     # env vars
     parser.add_argument('--model', type=str, required=True, help='Path to the model')
     parser.add_argument('--tokenizer', type=str, required=True, help='Path to the tokenizer')
-    parser.add_argument('--output_dir', type=str, required=False, default="./output")
+    parser.add_argument('--output_dir', type=str, required=False, default="")
     parser.add_argument('--work_dir', type=str, required=False, default="./workdir")
 
     # slurm config
@@ -106,14 +106,35 @@ def main():
 
     args = parser.parse_args()
 
-    if not os.path.exists(args.output_dir):
-        os.makedirs(args.output_dir)
     if not os.path.exists(args.work_dir):
         os.makedirs(args.work_dir)
     if not os.path.exists(args.log_dir):
         os.makedirs(args.log_dir)
 
-    output_file = os.path.join(os.path.abspath(args.output_dir), f"{args.eval}.json")
+    output_dir = args.output_dir
+    if not output_dir:
+        # determine output dir
+        output_dir = "./output"
+
+        # parse the model if we can do so
+        if "/scratch/project_462000319/general-tools/checkpoints/" in args.model:
+            # sample model is "33B_torch_step67824_bfloat16"
+            model_info_search = re.search(r"([^/]+)_torch_(.+)_bfloat16", args.model)
+            if model_info_search:
+                model_name = model_info_search.group(1)
+                step = model_info_search.group(2)
+                if model_name == "33B":  # this labeling is ambihguous, fix it.
+                    model_name = "poro-34b"
+                output_dir = os.path.join(output_dir, f"{model_name}/{step}")
+        # match anything of the form "Org/Model" as used on huggingface.
+        elif re.match(r"^[^/]+/[^/]+$", args.model):
+            output_dir = os.path.join(output_dir, args.model)
+        # otherwise we just dump everything in the default output dir
+
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+
+    output_file = os.path.join(os.path.abspath(output_dir), f"{args.eval}.json")
     if os.path.exists(output_file) and not args.force:
         print(f"Output file {output_file} already exists and --force not specified, skipping...")
         return
@@ -121,7 +142,7 @@ def main():
     env_vars = {
         'MODEL': args.model,
         'TOKENIZER': args.tokenizer,
-        'OUTPUT_DIR': os.path.abspath(args.output_dir),
+        'OUTPUT_DIR': os.path.abspath(output_dir),
         'WORK_DIR': os.path.abspath(args.work_dir),
         'OUTPUT_FILE': output_file,
     }
