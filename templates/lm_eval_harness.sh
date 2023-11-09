@@ -26,14 +26,6 @@ if [ -z "$MODEL" ]; then
     echo "MODEL is not set"
     exit 1
 fi
-if [ -z "$TOKENIZER" ]; then
-    echo "TOKENIZER is not set"
-    exit 1
-fi
-if [ -z "$WORK_DIR" ]; then
-    echo "WORK_DIR is not set"
-    exit 1
-fi
 if [ -z "$NUM_FEWSHOT" ]; then
     echo "NUM_FEWSHOT is not set"
     exit 1
@@ -42,8 +34,20 @@ if [ -z "$OUTPUT_DIR" ]; then
     echo "OUTPUT_DIR is not set"
     exit 1
 fi
+if [ -z "$OUTPUT_FILE" ]; then
+    echo "OUTPUT_FILE is not set"
+    exit 1
+fi
 if [ -z "$TASK_LIST" ]; then
     echo "TASK_LIST is not set"
+    exit 1
+fi
+if [ -z "$TOKENIZER" ]; then
+    echo "TOKENIZER is not set"
+    exit 1
+fi
+if [ -z "$WORK_DIR" ]; then
+    echo "WORK_DIR is not set"
     exit 1
 fi
 
@@ -53,8 +57,7 @@ mkdir -p $WORK_DIR
 cd $WORK_DIR
 
 mkdir -p $OUTPUT_DIR
-OUTFILE=$OUTPUT_DIR/{{ slurm_config.name }}-$SLURM_JOB_ID.json
-echo Saving results to: $OUTFILE
+echo Saving results to: $OUTPUT_FILE
 
 
 # move cache and tmp to work dir so we don't run out of space
@@ -85,4 +88,4 @@ python main.py \
     --no_cache \
     --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
-    --output_path $OUTFILE
+    --output_path $OUTPUT_FILE

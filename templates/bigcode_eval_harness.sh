@@ -28,16 +28,24 @@ if [ -z "$MODEL" ]; then
     echo "MODEL is not set"
     exit 1
 fi
-if [ -z "$WORK_DIR" ]; then
-    echo "WORK_DIR is not set"
+if [ -z "$N_SAMPLES" ]; then
+    echo "N_SAMPLES is not set"
+    exit 1
+fi
+if [ -z "$OUTPUT_DIR" ]; then
+    echo "OUTPUT_DIR is not set"
+    exit 1
+fi
+if [ -z "$OUTPUT_FILE" ]; then
+    echo "OUTPUT_FILE is not set"
     exit 1
 fi
 if [ -z "$TASK_LIST" ]; then
     echo "TASK_LIST is not set"
     exit 1
 fi
-if [ -z "$N_SAMPLES" ]; then
-    echo "N_SAMPLES is not set"
+if [ -z "$WORK_DIR" ]; then
+    echo "WORK_DIR is not set"
     exit 1
 fi
 
@@ -48,8 +56,7 @@ mkdir -p $WORK_DIR
 cd $WORK_DIR
 
 mkdir -p $OUTPUT_DIR
-OUTFILE=$OUTPUT_DIR/{{ slurm_config.name }}-$SLURM_JOB_ID.json
-echo Saving results to: $OUTFILE
+echo Saving results to: $OUTPUT_FILE
 
 
 # move cache and tmp to work dir
@@ -81,4 +88,4 @@ python main.py \
     --allow_code_execution \
     --max_memory_per_gpu=auto \
     --n_samples $N_SAMPLES \
-    --metric_output_path $OUTFILE
+    --metric_output_path $OUTPUT_FILE

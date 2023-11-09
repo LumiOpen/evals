@@ -95,13 +95,14 @@ def main():
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000319", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
-    parser.add_argument('--gres', type=str, default="gpu:mi250:3", help="gres required for sbatch job")
+    parser.add_argument('--gres', type=str, default="gpu:mi250:2", help="gres required for sbatch job")
     parser.add_argument('--time', type=str, default="48:00:00", help="Time limit for sbatch job")
     parser.add_argument('--log_dir', type=str, default="./logs", help="Dir for slurm logs")
 
     # other options
     parser.add_argument('--script_name', type=str, default=None, help="Filename to use when writing script.")
     parser.add_argument('--dryrun', action='store_true', default=False, help="Dry run mode, do not execute sbatch script")
+    parser.add_argument('--force', action='store_true', default=False, help="Run even if output file already exists")
 
     args = parser.parse_args()
 
@@ -112,11 +113,17 @@ def main():
     if not os.path.exists(args.log_dir):
         os.makedirs(args.log_dir)
 
+    output_file = os.path.join(os.path.abspath(args.output_dir), f"{args.eval}.json")
+    if os.path.exists(output_file) and not args.force:
+        print(f"Output file {output_file} already exists and --force not specified, skipping...")
+        return
+
     env_vars = {
         'MODEL': args.model,
         'TOKENIZER': args.tokenizer,
         'OUTPUT_DIR': os.path.abspath(args.output_dir),
         'WORK_DIR': os.path.abspath(args.work_dir),
+        'OUTPUT_FILE': output_file,
     }
 
     slurm_config = {
@@ -141,32 +148,33 @@ def main():
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp:
             temp.write(script)
             script_name = temp.name
-    print(f"Wrote script to {script_name}")
     if args.dryrun:
+        print(f"Wrote script to {script_name}")
         print(f"Dryrun mode enabled, not executing.  To run:\n    sbatch {script_name}")
         return
 
-    print(f"Running sbatch {script_name}")
-    process = subprocess.run(['sbatch', script_name], capture_output=True, text=True)
-    print(process.stdout)
 
+    process = subprocess.run(['sbatch', script_name], capture_output=True, text=True)
     # parse the jobid from stdout
     job_id_search = re.search(r"Submitted batch job (\d+)", process.stdout)
     if job_id_search:
         job_id = job_id_search.group(1)
     else:
-        print("Failed to parse job id from sbatch output.")
+        print("Failed to parse job id from sbatch output:")
+        print(process)
         job_id = None
 
     # save to command log to help figure out which jobs were which commands
     log_entry = {
         "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "script_name": script_name,
         "job_id": job_id, 
         "eval": args.eval,
         "model": args.model,
         "tokenizer": args.tokenizer,
-        "output_dir": os.path.abspath(args.output_dir),
-        "log_dir": os.path.abspath(args.log_dir),
+        "err_log": os.path.join(os.path.abspath(args.log_dir), f"{job_id}.err"),
+        "out_log": os.path.join(os.path.abspath(args.log_dir), f"{job_id}.out"),
+        "output_file": output_file,
     }
     with open("command_history.jsonl", "a") as f:
         f.write(json.dumps(log_entry))
