@@ -26,3 +26,6 @@ Commands will be logged to `command_history.jsonl` to help you look up job_ids a
     "output_file": "/pfs/lustrep4/scratch/project_462000319/evals/output/poro-34b/step70128/hellaswag.json"
 }
 ```
+
+You can use the included watch.py to monitor squeue to catch when jobs
+complete.
