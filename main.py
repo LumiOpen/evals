@@ -114,6 +114,7 @@ def main():
     }
 
     slurm_config = {
+        'name': args.eval,
         'account': args.project,
         'partition': args.partition,
         'gres': args.gres,

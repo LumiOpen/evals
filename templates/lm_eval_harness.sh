@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --job-name=LmEvalHarness
+#SBATCH --job-name={{ slurm_config.name }}
 #SBATCH --ntasks=1
 #SBATCH --mem=0
 #SBATCH --cpus-per-task=32
@@ -53,7 +53,7 @@ mkdir -p $WORK_DIR
 cd $WORK_DIR
 
 mkdir -p $OUTPUT_DIR
-OUTFILE=$OUTPUT_DIR/lm_eval_harness-$SLURM_JOB_ID.json
+OUTFILE=$OUTPUT_DIR/{{ slurm_config.name }}-$SLURM_JOB_ID.json
 echo Saving results to: $OUTFILE
 
 
