@@ -63,16 +63,19 @@ def main():
     evals = {
         "finbench": FinBench(),
 
-        "arc_easy": LMEvalHarness(["arc_easy"], num_fewshot=25),
+        "arc_easy": LMEvalHarness(["arc_easy"], num_fewshot=0),
         "arc_challenge": LMEvalHarness(["arc_challenge"], num_fewshot=25),
+        "boolq": LMEvalHarness(["boolq"], num_fewshot=0),
+        "gsm8k": LMEvalHarness(["gsm8k"], num_fewshot=8),   # config from llama1
         "hellaswag": LMEvalHarness(["hellaswag"], num_fewshot=10),
         "mmlu": LMEvalHarness(["hendrycksTest-*"], num_fewshot=5),
+        "nqopen": LMEvalHarness(["nqopen"], num_fewshot=0),
         "openbookqa": LMEvalHarness(["openbookqa"], num_fewshot=0),
         "piqa": LMEvalHarness(["piqa"], num_fewshot=0),
         "race": LMEvalHarness(["race"], num_fewshot=0),
         "triviaqa": LMEvalHarness(["triviaqa"], num_fewshot=0),
         "truthfulqa_mc": LMEvalHarness(["truthfulqa_mc"], num_fewshot=0),
-        "winogrande": LMEvalHarness(["wingrande"], num_fewshot=0),
+        "winogrande": LMEvalHarness(["winogrande"], num_fewshot=0),
 
         # TODO probably specify different max durations here for longer running
         # tests. I'm not even sure we can complete a 100 sample test.
