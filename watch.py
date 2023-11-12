@@ -75,14 +75,22 @@ def main():
                 if entry is None:
                     print(f"Unrecognized job {job}, ignoring...")
                     continue
-                print(f'{job} {entry["model"]} {entry["eval"]} is running.')
+                comment = entry.get("comment", None)
+                if comment is not None:
+                    print(f'{job} {entry["model"]} {entry["eval"]} is running. ({comment})')
+                else:
+                    print(f'{job} {entry["model"]} {entry["eval"]} is running.')
         for job in jobs:
             if job not in new_jobs:
                 # newly exited job
                 entry = entries.get(job, None)
                 if entry is None:
                     continue
-                print(f'{job} {entry["model"]} {entry["eval"]} has completed.')
+                comment = entry.get("comment", None)
+                if comment is not None:
+                    print(f'{job} {entry["model"]} {entry["eval"]} has completed. ({comment}')
+                else:
+                    print(f'{job} {entry["model"]} {entry["eval"]} has completed.')
                 if os.path.exists(entry["output_file"]):
                     print("Output follows =========")
                     with open(entry["output_file"], "r") as f:
