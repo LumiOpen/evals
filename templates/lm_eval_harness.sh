@@ -83,8 +83,8 @@ cd lm-evaluation-harness
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.2
 pip install --no-cache-dir -r requirements.txt
 
-# required for 01-ai/Yi
-pip install sentencepiece
+pip install sentencepiece --upgrade  # required for 01-ai/Yi
+pip install protobuf --upgrade       # required for Llama 2 tokenizer
 
 echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"
 
