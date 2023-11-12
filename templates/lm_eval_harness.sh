@@ -46,6 +46,10 @@ if [ -z "$TOKENIZER" ]; then
     echo "TOKENIZER is not set"
     exit 1
 fi
+if [ -z "$TRUST_REMOTE_CODE" ]; then
+    echo "TRUST_REMOTE_CODE is not set"
+    exit 1
+fi
 if [ -z "$WORK_DIR" ]; then
     echo "WORK_DIR is not set"
     exit 1
@@ -86,7 +90,7 @@ echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available()
 
 python main.py \
     --model hf-causal-experimental \
-    --model_args pretrained=$MODEL,use_accelerate=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=True \
+    --model_args pretrained=$MODEL,use_accelerate=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE \
     --device cuda:0 \
     --no_cache \
     --tasks "$TASK_LIST" \

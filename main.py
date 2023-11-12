@@ -95,6 +95,7 @@ def main():
     parser.add_argument('--tokenizer', type=str, required=True, help='Path to the tokenizer')
     parser.add_argument('--output_dir', type=str, required=False, default="")
     parser.add_argument('--work_dir', type=str, required=False, default="./workdir")
+    parser.add_argument('--trust_remote_code', action='store_true', default=False, help="load model with trust_remote_code=True")
 
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000319", help="Project for sbatch job")
@@ -104,6 +105,7 @@ def main():
     parser.add_argument('--log_dir', type=str, default="./logs", help="Dir for slurm logs")
 
     # other options
+    parser.add_argument('--comment', type=str, default=None, help="Comment to add to the command history")
     parser.add_argument('--script_name', type=str, default=None, help="Filename to use when writing script.")
     parser.add_argument('--dryrun', action='store_true', default=False, help="Dry run mode, do not execute sbatch script")
     parser.add_argument('--force', action='store_true', default=False, help="Run even if output file already exists")
@@ -149,6 +151,7 @@ def main():
         'OUTPUT_DIR': os.path.abspath(output_dir),
         'WORK_DIR': os.path.abspath(args.work_dir),
         'OUTPUT_FILE': output_file,
+        'TRUST_REMOTE_CODE': "True" if args.trust_remote_code else "False",
     }
 
     slurm_config = {
@@ -200,6 +203,7 @@ def main():
         "err_log": os.path.join(os.path.abspath(args.log_dir), f"{job_id}.err"),
         "out_log": os.path.join(os.path.abspath(args.log_dir), f"{job_id}.out"),
         "output_file": output_file,
+        "comment": args.comment,
     }
     with open("command_history.jsonl", "a") as f:
         f.write(json.dumps(log_entry) + "\n")

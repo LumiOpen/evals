@@ -40,6 +40,10 @@ if [ -z "$TOKENIZER" ]; then
     echo "TOKENIZER is not set"
     exit 1
 fi
+if [ -z "$TRUST_REMOTE_CODE" ]; then
+    echo "TRUST_REMOTE_CODE is not set"
+    exit 1
+fi
 if [ -z "$WORK_DIR" ]; then
     echo "WORK_DIR is not set"
     exit 1
@@ -79,7 +83,7 @@ echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available()
 
 python main.py \
     --model hf-causal-experimental \
-    --model_args pretrained=$MODEL,use_accelerate=True,tokenizer=$TOKENIZER,dtype=bfloat16\
+    --model_args pretrained=$MODEL,use_accelerate=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE \
     --device cuda:0 \
     --no_cache \
     --tasks bigbench_1_digit_addition,bigbench_1_digit_division,bigbench_1_digit_multiplication,bigbench_1_digit_subtraction,bigbench_2_digit_addition,bigbench_2_digit_division,bigbench_2_digit_multiplication,bigbench_2_digit_subtraction,bigbench_3_digit_addition,bigbench_3_digit_division,bigbench_3_digit_multiplication,bigbench_3_digit_subtraction,bigbench_4_digit_addition,bigbench_4_digit_division,bigbench_4_digit_multiplication,bigbench_4_digit_subtraction,bigbench_5_digit_addition,bigbench_5_digit_division,bigbench_5_digit_multiplication,bigbench_5_digit_subtraction,bigbench_analogies,bigbench_emotions,bigbench_empirical_judgments,bigbench_general_knowledge,bigbench_harmless,bigbench_helpful,bigbench_honest,bigbench_intent_recognition,bigbench_misconceptions,bigbench_one_sentence,bigbench_one_sentence_no_prompt,bigbench_other,bigbench_paraphrase,bigbench_sentence_ambiguity,bigbench_similarities_abstraction,bigbench_two_sentences \

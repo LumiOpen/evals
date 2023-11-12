@@ -44,6 +44,10 @@ if [ -z "$TASK_LIST" ]; then
     echo "TASK_LIST is not set"
     exit 1
 fi
+if [ -z "$TRUST_REMOTE_CODE" ]; then
+    echo "TRUST_REMOTE_CODE is not set"
+    exit 1
+fi
 if [ -z "$WORK_DIR" ]; then
     echo "WORK_DIR is not set"
     exit 1
@@ -88,4 +92,5 @@ python main.py \
     --allow_code_execution \
     --max_memory_per_gpu=auto \
     --n_samples $N_SAMPLES \
-    --metric_output_path $OUTPUT_FILE
+    --metric_output_path $OUTPUT_FILE \
+    $( [ "$TRUST_REMOTE_CODE" = "True" ] && echo "--trust_remote_code" )
