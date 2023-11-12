@@ -41,4 +41,12 @@ average mmlu.
 cat output/mistralai/Mistral-7B-v0.1/mmlu.json | jq '.results | .[] | .acc' | awk '{ sum += $1; n++ } END { if (n > 0) print sum / n; }'
 ```
 
+## Exporting
+
+To export a run's results as csv, you can use a command like the following:
+
+```
+cat output/poro-34b/step48672/finbench.json | jq -r '.results | to_entries | .[] | [.key, .value.multiple_choice_grade] | @csv'
+```
+
 
