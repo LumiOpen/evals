@@ -79,11 +79,14 @@ cd lm-evaluation-harness
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.2
 pip install --no-cache-dir -r requirements.txt
 
+# required for 01-ai/Yi
+pip install sentencepiece
+
 echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"
 
 python main.py \
     --model hf-causal-experimental \
-    --model_args pretrained=$MODEL,use_accelerate=True,tokenizer=$TOKENIZER,dtype=bfloat16\
+    --model_args pretrained=$MODEL,use_accelerate=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=True \
     --device cuda:0 \
     --no_cache \
     --tasks "$TASK_LIST" \
