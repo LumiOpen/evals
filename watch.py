@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import subprocess
@@ -64,6 +65,11 @@ def get_running_jobs():
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--once', action='store_true', help='run once and exit')
+    args = parser.parse_args()
+
+
     jobs = []
     while True:
         entries = read_command_log()
@@ -100,6 +106,10 @@ def main():
                     print(f'No output found! Error log: {entry["err_log"]}')
 
         jobs = new_jobs
+
+        if args.once:
+            break
+
         time.sleep(60)
 
 if __name__ == "__main__":
