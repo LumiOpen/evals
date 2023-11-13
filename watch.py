@@ -46,8 +46,8 @@ def read_command_log():
 
 def get_running_jobs():
     
-    username = os.getlogin()
-    command = ['squeue', '-u', username, '-o', '%i %T %j']
+    #username = os.getlogin()
+    command = ['squeue', '--me', '-o', '%i %T %j']
     process = subprocess.Popen(command, stdout=subprocess.PIPE)
     output, error = process.communicate()
     if error:
