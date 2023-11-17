@@ -79,13 +79,18 @@ def main():
                 # newly running job
                 entry = entries.get(job, None)
                 if entry is None:
-                    print(f"Unrecognized job {job}, ignoring...")
+                    # unrecognized job
                     continue
                 comment = entry.get("comment", None)
                 if comment is not None:
                     print(f'{job} {entry["model"]} {entry["eval"]} is running. ({comment})')
                 else:
                     print(f'{job} {entry["model"]} {entry["eval"]} is running.')
+                if os.path.exists(entry["err_log"]):
+                    with open(entry["err_log"], "r") as f:
+                        lines = f.readlines()
+                        print(lines[-1])
+                
         for job in jobs:
             if job not in new_jobs:
                 # newly exited job
