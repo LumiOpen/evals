@@ -58,60 +58,36 @@ class BigcodeEvaluationHarness:
 
         return rendered_script
 
+evals = {
+    "finbench": FinBench(),
 
-def main():
-    evals = {
-        "finbench": FinBench(),
+    # These are all configured as in the HF leaderboard for easy
+    # comparison.
+    "arc_challenge": LMEvalHarness(["arc_challenge"], num_fewshot=25),
+    "hellaswag": LMEvalHarness(["hellaswag"], num_fewshot=10),
+    "mmlu": LMEvalHarness(["hendrycksTest-*"], num_fewshot=5),
+    "truthfulqa_mc": LMEvalHarness(["truthfulqa_mc"], num_fewshot=0),
+    "winogrande": LMEvalHarness(["winogrande"], num_fewshot=5),
+    "gsm8k": LMEvalHarness(["gsm8k"], num_fewshot=5),
+    "drop": LMEvalHarness(["drop"], num_fewshot=3),
 
-        # These are all configured as in the HF leaderboard for easy
-        # comparison.
-        "arc_challenge": LMEvalHarness(["arc_challenge"], num_fewshot=25),
-        "hellaswag": LMEvalHarness(["hellaswag"], num_fewshot=10),
-        "mmlu": LMEvalHarness(["hendrycksTest-*"], num_fewshot=5),
-        "truthfulqa_mc": LMEvalHarness(["truthfulqa_mc"], num_fewshot=0),
-        "winogrande": LMEvalHarness(["winogrande"], num_fewshot=5),
-        "gsm8k": LMEvalHarness(["gsm8k"], num_fewshot=5),
-        "drop": LMEvalHarness(["drop"], num_fewshot=3),
+    "arc_easy": LMEvalHarness(["arc_easy"], num_fewshot=0),
+    "boolq": LMEvalHarness(["boolq"], num_fewshot=0),
+    "nq_open": LMEvalHarness(["nq_open"], num_fewshot=0),
+    "openbookqa": LMEvalHarness(["openbookqa"], num_fewshot=0),
+    "piqa": LMEvalHarness(["piqa"], num_fewshot=0),
+    "race": LMEvalHarness(["race"], num_fewshot=0),
+    "triviaqa": LMEvalHarness(["triviaqa"], num_fewshot=0),
 
-        "arc_easy": LMEvalHarness(["arc_easy"], num_fewshot=0),
-        "boolq": LMEvalHarness(["boolq"], num_fewshot=0),
-        "nq_open": LMEvalHarness(["nq_open"], num_fewshot=0),
-        "openbookqa": LMEvalHarness(["openbookqa"], num_fewshot=0),
-        "piqa": LMEvalHarness(["piqa"], num_fewshot=0),
-        "race": LMEvalHarness(["race"], num_fewshot=0),
-        "triviaqa": LMEvalHarness(["triviaqa"], num_fewshot=0),
+    # TODO probably specify different max durations here for longer running
+    # tests. I'm not even sure we can complete a 100 sample test.
+    "humaneval_pass@1": BigcodeEvaluationHarness(["humaneval"], n_samples=1),
+    "humaneval_pass@10": BigcodeEvaluationHarness(["humaneval"], n_samples=10),
+    "humaneval_pass@100": BigcodeEvaluationHarness(["humaneval"], n_samples=100),
+}
 
-        # TODO probably specify different max durations here for longer running
-        # tests. I'm not even sure we can complete a 100 sample test.
-        "humaneval_pass@1": BigcodeEvaluationHarness(["humaneval"], n_samples=1),
-        "humaneval_pass@10": BigcodeEvaluationHarness(["humaneval"], n_samples=10),
-        "humaneval_pass@100": BigcodeEvaluationHarness(["humaneval"], n_samples=100),
-    }
-    parser = argparse.ArgumentParser()
-    parser.add_argument('eval', type=str, choices=list(evals.keys()), default='finbench', help='Which eval to run')
 
-    # env vars
-    parser.add_argument('--model', type=str, required=True, help='Path to the model')
-    parser.add_argument('--tokenizer', type=str, required=True, help='Path to the tokenizer')
-    parser.add_argument('--output_dir', type=str, required=False, default="")
-    parser.add_argument('--work_dir', type=str, required=False, default="./workdir")
-    parser.add_argument('--trust_remote_code', action='store_true', default=False, help="load model with trust_remote_code=True")
-
-    # slurm config
-    parser.add_argument('--project', type=str, default="project_462000319", help="Project for sbatch job")
-    parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
-    parser.add_argument('--gres', type=str, default="gpu:mi250:2", help="gres required for sbatch job")
-    parser.add_argument('--time', type=str, default="48:00:00", help="Time limit for sbatch job")
-    parser.add_argument('--log_dir', type=str, default="./logs", help="Dir for slurm logs")
-
-    # other options
-    parser.add_argument('--comment', type=str, default=None, help="Comment to add to the command history")
-    parser.add_argument('--script_name', type=str, default=None, help="Filename to use when writing script.")
-    parser.add_argument('--dryrun', action='store_true', default=False, help="Dry run mode, do not execute sbatch script")
-    parser.add_argument('--force', action='store_true', default=False, help="Run even if output file already exists")
-
-    args = parser.parse_args()
-
+def run_eval(eval_name, args):
     if not os.path.exists(args.work_dir):
         os.makedirs(args.work_dir)
     if not os.path.exists(args.log_dir):
@@ -135,12 +111,14 @@ def main():
         # match anything of the form "Org/Model" as used on huggingface.
         elif re.match(r"^[^/]+/[^/]+$", args.model):
             output_dir = os.path.join(output_dir, args.model)
-        # otherwise we just dump everything in the default output dir
+        else:
+            output_dir = os.path.join(output_dir, "other", os.path.basename(args.model))
+
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    output_file = os.path.join(os.path.abspath(output_dir), f"{args.eval}.json")
+    output_file = os.path.join(os.path.abspath(output_dir), f"{eval_name}.json")
     if os.path.exists(output_file) and not args.force:
         print(f"Output file {output_file} already exists and --force not specified, skipping...")
         return
@@ -155,7 +133,7 @@ def main():
     }
 
     slurm_config = {
-        'name': args.eval,
+        'name': eval_name,
         'account': args.project,
         'partition': args.partition,
         'gres': args.gres,
@@ -165,7 +143,7 @@ def main():
 
 
     # eval is a reserved keyword, so we'll use tester instead.
-    tester = evals[args.eval]
+    tester = evals[eval_name]
     script = tester.generate_script(slurm_config, env_vars)
 
     script_name = args.script_name
@@ -197,7 +175,7 @@ def main():
         "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "script_name": script_name,
         "job_id": job_id, 
-        "eval": args.eval,
+        "eval": eval_name,
         "model": args.model,
         "tokenizer": args.tokenizer,
         "err_log": os.path.join(os.path.abspath(args.log_dir), f"{job_id}.err"),
@@ -208,6 +186,35 @@ def main():
     with open("command_history.jsonl", "a") as f:
         f.write(json.dumps(log_entry) + "\n")
     print(json.dumps(log_entry, indent=4))
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('eval', type=str, nargs='+', choices=list(evals.keys()), default='finbench', help='Which eval to run')
+
+    # env vars
+    parser.add_argument('--model', type=str, required=True, help='Path to the model')
+    parser.add_argument('--tokenizer', type=str, required=True, help='Path to the tokenizer')
+    parser.add_argument('--output_dir', type=str, required=False, default="")
+    parser.add_argument('--work_dir', type=str, required=False, default="./workdir")
+    parser.add_argument('--trust_remote_code', action='store_true', default=False, help="load model with trust_remote_code=True")
+
+    # slurm config
+    parser.add_argument('--project', type=str, default="project_462000319", help="Project for sbatch job")
+    parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
+    parser.add_argument('--gres', type=str, default="gpu:mi250:2", help="gres required for sbatch job")
+    parser.add_argument('--time', type=str, default="48:00:00", help="Time limit for sbatch job")
+    parser.add_argument('--log_dir', type=str, default="./logs", help="Dir for slurm logs")
+
+    # other options
+    parser.add_argument('--comment', type=str, default=None, help="Comment to add to the command history")
+    parser.add_argument('--script_name', type=str, default=None, help="Filename to use when writing script.")
+    parser.add_argument('--dryrun', action='store_true', default=False, help="Dry run mode, do not execute sbatch script")
+    parser.add_argument('--force', action='store_true', default=False, help="Run even if output file already exists")
+
+    args = parser.parse_args()
+
+    for eval_name in args.eval:
+        run_eval(eval_name, args)
 
 if __name__ == "__main__":
     main()
