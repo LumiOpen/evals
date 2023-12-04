@@ -14,7 +14,6 @@ echo -n "         mmlu: " ; cat $DIR/mmlu.json | jq '.results | .[] | .acc' | aw
 echo -n "truthfulqa_mc: " ; cat $DIR/truthfulqa_mc.json | jq .results.truthfulqa_mc.mc2 | awk '{print $1 * 100}'
 echo -n "   winogrande: " ; cat $DIR/winogrande.json | jq .results.winogrande.acc | awk '{print $1 * 100}'
 echo -n "        gsm8k: " ; cat $DIR/gsm8k.json | jq .results.gsm8k.acc | awk '{print $1 * 100}'
-echo -n "         drop: " ; cat $DIR/drop.json | jq .results.drop.f1 | awk '{print $1 * 100}'
 
 echo
 echo finbench:

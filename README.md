@@ -30,7 +30,7 @@ Commands will be logged to `command_history.jsonl` to help you look up job_ids a
 You can now specify multiple evals with a single command:
 
 ```
-python main.py --model foo --tokenizer foo arc_challenge hellaswag mmlu truthfulqa_mc winogrande gsm8k drop finbench
+python main.py --model foo --tokenizer foo arc_challenge hellaswag mmlu truthfulqa_mc winogrande gsm8k finbench
 ```
 
 ## Watching
