@@ -68,6 +68,7 @@ export PIP_CACHE_DIR=$WORK_DIR/cache
 echo PIP_CACHE_DIR is $PIP_CACHE_DIR
 mkdir -p $PIP_CACHE_DIR
 # /tmp may not be big enough for pip downloads
+OLD_TMPDIR=$TMPDIR
 export TMPDIR=$WORK_DIR/tmp
 mkdir -p $TMPDIR
 echo TMPDIR is $TMPDIR
@@ -82,6 +83,11 @@ cd bigcode-evaluation-harness
 
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.2
 pip install --no-cache-dir -r requirements.txt
+
+# NOTE: humaneval uses a unix socket which fails with AF_UNIX path too long if
+# TMPDIR is longer than 108 characters, so revert TMPDIR here.
+export TMPDIR=$OLD_TMPDIR
+echo TMPDIR is $TMPDIR
 
 echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"
 
