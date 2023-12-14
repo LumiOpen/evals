@@ -1,0 +1,23 @@
+{
+  "results": {
+    "winogrande": {
+      "acc": 0.835043409629045,
+      "acc_stderr": 0.010430917468237443
+    }
+  },
+  "versions": {
+    "winogrande": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=01-ai/Yi-34B,use_accelerate=True,tokenizer=01-ai/Yi-34B,dtype=bfloat16,trust_remote_code=True",
+    "num_fewshot": 5,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

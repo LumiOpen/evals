@@ -1,0 +1,25 @@
+{
+  "results": {
+    "hellaswag": {
+      "acc": 0.6287592113124876,
+      "acc_stderr": 0.004821492994082126,
+      "acc_norm": 0.8320055765783708,
+      "acc_norm_stderr": 0.003730972670511862
+    }
+  },
+  "versions": {
+    "hellaswag": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=mistralai/Mistral-7B-v0.1,use_accelerate=True,tokenizer=mistralai/Mistral-7B-v0.1,dtype=bfloat16",
+    "num_fewshot": 10,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

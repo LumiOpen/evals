@@ -1,0 +1,23 @@
+{
+  "results": {
+    "gsm8k": {
+      "acc": 0.034874905231235785,
+      "acc_stderr": 0.005053480765022259
+    }
+  },
+  "versions": {
+    "gsm8k": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=/scratch/project_462000319/zosaelai2/models/sft_finetuned/merged-33B_torch_step95328_bfloat16-hellaswag-1-1epochs,use_accelerate=True,tokenizer=/scratch/project_462000319/tokenizers/tokenizer_v6_fixed_fin,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 5,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

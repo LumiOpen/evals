@@ -1,0 +1,25 @@
+{
+  "results": {
+    "drop": {
+      "em": 0.001363255033557047,
+      "em_stderr": 0.00037786091964606323,
+      "f1": 0.04812604865771828,
+      "f1_stderr": 0.0010564801370916335
+    }
+  },
+  "versions": {
+    "drop": 1
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=huggyllama/llama-30b,use_accelerate=True,tokenizer=huggyllama/llama-30b,dtype=bfloat16",
+    "num_fewshot": 3,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

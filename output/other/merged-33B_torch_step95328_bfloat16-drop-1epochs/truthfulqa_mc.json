@@ -1,0 +1,25 @@
+{
+  "results": {
+    "truthfulqa_mc": {
+      "mc1": 0.2252141982864137,
+      "mc1_stderr": 0.014623240768023505,
+      "mc2": 0.3662683492400016,
+      "mc2_stderr": 0.014039228832037065
+    }
+  },
+  "versions": {
+    "truthfulqa_mc": 1
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=/scratch/project_462000319/zosaelai2/models/sft_finetuned/merged-33B_torch_step95328_bfloat16-drop-1epochs,use_accelerate=True,tokenizer=/scratch/project_462000319/tokenizers/tokenizer_v6_fixed_fin,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
