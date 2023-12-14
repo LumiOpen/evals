@@ -193,7 +193,7 @@ def main():
 
     # env vars
     parser.add_argument('--model', type=str, required=True, help='Path to the model')
-    parser.add_argument('--tokenizer', type=str, required=True, help='Path to the tokenizer')
+    parser.add_argument('--tokenizer', type=str, required=False, default="", help='Path to the tokenizer')
     parser.add_argument('--output_dir', type=str, required=False, default="")
     parser.add_argument('--work_dir', type=str, required=False, default="./workdir")
     parser.add_argument('--trust_remote_code', action='store_true', default=False, help="load model with trust_remote_code=True")
@@ -212,6 +212,8 @@ def main():
     parser.add_argument('--force', action='store_true', default=False, help="Run even if output file already exists")
 
     args = parser.parse_args()
+    if args.tokenizer == "":
+        args.tokenizer = args.model
 
     for eval_name in args.eval:
         run_eval(eval_name, args)
