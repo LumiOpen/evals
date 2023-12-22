@@ -43,6 +43,11 @@ def argparser():
         metavar='FILE',
     )
     ap.add_argument(
+        '--random-baseline',
+        type=float,
+        default=None,
+    )
+    ap.add_argument(
         'summaries',
         nargs='+',
         metavar='FILE',
@@ -87,11 +92,15 @@ def main(argv):
             assert label not in other_results
             other_results[label] = get_total(fn)
 
+    if args.random_baseline is not None:
+        poro_results[0] = args.random_baseline
+
     x, y = zip(*sorted(poro_results.items()))
 
     ax = plt.gca()
     ax.xaxis.set_major_formatter(PercentFormatter(xmax=1.0, decimals=0))
     ax.yaxis.set_major_formatter(PercentFormatter(xmax=1.0, decimals=0))
+    #ax.set_ylim([0.45, 0.65])    # TODO make arg
     
     plt.plot(x, y, marker='o', color='darkblue', linestyle='solid', label="Poro")
 
