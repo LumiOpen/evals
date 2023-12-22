@@ -1,0 +1,25 @@
+{
+  "results": {
+    "hellaswag": {
+      "acc": 0.4182433778131846,
+      "acc_stderr": 0.004922624636945243,
+      "acc_norm": 0.5490938060147381,
+      "acc_norm_stderr": 0.004965670398127354
+    }
+  },
+  "versions": {
+    "hellaswag": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=/scratch/project_462000086/risto/converted_models/viking_13B_high_eps_0048000,use_accelerate=True,tokenizer=/scratch/project_462000319/tokenizers/nordic_tokenizer_131072,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 10,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
