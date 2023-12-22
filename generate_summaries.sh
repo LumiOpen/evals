@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo 'This script will rewrite summaries/ and latex_tables/. Continue? (y/n)'
+echo 'This script will rewrite summaries/, latex_tables/, and figures/. Continue? (y/n)'
 while true; do
     read answer
     case "$answer" in
@@ -15,6 +15,9 @@ mkdir summaries
 
 rm -rf latex_tables
 mkdir latex_tables
+
+rm -rf figures
+mkdir figures
 
 set -euo pipefail
 
@@ -44,3 +47,10 @@ python3 make_latex_table.py \
 	--wide \
 	$data \
 	> "$o"
+
+# FIN-bench Poro progression
+python3 plot_poro_progression.py \
+	--output figures/poro-finbench-progression.pdf \
+	summaries/finbench/poro-34b_step* \
+	summaries/finbench/TurkuNLP_gpt3-finnish-8B.tsv \
+	summaries/finbench/TurkuNLP_bloom-finnish-176b.tsv
