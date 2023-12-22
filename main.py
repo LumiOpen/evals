@@ -9,8 +9,13 @@ import subprocess
 import tempfile
 
 class FinBench:
+    def __init__(self, num_fewshot=0):
+        self.num_fewshot = num_fewshot
+
     def generate_script(self, slurm_config, env_vars):
-        config = { }
+        env_vars = copy.deepcopy(env_vars)
+        env_vars["NUM_FEWSHOT"] = self.num_fewshot
+        config = {}
         config["env_vars"] = env_vars
         config["slurm_config"] = slurm_config
 
@@ -59,7 +64,10 @@ class BigcodeEvaluationHarness:
         return rendered_script
 
 evals = {
-    "finbench": FinBench(),
+    "finbench_0shot": FinBench(num_fewshot=0),
+    "finbench_1shot": FinBench(num_fewshot=1),
+    "finbench_2shot": FinBench(num_fewshot=2),
+    "finbench_3shot": FinBench(num_fewshot=3),
 
     # These are all configured as in the HF leaderboard for easy
     # comparison.

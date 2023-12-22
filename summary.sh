@@ -50,9 +50,9 @@ else
     echo na
 fi
 
-if [ -f $DIR/finbench.json ] ; then 
+if [ -f $DIR/finbench_3shot.json ] ; then 
     echo finbench:
-    cat $DIR/finbench.json | jq -r '.results | to_entries | .[] | [.key, .value.multiple_choice_grade] | @csv'
+    cat $DIR/finbench_3shot.json | jq -r '.results | to_entries | .[] | [.key, .value.multiple_choice_grade] | @csv'
 fi
 
 

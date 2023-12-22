@@ -30,7 +30,7 @@ Commands will be logged to `command_history.jsonl` to help you look up job_ids a
 You can now specify multiple evals with a single command:
 
 ```
-python main.py --model foo --tokenizer foo arc_challenge hellaswag mmlu truthfulqa_mc winogrande gsm8k finbench
+python main.py --model foo --tokenizer foo arc_challenge hellaswag mmlu truthfulqa_mc winogrande gsm8k finbench_3shot
 ```
 
 ## Watching
@@ -52,7 +52,7 @@ cat output/mistralai/Mistral-7B-v0.1/mmlu.json | jq '.results | .[] | .acc' | aw
 To export a run's results as csv, you can use a command like the following:
 
 ```
-cat output/poro-34b/step48672/finbench.json | jq -r '.results | to_entries | .[] | [.key, .value.multiple_choice_grade] | @csv'
+cat output/poro-34b/step48672/finbench_3shot.json | jq -r '.results | to_entries | .[] | [.key, .value.multiple_choice_grade] | @csv'
 ```
 
 

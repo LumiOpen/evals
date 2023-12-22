@@ -25,7 +25,7 @@ set -euo pipefail
 
 # FIN-bench TSV summaries
 mkdir summaries/finbench
-for f in output/{poro-34b,TurkuNLP}/*/finbench.json; do
+for f in output/{poro-34b,TurkuNLP}/*/finbench_3shot.json; do
     d=$(dirname "$f")
     m=${d#output/}
     m=${m//\//_}
