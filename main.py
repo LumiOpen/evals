@@ -107,7 +107,14 @@ def run_eval(eval_name, args):
         output_dir = "./output"
 
         # parse the model if we can do so
-        if "/scratch/project_462000319/general-tools/checkpoints/" in args.model:
+        if "viking_v2" in args.model:
+            # viking_v2_7B_iter_0096000_bfloat16
+            result = re.search(r"(viking_v2_\d+B)_iter_(\d+)_bfloat16", args.model)
+            if result:
+                model_name = result.group(1)
+                step = result.group(2)
+                output_dir = os.path.join(output_dir, f"{model_name}/{step}")
+        elif "/scratch/project_462000319/general-tools/checkpoints/" in args.model:
             # sample model is "33B_torch_step67824_bfloat16"
             model_info_search = re.search(r"([^/]+)_torch_(.+)_bfloat16", args.model)
             if model_info_search:
