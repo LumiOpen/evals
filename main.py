@@ -214,7 +214,7 @@ def main():
     parser.add_argument('--trust_remote_code', action='store_true', default=False, help="load model with trust_remote_code=True")
 
     # slurm config
-    parser.add_argument('--project', type=str, default="project_462000086", help="Project for sbatch job")
+    parser.add_argument('--project', type=str, default="project_462000319", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
     parser.add_argument('--gres', type=str, default="gpu:mi250:2", help="gres required for sbatch job")
     parser.add_argument('--time', type=str, default="48:00:00", help="Time limit for sbatch job")
