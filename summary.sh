@@ -50,6 +50,70 @@ else
     echo na
 fi
 
+echo
+
+if [ -f $DIR/arc_easy.json ] ; then
+    echo -n "       arc_easy (acc): "
+    cat $DIR/arc_easy.json | jq .results.arc_easy.acc | awk '{print $1 * 100}'
+    echo -n "  arc_easy (acc_norm): "
+    cat $DIR/arc_easy.json | jq .results.arc_easy.acc_norm | awk '{print $1 * 100}'
+fi
+
+if [ -f $DIR/boolq.json ] ; then
+    echo -n "                boolq: "
+    cat $DIR/boolq.json | jq .results.boolq.acc | awk '{print $1 * 100}'
+fi
+
+if [ -f $DIR/nq_open.json ] ; then
+    echo -n "              nq_open: "
+    cat $DIR/nq_open.json | jq .results.nq_open.em | awk '{print $1 * 100}'
+fi
+
+if [ -f $DIR/openbookqa.json ] ; then
+    echo -n "     openbookqa (acc): "
+    cat $DIR/openbookqa.json | jq .results.openbookqa.acc | awk '{print $1 * 100}'
+    echo -n "openbookqa (acc_norm): "
+    cat $DIR/openbookqa.json | jq .results.openbookqa.acc_norm | awk '{print $1 * 100}'
+fi
+
+
+if [ -f $DIR/piqa.json ] ; then
+    echo -n "           piqa (acc): "
+    cat $DIR/piqa.json | jq .results.piqa.acc | awk '{print $1 * 100}'
+    echo -n "      piqa (acc_norm): "
+    cat $DIR/piqa.json | jq .results.piqa.acc_norm | awk '{print $1 * 100}'
+fi
+
+if [ -f $DIR/triviaqa.json ] ; then
+    echo -n "             triviaqa: "
+    cat $DIR/triviaqa.json | jq .results.triviaqa.em | awk '{print $1 * 100}'
+fi
+
+### add squad2, math and drop
+
+echo
+
+if [ -f $DIR/humaneval_pass@1.json ] ; then
+    echo -n "     humaneval_pass@1: "
+    cat $DIR/humaneval_pass@1.json | jq '.humaneval."pass@1"' | awk '{print $1 * 100 }'
+fi
+
+if [ -f $DIR/humaneval_pass@10.json ] ; then
+    echo -n "    humaneval_pass@10: "
+    cat $DIR/humaneval_pass@10.json | jq '.humaneval."pass@10"' | awk '{print $1 * 100 }'
+fi
+if [ -f $DIR/mbpp_pass@1.json ] ; then
+    echo -n "          mbpp_pass@1: "
+    cat $DIR/mbpp_pass@1.json | jq '.mbpp."pass@1"' | awk '{print $1 * 100 }'
+fi
+
+if [ -f $DIR/mbpp_pass@10.json ] ; then
+    echo -n "         mbpp_pass@10: "
+    cat $DIR/mbpp_pass@10.json | jq '.mbpp."pass@10"' | awk '{print $1 * 100 }'
+fi
+
+echo 
+
 if [ -f $DIR/finbench_3shot.json ] ; then 
     echo finbench:
     cat $DIR/finbench_3shot.json | jq -r '.results | to_entries | .[] | [.key, .value.multiple_choice_grade] | @csv'

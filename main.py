@@ -76,22 +76,40 @@ evals = {
     "mmlu": LMEvalHarness(["hendrycksTest-*"], num_fewshot=5),
     "truthfulqa_mc": LMEvalHarness(["truthfulqa_mc"], num_fewshot=0),
     "winogrande": LMEvalHarness(["winogrande"], num_fewshot=5),
-    "gsm8k": LMEvalHarness(["gsm8k"], num_fewshot=5),
-    "drop": LMEvalHarness(["drop"], num_fewshot=3),
+    "gsm8k": LMEvalHarness(["gsm8k"], num_fewshot=5), # llama 2 uses 8 shot in the paper.
 
-    "arc_easy": LMEvalHarness(["arc_easy"], num_fewshot=0),
+    # In addition to the above, thease are all used in the llama 2 paper
     "boolq": LMEvalHarness(["boolq"], num_fewshot=0),
-    "nq_open": LMEvalHarness(["nq_open"], num_fewshot=0),
+    "math": LMEvalHarness([
+            "math_prealgebra",
+            "math_algebra",
+            "math_num_theory",
+            "math_counting_and_prob",
+            "math_geometry",
+            "math_intermediate_algebra",
+            "math_precalc"
+        ], num_fewshot=4),  # 4 shot from Llama 2 paper
     "openbookqa": LMEvalHarness(["openbookqa"], num_fewshot=0),
     "piqa": LMEvalHarness(["piqa"], num_fewshot=0),
     "race": LMEvalHarness(["race"], num_fewshot=0),
+    "squad2": LMEvalHarness(["squad2"], num_fewshot=0),
     "triviaqa": LMEvalHarness(["triviaqa"], num_fewshot=0),
+    "toxigen": LMEvalHarness(["toxigen"], num_fewshot=0),
+    # TODO: determine which versions of the following were used in other tests
+    # Lamabda - several different versions here
+    # do we want to use the incomplete bigbench ported to lm-eval-harness?
+
+    "arc_easy": LMEvalHarness(["arc_easy"], num_fewshot=0),
+    "drop": LMEvalHarness(["drop"], num_fewshot=3),
+    "nq_open": LMEvalHarness(["nq_open"], num_fewshot=0),
 
     # TODO probably specify different max durations here for longer running
     # tests. I'm not even sure we can complete a 100 sample test.
     "humaneval_pass@1": BigcodeEvaluationHarness(["humaneval"], n_samples=1),
     "humaneval_pass@10": BigcodeEvaluationHarness(["humaneval"], n_samples=10),
     "humaneval_pass@100": BigcodeEvaluationHarness(["humaneval"], n_samples=100),
+    "mbpp_pass@1": BigcodeEvaluationHarness(["mbpp"], n_samples=1),
+    "mbpp_pass@10": BigcodeEvaluationHarness(["mbpp"], n_samples=10),
 }
 
 
