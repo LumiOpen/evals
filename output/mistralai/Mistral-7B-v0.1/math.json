@@ -1,0 +1,53 @@
+{
+  "results": {
+    "math_algebra": {
+      "acc": 0.0008424599831508003,
+      "acc_stderr": 0.0008424599831507991
+    },
+    "math_counting_and_prob": {
+      "acc": 0.0,
+      "acc_stderr": 0.0
+    },
+    "math_geometry": {
+      "acc": 0.0,
+      "acc_stderr": 0.0
+    },
+    "math_intermediate_algebra": {
+      "acc": 0.0,
+      "acc_stderr": 0.0
+    },
+    "math_num_theory": {
+      "acc": 0.0,
+      "acc_stderr": 0.0
+    },
+    "math_prealgebra": {
+      "acc": 0.0,
+      "acc_stderr": 0.0
+    },
+    "math_precalc": {
+      "acc": 0.0018315018315018315,
+      "acc_stderr": 0.001831501831501839
+    }
+  },
+  "versions": {
+    "math_algebra": 1,
+    "math_counting_and_prob": 1,
+    "math_geometry": 1,
+    "math_intermediate_algebra": 1,
+    "math_num_theory": 1,
+    "math_prealgebra": 1,
+    "math_precalc": 1
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=mistralai/Mistral-7B-v0.1,use_accelerate=True,tokenizer=mistralai/Mistral-7B-v0.1,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 4,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

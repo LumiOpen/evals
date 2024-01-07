@@ -1,0 +1,53 @@
+{
+  "results": {
+    "math_algebra": {
+      "acc": 0.0008424599831508003,
+      "acc_stderr": 0.0008424599831507944
+    },
+    "math_counting_and_prob": {
+      "acc": 0.0,
+      "acc_stderr": 0.0
+    },
+    "math_geometry": {
+      "acc": 0.0,
+      "acc_stderr": 0.0
+    },
+    "math_intermediate_algebra": {
+      "acc": 0.0,
+      "acc_stderr": 0.0
+    },
+    "math_num_theory": {
+      "acc": 0.0,
+      "acc_stderr": 0.0
+    },
+    "math_prealgebra": {
+      "acc": 0.001148105625717566,
+      "acc_stderr": 0.0011481056257175676
+    },
+    "math_precalc": {
+      "acc": 0.0,
+      "acc_stderr": 0.0
+    }
+  },
+  "versions": {
+    "math_algebra": 1,
+    "math_counting_and_prob": 1,
+    "math_geometry": 1,
+    "math_intermediate_algebra": 1,
+    "math_num_theory": 1,
+    "math_prealgebra": 1,
+    "math_precalc": 1
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=huggyllama/llama-30b,use_accelerate=True,tokenizer=huggyllama/llama-30b,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 4,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

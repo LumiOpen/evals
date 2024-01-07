@@ -1,0 +1,23 @@
+{
+  "results": {
+    "boolq": {
+      "acc": 0.8281345565749235,
+      "acc_stderr": 0.006598379269781496
+    }
+  },
+  "versions": {
+    "boolq": 1
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=huggyllama/llama-30b,use_accelerate=True,tokenizer=huggyllama/llama-30b,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

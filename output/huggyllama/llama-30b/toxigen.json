@@ -1,0 +1,25 @@
+{
+  "results": {
+    "toxigen": {
+      "acc": 0.4297872340425532,
+      "acc_stderr": 0.01615520330150947,
+      "acc_norm": 0.4319148936170213,
+      "acc_norm_stderr": 0.016164899004911828
+    }
+  },
+  "versions": {
+    "toxigen": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=huggyllama/llama-30b,use_accelerate=True,tokenizer=huggyllama/llama-30b,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
