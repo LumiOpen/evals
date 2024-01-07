@@ -53,10 +53,8 @@ fi
 echo
 
 if [ -f $DIR/arc_easy.json ] ; then
-    echo -n "       arc_easy (acc): "
+    echo -n "             arc_easy: "
     cat $DIR/arc_easy.json | jq .results.arc_easy.acc | awk '{print $1 * 100}'
-    echo -n "  arc_easy (acc_norm): "
-    cat $DIR/arc_easy.json | jq .results.arc_easy.acc_norm | awk '{print $1 * 100}'
 fi
 
 if [ -f $DIR/boolq.json ] ; then
@@ -72,16 +70,17 @@ fi
 if [ -f $DIR/openbookqa.json ] ; then
     echo -n "     openbookqa (acc): "
     cat $DIR/openbookqa.json | jq .results.openbookqa.acc | awk '{print $1 * 100}'
-    echo -n "openbookqa (acc_norm): "
-    cat $DIR/openbookqa.json | jq .results.openbookqa.acc_norm | awk '{print $1 * 100}'
 fi
 
 
 if [ -f $DIR/piqa.json ] ; then
     echo -n "           piqa (acc): "
     cat $DIR/piqa.json | jq .results.piqa.acc | awk '{print $1 * 100}'
-    echo -n "      piqa (acc_norm): "
-    cat $DIR/piqa.json | jq .results.piqa.acc_norm | awk '{print $1 * 100}'
+fi
+
+if [ -f $DIR/toxigen.json ] ; then
+    echo -n "        toxigen (acc): "
+    cat $DIR/toxigen.json | jq .results.toxigen.acc | awk '{print $1 * 100}'
 fi
 
 if [ -f $DIR/triviaqa.json ] ; then
@@ -89,7 +88,29 @@ if [ -f $DIR/triviaqa.json ] ; then
     cat $DIR/triviaqa.json | jq .results.triviaqa.em | awk '{print $1 * 100}'
 fi
 
-### add squad2, math and drop
+# squad2 reports many different results, we need to determine which ones to use
+if [ -f $DIR/squad2.json ] ; then
+    echo
+    echo -n "       squad2 (exact): "
+    cat $DIR/squad2.json | jq .results.squad2.exact
+    echo -n "          squad2 (f1): "
+    cat $DIR/squad2.json | jq .results.squad2.f1
+    echo -n "squad2 (HasAns_exact): "
+    cat $DIR/squad2.json | jq .results.squad2.HasAns_exact
+    echo -n "   squad2 (HasAns_f1): "
+    cat $DIR/squad2.json | jq .results.squad2.HasAns_f1
+    echo -n " squad2 (NoAns_exact): "
+    cat $DIR/squad2.json | jq .results.squad2.NoAns_exact
+    echo -n "    squad2 (NoAns_f1): "
+    cat $DIR/squad2.json | jq .results.squad2.NoAns_f1
+    echo -n "  squad2 (best_exact): "
+    cat $DIR/squad2.json | jq .results.squad2.best_exact
+    echo -n "     squad2 (best_f1): "
+    cat $DIR/squad2.json | jq .results.squad2.best_f1
+fi
+
+
+### add math and drop
 
 echo
 
@@ -115,7 +136,7 @@ fi
 echo 
 
 if [ -f $DIR/finbench_3shot.json ] ; then 
-    echo finbench:
+    echo finbench_3shot:
     cat $DIR/finbench_3shot.json | jq -r '.results | to_entries | .[] | [.key, .value.multiple_choice_grade] | @csv'
 fi
 

@@ -78,7 +78,7 @@ evals = {
     "winogrande": LMEvalHarness(["winogrande"], num_fewshot=5),
     "gsm8k": LMEvalHarness(["gsm8k"], num_fewshot=5), # llama 2 uses 8 shot in the paper.
 
-    # In addition to the above, thease are all used in the llama 2 paper
+    # In addition to the above, these are all used in the llama 2 paper
     "boolq": LMEvalHarness(["boolq"], num_fewshot=0),
     "math": LMEvalHarness([
             "math_prealgebra",
@@ -88,12 +88,14 @@ evals = {
             "math_geometry",
             "math_intermediate_algebra",
             "math_precalc"
-        ], num_fewshot=4),  # 4 shot from Llama 2 paper
+        ], num_fewshot=2),  # Llama 2 paper user 4shot, but that doesn't fit
+                            # in our context window
     "openbookqa": LMEvalHarness(["openbookqa"], num_fewshot=0),
     "piqa": LMEvalHarness(["piqa"], num_fewshot=0),
     "race": LMEvalHarness(["race"], num_fewshot=0),
     "squad2": LMEvalHarness(["squad2"], num_fewshot=0),
     "triviaqa": LMEvalHarness(["triviaqa"], num_fewshot=0),
+    "triviaqa_5shot": LMEvalHarness(["triviaqa_5shot"], num_fewshot=5),
     "toxigen": LMEvalHarness(["toxigen"], num_fewshot=0),
     # TODO: determine which versions of the following were used in other tests
     # Lamabda - several different versions here
