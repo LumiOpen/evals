@@ -1,0 +1,23 @@
+{
+  "results": {
+    "gsm8k": {
+      "acc": 0.5617892342683851,
+      "acc_stderr": 0.01366691591725507
+    }
+  },
+  "versions": {
+    "gsm8k": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=mistralai/Mixtral-8x7B-v0.1,use_accelerate=True,tokenizer=mistralai/Mixtral-8x7B-v0.1,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 5,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
