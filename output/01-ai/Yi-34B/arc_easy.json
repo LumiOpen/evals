@@ -1,0 +1,25 @@
+{
+  "results": {
+    "arc_easy": {
+      "acc": 0.8421717171717171,
+      "acc_stderr": 0.007481022051417313,
+      "acc_norm": 0.8438552188552189,
+      "acc_norm_stderr": 0.007448449883694369
+    }
+  },
+  "versions": {
+    "arc_easy": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=01-ai/Yi-34B,use_accelerate=True,tokenizer=01-ai/Yi-34B,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "results": {
+    "triviaqa": {
+      "em": 0.7261480160499332,
+      "em_stderr": 0.003329070518730234
+    }
+  },
+  "versions": {
+    "triviaqa": 3
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=01-ai/Yi-34B,use_accelerate=True,tokenizer=01-ai/Yi-34B,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
