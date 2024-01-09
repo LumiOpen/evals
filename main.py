@@ -79,8 +79,10 @@ evals = {
     "gsm8k": LMEvalHarness(["gsm8k"], num_fewshot=5), # llama 2 uses 8 shot in the paper.
 
     # In addition to the above, these are all used in the llama 2 paper
+
+    # Llama 2 paper uses 4shot MATH, but that doesn't fit in our context window
     "boolq": LMEvalHarness(["boolq"], num_fewshot=0),
-    "math": LMEvalHarness([
+    "math_0shot": LMEvalHarness([
             "math_prealgebra",
             "math_algebra",
             "math_num_theory",
@@ -88,8 +90,17 @@ evals = {
             "math_geometry",
             "math_intermediate_algebra",
             "math_precalc"
-        ], num_fewshot=2),  # Llama 2 paper user 4shot, but that doesn't fit
-                            # in our context window
+        ], num_fewshot=0),
+    "math_1shot": LMEvalHarness([
+            "math_prealgebra",
+            "math_algebra",
+            "math_num_theory",
+            "math_counting_and_prob",
+            "math_geometry",
+            "math_intermediate_algebra",
+            "math_precalc"
+        ], num_fewshot=1),
+    "boolq": LMEvalHarness(["boolq"], num_fewshot=0),
     "openbookqa": LMEvalHarness(["openbookqa"], num_fewshot=0),
     "piqa": LMEvalHarness(["piqa"], num_fewshot=0),
     "race": LMEvalHarness(["race"], num_fewshot=0),
