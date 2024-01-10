@@ -79,7 +79,6 @@ if [ -f $DIR/piqa.json ] ; then
 fi
 
 if [ -f $DIR/squad2.json ] ; then
-    echo
     echo -n "          squad2 (f1): "
     cat $DIR/squad2.json | jq .results.squad2.f1
 fi
