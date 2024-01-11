@@ -1,0 +1,23 @@
+{
+  "results": {
+    "nq_open": {
+      "em": 0.07534626038781163,
+      "em_stderr": 0.004393665350897735
+    }
+  },
+  "versions": {
+    "nq_open": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=meta-llama/Llama-2-7b-hf,use_accelerate=True,tokenizer=meta-llama/Llama-2-7b-hf,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

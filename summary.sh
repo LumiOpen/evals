@@ -78,9 +78,9 @@ if [ -f $DIR/piqa.json ] ; then
     cat $DIR/piqa.json | jq .results.piqa.acc | awk '{print $1 * 100}'
 fi
 
-if [ -f $DIR/toxigen.json ] ; then
-    echo -n "        toxigen (acc): "
-    cat $DIR/toxigen.json | jq .results.toxigen.acc | awk '{print $1 * 100}'
+if [ -f $DIR/squad2.json ] ; then
+    echo -n "          squad2 (f1): "
+    cat $DIR/squad2.json | jq .results.squad2.f1
 fi
 
 if [ -f $DIR/triviaqa.json ] ; then
@@ -88,25 +88,11 @@ if [ -f $DIR/triviaqa.json ] ; then
     cat $DIR/triviaqa.json | jq .results.triviaqa.em | awk '{print $1 * 100}'
 fi
 
-# squad2 reports many different results, we need to determine which ones to use
-if [ -f $DIR/squad2.json ] ; then
-    echo
-    echo -n "       squad2 (exact): "
-    cat $DIR/squad2.json | jq .results.squad2.exact
-    echo -n "          squad2 (f1): "
-    cat $DIR/squad2.json | jq .results.squad2.f1
-    echo -n "squad2 (HasAns_exact): "
-    cat $DIR/squad2.json | jq .results.squad2.HasAns_exact
-    echo -n "   squad2 (HasAns_f1): "
-    cat $DIR/squad2.json | jq .results.squad2.HasAns_f1
-    echo -n " squad2 (NoAns_exact): "
-    cat $DIR/squad2.json | jq .results.squad2.NoAns_exact
-    echo -n "    squad2 (NoAns_f1): "
-    cat $DIR/squad2.json | jq .results.squad2.NoAns_f1
-    echo -n "  squad2 (best_exact): "
-    cat $DIR/squad2.json | jq .results.squad2.best_exact
-    echo -n "     squad2 (best_f1): "
-    cat $DIR/squad2.json | jq .results.squad2.best_f1
+echo
+
+if [ -f $DIR/toxigen.json ] ; then
+    echo -n "        toxigen (acc): "
+    cat $DIR/toxigen.json | jq .results.toxigen.acc | awk '{print $1 * 100}'
 fi
 
 

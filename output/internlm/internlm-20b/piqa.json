@@ -1,0 +1,25 @@
+{
+  "results": {
+    "piqa": {
+      "acc": 0.8008705114254625,
+      "acc_stderr": 0.00931739189370684,
+      "acc_norm": 0.8057671381936888,
+      "acc_norm_stderr": 0.009230209366168267
+    }
+  },
+  "versions": {
+    "piqa": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=internlm/internlm-20b,use_accelerate=True,tokenizer=internlm/internlm-20b,dtype=bfloat16,trust_remote_code=True",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

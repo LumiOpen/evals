@@ -1,0 +1,23 @@
+{
+  "results": {
+    "nq_open": {
+      "em": 0.15401662049861495,
+      "em_stderr": 0.006008571994153045
+    }
+  },
+  "versions": {
+    "nq_open": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=internlm/internlm-20b,use_accelerate=True,tokenizer=internlm/internlm-20b,dtype=bfloat16,trust_remote_code=True",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

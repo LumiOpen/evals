@@ -1,0 +1,23 @@
+{
+  "results": {
+    "nq_open": {
+      "em": 0.2642659279778393,
+      "em_stderr": 0.007339856678575448
+    }
+  },
+  "versions": {
+    "nq_open": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=01-ai/Yi-34B,use_accelerate=True,tokenizer=01-ai/Yi-34B,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "results": {
+    "arc_challenge": {
+      "acc": 0.25341296928327645,
+      "acc_stderr": 0.012710896778378606,
+      "acc_norm": 0.27559726962457337,
+      "acc_norm_stderr": 0.01305716965576184
+    }
+  },
+  "versions": {
+    "arc_challenge": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=/scratch/project_462000319/general-tools/checkpoints/viking_7B_torch_step50112_bfloat16,use_accelerate=True,tokenizer=/scratch/project_462000319/general-tools/checkpoints/viking_7B_torch_step50112_bfloat16,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 25,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
