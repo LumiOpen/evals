@@ -1,0 +1,29 @@
+{
+  "results": {
+    "squad2": {
+      "exact": 18.99267245009686,
+      "f1": 26.55908746810231,
+      "HasAns_exact": 24.88191632928475,
+      "HasAns_f1": 40.03644492388313,
+      "NoAns_exact": 13.12026913372582,
+      "NoAns_f1": 13.12026913372582,
+      "best_exact": 50.07159100480081,
+      "best_f1": 50.08739449602141
+    }
+  },
+  "versions": {
+    "squad2": 1
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=meta-llama/Llama-2-7b-hf,use_accelerate=True,tokenizer=meta-llama/Llama-2-7b-hf,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
