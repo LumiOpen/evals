@@ -21,7 +21,7 @@ for model_lang in "${model_langs[@]}"; do
     size=$(python3 vocab_size.py $model 2>/dev/null)
     result=$(
 	python3 fertility.py $model flores200_dataset/dev/$lang* 2>/dev/null \
-	    | perl -pe 's/^fertility\s+//; s/ /\t/'
+	    | perl -pe 's/^fertility\s+//; s/ /\t/; s/[()]//g'
     )
     echo "$model"$'\t'"$size"$'\t'"$lang"$'\t'"$result"
 done
