@@ -1,0 +1,25 @@
+{
+  "results": {
+    "piqa": {
+      "acc": 0.7323177366702938,
+      "acc_stderr": 0.010330111189370422,
+      "acc_norm": 0.7372143634385201,
+      "acc_norm_stderr": 0.010269354068140776
+    }
+  },
+  "versions": {
+    "piqa": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=/scratch/project_462000086/viking-v2/converted_models/viking_v2_13B_iter_0120000_bfloat16,use_accelerate=True,tokenizer=/scratch/project_462000086/viking-v2/converted_models/viking_v2_13B_iter_0120000_bfloat16,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

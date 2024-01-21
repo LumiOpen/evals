@@ -1,0 +1,29 @@
+{
+  "results": {
+    "squad2": {
+      "exact": 10.932367556641118,
+      "f1": 15.673734934096236,
+      "HasAns_exact": 21.86234817813765,
+      "HasAns_f1": 31.358679971748415,
+      "NoAns_exact": 0.0336417157275021,
+      "NoAns_f1": 0.0336417157275021,
+      "best_exact": 50.08001347595385,
+      "best_f1": 50.08001347595385
+    }
+  },
+  "versions": {
+    "squad2": 1
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=/scratch/project_462000086/viking-v2/converted_models/viking_v2_13B_iter_0120000_bfloat16,use_accelerate=True,tokenizer=/scratch/project_462000086/viking-v2/converted_models/viking_v2_13B_iter_0120000_bfloat16,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
