@@ -33,6 +33,13 @@ You can now specify multiple evals with a single command:
 python main.py --model foo --tokenizer foo arc_challenge hellaswag mmlu truthfulqa_mc winogrande gsm8k finbench_3shot
 ```
 
+If you are running a larger model and need more GPUs, you can specify the --gre
+argument to override the default (2):
+
+```
+python main.py --model foo --gre gpu:mi250:4 eval1 eval2
+```
+
 ## Watching
 
 You can use the included watch.py to monitor squeue to catch when jobs
