@@ -44,6 +44,25 @@ class LMEvalHarness:
 
         return rendered_script
 
+class LMEvalHarness2:
+    def __init__(self, task_list, num_fewshot=0):
+        self.task_list = task_list
+        self.num_fewshot = num_fewshot
+
+    def generate_script(self, slurm_config, env_vars):
+        env_vars = copy.deepcopy(env_vars)
+        env_vars["TASK_LIST"] = ",".join(self.task_list)
+        env_vars["NUM_FEWSHOT"] = self.num_fewshot
+        config = {}
+        config["env_vars"] = env_vars
+        config["slurm_config"] = slurm_config
+
+        template_str = open('templates/lm_eval_harness2.sh', 'r').read()
+        template = Template(template_str)
+        rendered_script = template.render(**config)
+
+        return rendered_script
+
 class BigcodeEvaluationHarness:
     def __init__(self, task_list, n_samples=1):
         self.task_list = task_list
@@ -78,10 +97,18 @@ evals = {
     "winogrande": LMEvalHarness(["winogrande"], num_fewshot=5),
     "gsm8k": LMEvalHarness(["gsm8k"], num_fewshot=5), # llama 2 uses 8 shot in the paper.
 
+
+    # TODO new tests
+    "arc_challenge2": LMEvalHarness2(["arc_challenge"], num_fewshot=25),
+    "hellaswag2": LMEvalHarness2(["hellaswag"], num_fewshot=10),
+    "mmlu2": LMEvalHarness2(["hendrycksTest-*"], num_fewshot=5),
+    "truthfulqa_mc2": LMEvalHarness2(["truthfulqa_mc"], num_fewshot=0),
+    "winogrande2": LMEvalHarness2(["winogrande"], num_fewshot=5),
+    "gsm8k2": LMEvalHarness2(["gsm8k"], num_fewshot=5), # llama 2 uses 8 shot in the paper.
+
     # In addition to the above, these are all used in the llama 2 paper
 
     # Llama 2 paper uses 4shot MATH, but that doesn't fit in our context window
-    "boolq": LMEvalHarness(["boolq"], num_fewshot=0),
     "math_0shot": LMEvalHarness([
             "math_prealgebra",
             "math_algebra",
