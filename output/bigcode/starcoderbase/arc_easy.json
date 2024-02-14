@@ -1,0 +1,25 @@
+{
+  "results": {
+    "arc_easy": {
+      "acc": 0.5252525252525253,
+      "acc_stderr": 0.010246690042583852,
+      "acc_norm": 0.5075757575757576,
+      "acc_norm_stderr": 0.01025860579215332
+    }
+  },
+  "versions": {
+    "arc_easy": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=bigcode/starcoderbase,use_accelerate=True,tokenizer=bigcode/starcoderbase,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

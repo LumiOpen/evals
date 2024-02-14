@@ -1,0 +1,29 @@
+{
+  "results": {
+    "squad2": {
+      "exact": 11.698812431567422,
+      "f1": 19.229842489071967,
+      "HasAns_exact": 19.85492577597841,
+      "HasAns_f1": 34.93858297448586,
+      "NoAns_exact": 3.566021867115223,
+      "NoAns_f1": 3.566021867115223,
+      "best_exact": 50.07159100480081,
+      "best_f1": 50.07439849518515
+    }
+  },
+  "versions": {
+    "squad2": 1
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=bigcode/starcoderbase,use_accelerate=True,tokenizer=bigcode/starcoderbase,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

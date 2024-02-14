@@ -1,0 +1,25 @@
+{
+  "results": {
+    "hellaswag": {
+      "acc": 0.5275841465843457,
+      "acc_stderr": 0.004982182323923561,
+      "acc_norm": 0.711611232822147,
+      "acc_norm_stderr": 0.00452087067945705
+    }
+  },
+  "versions": {
+    "hellaswag": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=/scratch/project_462000319/jburdge/git/evals/models/MaLA-LM/mala-500,use_accelerate=True,tokenizer=/scratch/project_462000319/jburdge/git/evals/models/MaLA-LM/mala-500,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 10,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

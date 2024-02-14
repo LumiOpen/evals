@@ -1,0 +1,25 @@
+{
+  "results": {
+    "piqa": {
+      "acc": 0.6485310119695321,
+      "acc_stderr": 0.011139207691931193,
+      "acc_norm": 0.6545157780195865,
+      "acc_norm_stderr": 0.011094802893617757
+    }
+  },
+  "versions": {
+    "piqa": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=bigcode/starcoderbase,use_accelerate=True,tokenizer=bigcode/starcoderbase,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

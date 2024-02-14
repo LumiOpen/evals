@@ -1,0 +1,25 @@
+{
+  "results": {
+    "truthfulqa_mc": {
+      "mc1": 0.49571603427172584,
+      "mc1_stderr": 0.01750285857737128,
+      "mc2": 0.6468671424040561,
+      "mc2_stderr": 0.015498915659045204
+    }
+  },
+  "versions": {
+    "truthfulqa_mc": 1
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=mistralai/Mixtral-8x7B-Instruct-v0.1,use_accelerate=True,tokenizer=mistralai/Mixtral-8x7B-Instruct-v0.1,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
