@@ -165,7 +165,13 @@ def run_eval(eval_name, args):
         output_dir = "./output"
 
         # parse the model if we can do so
-        if "viking_v2" in args.model:
+        if "viking-v3" in args.model:
+            result = re.search(r"(viking_v3_\d+B)_iter_(\d+)_bfloat16", args.model)
+            if result:
+                model_name = result.group(1)
+                step = result.group(2)
+                output_dir = os.path.join(output_dir, f"{model_name}/{step}")
+        elif "viking_v2" in args.model:
             # viking_v2_7B_iter_0096000_bfloat16
             result = re.search(r"(viking_v2_\d+B)_iter_(\d+)_bfloat16", args.model)
             if result:
