@@ -171,6 +171,8 @@ def run_eval(eval_name, args):
                 model_name = result.group(1)
                 step = result.group(2)
                 output_dir = os.path.join(output_dir, f"{model_name}/{step}")
+            else:
+                output_dir = os.path.join(output_dir, "other", os.path.basename(args.model))
         elif "viking_v2" in args.model:
             # viking_v2_7B_iter_0096000_bfloat16
             result = re.search(r"(viking_v2_\d+B)_iter_(\d+)_bfloat16", args.model)
@@ -178,6 +180,8 @@ def run_eval(eval_name, args):
                 model_name = result.group(1)
                 step = result.group(2)
                 output_dir = os.path.join(output_dir, f"{model_name}/{step}")
+            else:
+                output_dir = os.path.join(output_dir, "other", os.path.basename(args.model))
         elif "/scratch/project_462000319/general-tools/checkpoints/" in args.model:
             # sample model is "33B_torch_step67824_bfloat16"
             model_info_search = re.search(r"([^/]+)_torch_(.+)_bfloat16", args.model)
@@ -187,6 +191,8 @@ def run_eval(eval_name, args):
                 if model_name == "33B":  # this labeling is ambihguous, fix it.
                     model_name = "poro-34b"
                 output_dir = os.path.join(output_dir, f"{model_name}/{step}")
+            else:
+                output_dir = os.path.join(output_dir, "other", os.path.basename(args.model))
         # match anything of the form "Org/Model" as used on huggingface.
         elif re.match(r"^[^/]+/[^/]+$", args.model):
             output_dir = os.path.join(output_dir, args.model)
