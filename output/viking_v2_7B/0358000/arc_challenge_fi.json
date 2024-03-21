@@ -1,0 +1,25 @@
+{
+  "results": {
+    "arc_challenge_fi": {
+      "acc": 0.31313993174061433,
+      "acc_stderr": 0.013552671543623513,
+      "acc_norm": 0.35238907849829354,
+      "acc_norm_stderr": 0.013960142600598677
+    }
+  },
+  "versions": {
+    "arc_challenge_fi": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=/scratch/project_462000319/general-tools/viking_v2_checkpoints/viking_v2_7B_iter_0358000_bfloat16/,use_accelerate=True,tokenizer=/scratch/project_462000319/general-tools/viking_v2_checkpoints/viking_v2_7B_iter_0358000_bfloat16/,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 25,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
