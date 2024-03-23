@@ -1,6 +1,4 @@
-from jinja2 import Template
 import argparse
-import copy
 import datetime
 import json
 import os
@@ -8,200 +6,53 @@ import re
 import subprocess
 import tempfile
 
-class FinBench:
-    def __init__(self, num_fewshot=0):
-        self.num_fewshot = num_fewshot
+from evals.evals import evals
 
-    def generate_script(self, slurm_config, env_vars):
-        env_vars = copy.deepcopy(env_vars)
-        env_vars["NUM_FEWSHOT"] = self.num_fewshot
-        config = {}
-        config["env_vars"] = env_vars
-        config["slurm_config"] = slurm_config
+def parse_model(model):
+    # default usually applies to uniquely named finetune tests or failures to parse.
+    model_name = "other"
+    step = os.path.basename(model_name)
 
-        template_str = open('templates/finbench.sh', 'r').read()
-        template = Template(template_str)
-        rendered_script = template.render(**config)
-
-        return rendered_script
-
-class LMEvalHarness:
-    def __init__(self, task_list, num_fewshot=0):
-        self.task_list = task_list
-        self.num_fewshot = num_fewshot
-
-    def generate_script(self, slurm_config, env_vars):
-        env_vars = copy.deepcopy(env_vars)
-        env_vars["TASK_LIST"] = ",".join(self.task_list)
-        env_vars["NUM_FEWSHOT"] = self.num_fewshot
-        config = {}
-        config["env_vars"] = env_vars
-        config["slurm_config"] = slurm_config
-
-        template_str = open('templates/lm_eval_harness.sh', 'r').read()
-        template = Template(template_str)
-        rendered_script = template.render(**config)
-
-        return rendered_script
-
-class LMEvalHarness2:
-    def __init__(self, task_list, num_fewshot=0):
-        self.task_list = task_list
-        self.num_fewshot = num_fewshot
-
-    def generate_script(self, slurm_config, env_vars):
-        env_vars = copy.deepcopy(env_vars)
-        env_vars["TASK_LIST"] = ",".join(self.task_list)
-        env_vars["NUM_FEWSHOT"] = self.num_fewshot
-        config = {}
-        config["env_vars"] = env_vars
-        config["slurm_config"] = slurm_config
-
-        template_str = open('templates/lm_eval_harness2.sh', 'r').read()
-        template = Template(template_str)
-        rendered_script = template.render(**config)
-
-        return rendered_script
-
-class BigcodeEvaluationHarness:
-    def __init__(self, task_list, n_samples=1):
-        self.task_list = task_list
-        self.n_samples = n_samples
-
-    def generate_script(self, slurm_config, env_vars):
-        env_vars = copy.deepcopy(env_vars)
-        env_vars["TASK_LIST"] = ",".join(self.task_list)
-        env_vars["N_SAMPLES"] = self.n_samples
-        config = {}
-        config["env_vars"] = env_vars
-        config["slurm_config"] = slurm_config
-
-        template_str = open('templates/bigcode_eval_harness.sh', 'r').read()
-        template = Template(template_str)
-        rendered_script = template.render(**config)
-
-        return rendered_script
-
-evals = {
-    "finbench_0shot": FinBench(num_fewshot=0),
-    "finbench_1shot": FinBench(num_fewshot=1),
-    "finbench_2shot": FinBench(num_fewshot=2),
-    "finbench_3shot": FinBench(num_fewshot=3),
-
-    # These are all configured as in the HF leaderboard for easy
-    # comparison.
-    "arc_challenge": LMEvalHarness(["arc_challenge"], num_fewshot=25),
-    "hellaswag": LMEvalHarness(["hellaswag"], num_fewshot=10),
-    "mmlu": LMEvalHarness(["hendrycksTest-*"], num_fewshot=5),
-    "truthfulqa_mc": LMEvalHarness(["truthfulqa_mc"], num_fewshot=0),
-    "winogrande": LMEvalHarness(["winogrande"], num_fewshot=5),
-    "gsm8k": LMEvalHarness(["gsm8k"], num_fewshot=5), # llama 2 uses 8 shot in the paper.
-
-
-    # TODO new tests
-    "arc_challenge2": LMEvalHarness2(["arc_challenge"], num_fewshot=25),
-    "hellaswag2": LMEvalHarness2(["hellaswag"], num_fewshot=10),
-    "mmlu2": LMEvalHarness2(["hendrycksTest-*"], num_fewshot=5),
-    "truthfulqa_mc2": LMEvalHarness2(["truthfulqa_mc"], num_fewshot=0),
-    "winogrande2": LMEvalHarness2(["winogrande"], num_fewshot=5),
-    "gsm8k2": LMEvalHarness2(["gsm8k"], num_fewshot=5), # llama 2 uses 8 shot in the paper.
-
-    # In addition to the above, these are all used in the llama 2 paper
-
-    # Llama 2 paper uses 4shot MATH, but that doesn't fit in our context window
-    "math_0shot": LMEvalHarness([
-            "math_prealgebra",
-            "math_algebra",
-            "math_num_theory",
-            "math_counting_and_prob",
-            "math_geometry",
-            "math_intermediate_algebra",
-            "math_precalc"
-        ], num_fewshot=0),
-    "math_1shot": LMEvalHarness([
-            "math_prealgebra",
-            "math_algebra",
-            "math_num_theory",
-            "math_counting_and_prob",
-            "math_geometry",
-            "math_intermediate_algebra",
-            "math_precalc"
-        ], num_fewshot=1),
-    "boolq": LMEvalHarness(["boolq"], num_fewshot=0),
-    "openbookqa": LMEvalHarness(["openbookqa"], num_fewshot=0),
-    "piqa": LMEvalHarness(["piqa"], num_fewshot=0),
-    "race": LMEvalHarness(["race"], num_fewshot=0),
-    "squad2": LMEvalHarness(["squad2"], num_fewshot=0),
-    "triviaqa": LMEvalHarness(["triviaqa"], num_fewshot=0),
-    "triviaqa_5shot": LMEvalHarness(["triviaqa_5shot"], num_fewshot=5),
-    "toxigen": LMEvalHarness(["toxigen"], num_fewshot=0),
-    # TODO: determine which versions of the following were used in other tests
-    # Lamabda - several different versions here
-    # do we want to use the incomplete bigbench ported to lm-eval-harness?
-
-    "arc_easy": LMEvalHarness(["arc_easy"], num_fewshot=0),
-    "drop": LMEvalHarness(["drop"], num_fewshot=3),
-    "nq_open": LMEvalHarness(["nq_open"], num_fewshot=0),
-
-    # TODO probably specify different max durations here for longer running
-    # tests. I'm not even sure we can complete a 100 sample test.
-    "humaneval_pass@1": BigcodeEvaluationHarness(["humaneval"], n_samples=1),
-    "humaneval_pass@10": BigcodeEvaluationHarness(["humaneval"], n_samples=10),
-    "humaneval_pass@100": BigcodeEvaluationHarness(["humaneval"], n_samples=100),
-    "mbpp_pass@1": BigcodeEvaluationHarness(["mbpp"], n_samples=1),
-    "mbpp_pass@10": BigcodeEvaluationHarness(["mbpp"], n_samples=10),
-}
+    # parse the model if we can do so
+    if "viking-v3" in model:
+        result = re.search(r"(viking_v3_\d+B)_iter_(\d+)_bfloat16", model)
+        if result:
+            model_name = result.group(1)
+            step = result.group(2)
+    elif "viking_v2" in model:
+        # viking_v2_7B_iter_0096000_bfloat16
+        result = re.search(r"(viking_v2_\d+B)_iter_(\d+)_bfloat16", model)
+        if result:
+            model_name = result.group(1)
+            step = result.group(2)
+    elif "/scratch/project_462000319/general-tools/checkpoints/" in model:
+        # sample model is "33B_torch_step67824_bfloat16"
+        model_info_search = re.search(r"([^/]+)_torch_(.+)_bfloat16", model)
+        if model_info_search:
+            model_name = model_info_search.group(1)
+            step = model_info_search.group(2)
+            if model_name == "33B":  # this labeling is ambihguous, fix it.
+                model_name = "poro-34b"
+    # match anything of the form "Org/Model" as used on huggingface.
+    else:
+        result = re.search(r"^([^/]+)/([^/]+)$", model)
+        if result:
+            # this is actually org / model but ...
+            model_name = result.group(1)
+            step = result.group(2)
+    
+    return model_name, step
 
 
 def run_eval(eval_name, args):
-    if not os.path.exists(args.work_dir):
-        os.makedirs(args.work_dir)
-    if not os.path.exists(args.log_dir):
-        os.makedirs(args.log_dir)
-
     output_dir = args.output_dir
     if not output_dir:
-        # determine output dir
-        output_dir = "./output"
+        model, step = parse_model(args.model)
+        output_dir = os.path.join("./output", model, step)
 
-        # parse the model if we can do so
-        if "viking-v3" in args.model:
-            result = re.search(r"(viking_v3_\d+B)_iter_(\d+)_bfloat16", args.model)
-            if result:
-                model_name = result.group(1)
-                step = result.group(2)
-                output_dir = os.path.join(output_dir, f"{model_name}/{step}")
-            else:
-                output_dir = os.path.join(output_dir, "other", os.path.basename(args.model))
-        elif "viking_v2" in args.model:
-            # viking_v2_7B_iter_0096000_bfloat16
-            result = re.search(r"(viking_v2_\d+B)_iter_(\d+)_bfloat16", args.model)
-            if result:
-                model_name = result.group(1)
-                step = result.group(2)
-                output_dir = os.path.join(output_dir, f"{model_name}/{step}")
-            else:
-                output_dir = os.path.join(output_dir, "other", os.path.basename(args.model))
-        elif "/scratch/project_462000319/general-tools/checkpoints/" in args.model:
-            # sample model is "33B_torch_step67824_bfloat16"
-            model_info_search = re.search(r"([^/]+)_torch_(.+)_bfloat16", args.model)
-            if model_info_search:
-                model_name = model_info_search.group(1)
-                step = model_info_search.group(2)
-                if model_name == "33B":  # this labeling is ambihguous, fix it.
-                    model_name = "poro-34b"
-                output_dir = os.path.join(output_dir, f"{model_name}/{step}")
-            else:
-                output_dir = os.path.join(output_dir, "other", os.path.basename(args.model))
-        # match anything of the form "Org/Model" as used on huggingface.
-        elif re.match(r"^[^/]+/[^/]+$", args.model):
-            output_dir = os.path.join(output_dir, args.model)
-        else:
-            output_dir = os.path.join(output_dir, "other", os.path.basename(args.model))
-
-
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    #
+    # generate slurm script
+    #
 
     output_file = os.path.join(os.path.abspath(output_dir), f"{eval_name}.json")
     if os.path.exists(output_file) and not args.force:
@@ -226,24 +77,31 @@ def run_eval(eval_name, args):
         'log_dir': os.path.abspath(args.log_dir),
     }
 
-
     # eval is a reserved keyword, so we'll use tester instead.
     tester = evals[eval_name]
-    script = tester.generate_script(slurm_config, env_vars)
+    harness = tester.harness
+    script = harness.generate_script(slurm_config, env_vars)
 
-    script_name = args.script_name
-    if script_name is not None:
-        with open(script_name, 'w') as f:
-            f.write(script)
-    else:
-        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp:
-            temp.write(script)
-            script_name = temp.name
+    with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp:
+        temp.write(script)
+        script_name = temp.name
+
     if args.dryrun:
         print(f"Wrote script to {script_name}")
         print(f"Dryrun mode enabled, not executing.  To run:\n    sbatch {script_name}")
         return
 
+
+    #
+    # slurm job execution
+    #
+
+    if not os.path.exists(args.work_dir):
+        os.makedirs(args.work_dir)
+    if not os.path.exists(args.log_dir):
+        os.makedirs(args.log_dir)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
 
     process = subprocess.run(['sbatch', script_name], capture_output=True, text=True)
     # parse the jobid from stdout
@@ -292,7 +150,6 @@ def main():
 
     # other options
     parser.add_argument('--comment', type=str, default=None, help="Comment to add to the command history")
-    parser.add_argument('--script_name', type=str, default=None, help="Filename to use when writing script.")
     parser.add_argument('--dryrun', action='store_true', default=False, help="Dry run mode, do not execute sbatch script")
     parser.add_argument('--force', action='store_true', default=False, help="Run even if output file already exists")
 
