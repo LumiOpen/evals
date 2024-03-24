@@ -14,7 +14,7 @@ class EvalConfig(ABC):
                 json_data = json.load(f)
             if self.result_type == "custom":
                 return self.get_results_custom(json_data)
-            return json_data["results"][self.name][result_type]
+            return json_data["results"][self.name][self.result_type]
 
     def get_results_acc_norm(self, json_data):
         return json_data["results"][self.name]["acc_norm"]
@@ -23,7 +23,8 @@ class EvalConfig(ABC):
         return json_data["results"][self.name]["acc"]
 
     def get_results_custom(self, json_data):
-        raise NotImplementedError("custom results must be implemented in a subclass")
+        return None
+        #raise NotImplementedError("custom results must be implemented in a subclass")
 
 class LMEvalConfig(EvalConfig):
     def __init__(self, name, result_type, num_fewshot=0):
@@ -31,6 +32,15 @@ class LMEvalConfig(EvalConfig):
         # rather than being instantiated in every single eval.
         super().__init__(name, result_type, LMEvalHarness([name], num_fewshot=num_fewshot))
         self.num_fewshot = num_fewshot
+
+    def get_results_custom(self, json_data):
+        if self.name == "hendrycksTest-*":
+            # avg the acc
+            scores = [json_data["results"][task]["acc"] for task in json_data["results"]]
+            return sum(scores) / len(scores)
+        return None
+
+
 
 # These configs can be used directly for simple tests, or subclassed for more complex ones.
 class LMEvalConfig2(EvalConfig):
@@ -42,6 +52,59 @@ class FinBenchConfig(EvalConfig):
     def __init__(self, name, result_type, num_fewshot=0):
         super().__init__(name, result_type, FinBench(num_fewshot=num_fewshot))
         self.num_fewshot = num_fewshot
+
+    def get_results_custom(self, json_data):
+        math_scores = [
+            json_data["results"]["bigbench_1_digit_addition"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_1_digit_division"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_1_digit_multiplication"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_1_digit_subtraction"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_2_digit_addition"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_2_digit_division"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_2_digit_multiplication"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_2_digit_subtraction"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_3_digit_addition"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_3_digit_division"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_3_digit_multiplication"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_3_digit_subtraction"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_4_digit_addition"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_4_digit_division"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_4_digit_multiplication"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_4_digit_subtraction"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_5_digit_addition"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_5_digit_division"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_5_digit_multiplication"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_5_digit_subtraction"]["multiple_choice_grade"],
+        ]
+        math_avg = sum(math_scores) / len(math_scores)
+        final_scores = [
+            json_data["results"]["bigbench_analogies"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_emotions"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_empirical_judgments"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_general_knowledge"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_harmless"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_helpful"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_honest"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_intent_recognition"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_misconceptions"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_one_sentence"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_one_sentence_no_prompt"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_other"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_paraphrase"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_sentence_ambiguity"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_similarities_abstraction"]["multiple_choice_grade"],
+            json_data["results"]["bigbench_two_sentences"]["multiple_choice_grade"], 
+            sum(math_scores) / len(math_scores),
+        ]
+        return sum(final_scores) / len(final_scores)
+
+class BigcodeConfig(EvalConfig):
+    def __init__(self, name, n_samples=1):
+        super().__init__(name, "custom", BigcodeEvaluationHarness([name], n_samples=n_samples))
+        self.n_samples = n_samples
+
+    def get_results_custom(self, json_data):
+        return json_data[self.name]["pass@{}".format(self.n_samples)]
 
 
 evals = {
@@ -76,6 +139,7 @@ evals = {
 
     "arc_easy": LMEvalConfig("arc_easy", "acc", num_fewshot=0),
     "boolq": LMEvalConfig("boolq", "acc", num_fewshot=0),
+    "drop": LMEvalConfig("drop", "f1", num_fewshot=3),
     "nq_open": LMEvalConfig("nq_open", "em", num_fewshot=0),
     "openbookqa": LMEvalConfig("openbookqa", "acc", num_fewshot=0),
     "piqa": LMEvalConfig("piqa", "acc", num_fewshot=0),
@@ -83,12 +147,12 @@ evals = {
     "triviaqa": LMEvalConfig("triviaqa", "em", num_fewshot=0),
     "triviaqa_5shot": LMEvalConfig("triviaqa_5shot", "em", num_fewshot=5),
 
-    "toxigen": LMEvalConfig("toxigen", "em", num_fewshot=0),
+    "toxigen": LMEvalConfig("toxigen", "acc", num_fewshot=0),
 
-    "humaneval_pass@1": BigcodeEvaluationHarness(["humaneval"], n_samples=1),
-    "humaneval_pass@10": BigcodeEvaluationHarness(["humaneval"], n_samples=10),
-    "mbpp_pass@1": BigcodeEvaluationHarness(["mbpp"], n_samples=1),
-    "mbpp_pass@10": BigcodeEvaluationHarness(["mbpp"], n_samples=10),
+    "humaneval_pass@1": BigcodeConfig("humaneval", n_samples=1),
+    "humaneval_pass@10": BigcodeConfig("humaneval", n_samples=10),
+    "mbpp_pass@1": BigcodeConfig("mbpp", n_samples=1),
+    "mbpp_pass@10": BigcodeConfig("mbpp", n_samples=10),
 
     # TODO tests on new harness
     "arc_challenge2": LMEvalConfig2("arc_challenge", "acc_norm", num_fewshot=25),
