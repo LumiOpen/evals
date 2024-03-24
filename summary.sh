@@ -103,6 +103,12 @@ if [ -f $DIR/finbench_3shot.json ] ; then
 else
     echo na
 fi
+echo -n " arc_challenge_fi: "
+if [ -f $DIR/arc_challenge_fi.json ] ; then 
+    cat $DIR/arc_challenge_fi.json | jq '.results.arc_challenge_fi.acc_norm' | awk '{print $1 * 100}'
+else
+    echo na
+fi
 
 
 echo
