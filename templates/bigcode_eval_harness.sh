@@ -97,6 +97,7 @@ python main.py \
     --precision bf16 \
     --allow_code_execution \
     --max_memory_per_gpu=auto \
+    --max_length_generation=2048 \
     --n_samples $N_SAMPLES \
     --metric_output_path $OUTPUT_FILE \
     $( [ "$TRUST_REMOTE_CODE" = "True" ] && echo "--trust_remote_code" )
