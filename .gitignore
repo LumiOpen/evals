@@ -4,3 +4,4 @@ logs
 workdir
 command_history.jsonl
 .*.sw?
+__pycache__
