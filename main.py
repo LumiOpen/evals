@@ -11,7 +11,7 @@ from evals.evals import evals
 def parse_model(model):
     # default usually applies to uniquely named finetune tests or failures to parse.
     model_name = "other"
-    step = os.path.basename(model_name)
+    step = os.path.basename(model)
 
     # parse the model if we can do so
     if "viking-v3" in model:
@@ -40,7 +40,7 @@ def parse_model(model):
             # this is actually org / model but ...
             model_name = result.group(1)
             step = result.group(2)
-    
+
     return model_name, step
 
 
