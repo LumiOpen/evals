@@ -1,0 +1,23 @@
+{
+  "results": {
+    "boolq": {
+      "acc": 0.6409785932721712,
+      "acc_stderr": 0.008390241754319917
+    }
+  },
+  "versions": {
+    "boolq": 1
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=AI-Sweden-Models/gpt-sw3-6.7b-v2,use_accelerate=True,tokenizer=AI-Sweden-Models/gpt-sw3-6.7b-v2,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
