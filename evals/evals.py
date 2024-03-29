@@ -113,7 +113,10 @@ evals = {
     "finbench_2shot": FinBenchConfig("finbench", "custom", num_fewshot=2),
     "finbench_3shot": FinBenchConfig("finbench", "custom", num_fewshot=3),
 
+    "arc_challenge_da": LMEvalConfig("arc_challenge_da", "acc_norm", num_fewshot=25),
     "arc_challenge_fi": LMEvalConfig("arc_challenge_fi", "acc_norm", num_fewshot=25),
+    "arc_challenge_nb": LMEvalConfig("arc_challenge_nb", "acc_norm", num_fewshot=25),
+    "arc_challenge_sv": LMEvalConfig("arc_challenge_sv", "acc_norm", num_fewshot=25),
 
     # These are all configured as in the HF leaderboard for easy
     # comparison.

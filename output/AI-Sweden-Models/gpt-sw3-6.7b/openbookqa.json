@@ -1,0 +1,25 @@
+{
+  "results": {
+    "openbookqa": {
+      "acc": 0.236,
+      "acc_stderr": 0.019008699622084728,
+      "acc_norm": 0.36,
+      "acc_norm_stderr": 0.021487751089720526
+    }
+  },
+  "versions": {
+    "openbookqa": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=AI-Sweden-Models/gpt-sw3-6.7b,use_accelerate=True,tokenizer=AI-Sweden-Models/gpt-sw3-6.7b,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
