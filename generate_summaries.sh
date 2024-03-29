@@ -36,8 +36,9 @@ done
 # FIN-bench detailed Poro results table
 o=latex_tables/poro-finbench-progression.tex
 
-data=$(ls summaries/finbench/poro-34b_step*.tsv \
-	   | perl -pe 's/(.*step(\d+))/$2:$1/' | sort -n | tr '\n' ' ')
+data=$(ls summaries/finbench/poro-34b_step{25632,48672,70128,95328,119232,143712,166752,190656,214560,238418}.tsv \
+	   | perl -pe 's/(.*step(\d+))/$2:$1/' \
+	   | sort -n | tr '\n' ' ')
 
 python3 make_latex_table.py \
 	--caption 'Poro progression on FIN-bench' \
@@ -51,6 +52,6 @@ python3 make_latex_table.py \
 # FIN-bench Poro progression
 python3 plot_poro_progression.py \
 	--output figures/poro-finbench-progression.pdf \
-	summaries/finbench/poro-34b_step* \
+	summaries/finbench/poro-34b_step{25632,48672,70128,95328,119232,143712,166752,190656,214560,238418}.tsv \
 	summaries/finbench/TurkuNLP_gpt3-finnish-8B.tsv \
 	summaries/finbench/TurkuNLP_bloom-finnish-176b.tsv
