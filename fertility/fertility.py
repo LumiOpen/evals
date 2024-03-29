@@ -4,6 +4,7 @@ import sys
 import os
 import regex
 
+from statistics import mean
 from argparse import ArgumentParser
 
 from transformers import AutoTokenizer
@@ -26,6 +27,7 @@ def main(argv):
 
     tokenizer = AutoTokenizer.from_pretrained(args.tokenizer)
 
+    fertilities = []
     total_token_count, total_word_count = 0, 0
     for fn in args.text:
         with open(fn) as f:
@@ -44,11 +46,13 @@ def main(argv):
         print(f'{os.path.basename(fn)} {token_count}/{word_count} '
               f'({token_count/word_count:.2f})')
 
+        fertilities.append(token_count/word_count)
         total_token_count += token_count
         total_word_count += word_count
 
     print(f'TOTAL {total_token_count}/{total_word_count} '
           f'({total_token_count/total_word_count:.2f})')
+    print(f'AVERAGE {mean(fertilities):.2f}')
 
 
 if __name__ == '__main__':
