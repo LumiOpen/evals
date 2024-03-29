@@ -35,6 +35,16 @@ def argparser():
         help='format values as percentages'
     )
     ap.add_argument(
+        '--name-map',
+        metavar='NAME:LABEL,...',
+        help='map names to labels'
+    )
+    ap.add_argument(
+        '--order',
+        metavar='NAME,NAME,...',
+        help='name order'
+    )
+    ap.add_argument(
         'data',
         nargs='+',
         metavar='NAME:FILE',
@@ -62,9 +72,15 @@ def format_value(value, args):
 def main(argv):
     args = argparser().parse_args(argv[1:])
 
+    if args.name_map:
+        name_map = dict(kv.split(':') for kv in args.name_map.split(','))
+    else:
+        name_map = {}
+
     names, data = [], {}
     for d in args.data:
         name, fn = d.split(':')
+        name = name_map.get(name, name)
 
         names.append(name)
         assert name not in data, f'duplicate name {name}'
@@ -74,6 +90,11 @@ def main(argv):
     for n in names[1:]:
         assert data[n].keys() == data[names[0]].keys()
     labels = list(data[names[0]].keys())
+
+    # reorder if --order provided
+    if args.order:
+        assert set(names) == set(args.order.split(','))
+        names = args.order.split(',')
 
     env_name = 'table' if not args.wide else 'table*'
 
