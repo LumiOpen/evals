@@ -51,7 +51,7 @@ for data, name in ((original_data, 'original'), (sampled_data, 'sampled')):
         pctdistance=0.75,
         labeldistance=None,
         wedgeprops=dict(width=0.5),
-        textprops={'fontsize': 28}
+        textprops={'fontsize': 34}
     )
 
     # Add a legend
