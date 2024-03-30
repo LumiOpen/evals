@@ -17,15 +17,38 @@ order = ["NorthLM", "Llama-33B", "MPT-30B", "Falcon-40B", "FinGPT", "StarCoder"]
 groups = ["Finnish", "English", "Code", "Average"]
 
 # Create a new figure with a specific size (width, height)
-plt.figure(figsize=(12, 4))  # Increase the width to 12
+plt.figure(figsize=(12, 3))
+
+plt.rc('font', size=10)    # defaults
 
 # Get the colormap
 #colors = sns.color_palette("hls", len(order))
-colors = sns.color_palette("Paired")
+#colors = sns.color_palette("muted", len(order))
+#colors = sns.color_palette("Paired")
+colors = sns.color_palette("RdYlBu", len(order))
 
-# Swap colors around a bit
-colors[1], colors[4] = colors[4], colors[1]
-colors[1], colors[2] = colors[2], colors[1]
+# Tweak colors
+colors[0], colors[-1] = colors[-1], colors[0]
+colors[3], colors[-1] = colors[-1], colors[3]
+colors[5] = (0.5, 0.5, 0.7)
+
+#colors[1:4] = [(0.516078431372549, 0.8108573625528642, 0.7273510188389081), (0.31578623606305267, 0.7152633602460592, 0.5384390618992695), (0.17139561707035755, 0.5849288735101883, 0.3263514033064206)]
+
+# #colors = sns.color_palette("BuGn", len(order))
+# colors = sns.color_palette("Set2")
+# colors[0], colors[2] = colors[2], colors[0]
+# colors[5], colors[2] = colors[2], colors[5]
+# colors[4] = 'lightblue'
+# print(colors)
+
+colors = [
+    (0.5529411764705883, 0.6274509803921569, 0.796078431372549),
+    (0xbb/256, 0xde/256, 0x94/256),
+    (0.4, 0.7607843137254902, 0.6470588235294118),
+    (0.9882352941176471, 0.5529411764705883, 0.3843137254901961),
+    'lightblue',
+    (0.9058823529411765, 0.5411764705882353, 0.7647058823529411),
+]
 
 # Set the width of the bars and the positions of the bars on the x-axis
 barWidth = 0.75
