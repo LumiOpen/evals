@@ -1,0 +1,25 @@
+{
+  "results": {
+    "hellaswag": {
+      "acc": 0.5085640310695081,
+      "acc_stderr": 0.004989049430391294,
+      "acc_norm": 0.6875124477195778,
+      "acc_norm_stderr": 0.0046256009167749915
+    }
+  },
+  "versions": {
+    "hellaswag": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=AI-Sweden-Models/gpt-sw3-20b,use_accelerate=True,tokenizer=AI-Sweden-Models/gpt-sw3-20b,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 10,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

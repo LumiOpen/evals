@@ -1,0 +1,25 @@
+{
+  "results": {
+    "arc_easy": {
+      "acc": 0.6877104377104377,
+      "acc_stderr": 0.009509325983631451,
+      "acc_norm": 0.67003367003367,
+      "acc_norm_stderr": 0.009648311574241042
+    }
+  },
+  "versions": {
+    "arc_easy": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=AI-Sweden-Models/gpt-sw3-20b,use_accelerate=True,tokenizer=AI-Sweden-Models/gpt-sw3-20b,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

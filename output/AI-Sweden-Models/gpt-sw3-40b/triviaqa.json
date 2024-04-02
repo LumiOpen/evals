@@ -1,0 +1,23 @@
+{
+  "results": {
+    "triviaqa": {
+      "em": 0.05639768167632635,
+      "em_stderr": 0.0017221762551415075
+    }
+  },
+  "versions": {
+    "triviaqa": 3
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=AI-Sweden-Models/gpt-sw3-40b,use_accelerate=True,tokenizer=AI-Sweden-Models/gpt-sw3-40b,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "results": {
+    "squad2": {
+      "exact": 50.307420197085825,
+      "f1": 50.41803340720954,
+      "HasAns_exact": 2.074898785425101,
+      "HasAns_f1": 2.296442416295361,
+      "NoAns_exact": 98.40201850294365,
+      "NoAns_f1": 98.40201850294365,
+      "best_exact": 50.34953255285101,
+      "best_f1": 50.46014576297475
+    }
+  },
+  "versions": {
+    "squad2": 1
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=AI-Sweden-Models/gpt-sw3-40b,use_accelerate=True,tokenizer=AI-Sweden-Models/gpt-sw3-40b,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
