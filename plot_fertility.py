@@ -4,15 +4,15 @@ import seaborn as sns
 
 # data
 fertility = {
-    "NorthLM": [1.38, 1.06, 1.00, 1.15],
-    "Llama-33B": [3.14, 1.26, 1.35, 1.92],
-    "MPT-30B": [2.85, 1.08, 1.18, 1.70],
-    "Falcon-40B": [2.95, 1.09, 1.26, 1.77],
+    "Poro 34B": [1.38, 1.06, 1.00, 1.15],
+    "Llama 33B": [3.14, 1.26, 1.35, 1.92],
+    "MPT 30B": [2.85, 1.08, 1.18, 1.70],
+    "Falcon 40B": [2.95, 1.09, 1.26, 1.77],
     "FinGPT": [1.23, 1.49, 1.89, 1.53],
     "StarCoder": [3.19, 1.29, 1.15, 1.88],
 }
 
-order = ["NorthLM", "Llama-33B", "MPT-30B", "Falcon-40B", "FinGPT", "StarCoder"]
+order = ["Poro 34B", "Llama 33B", "MPT 30B", "Falcon 40B", "FinGPT", "StarCoder"]
 
 groups = ["Finnish", "English", "Code", "Average"]
 
@@ -21,33 +21,25 @@ plt.figure(figsize=(12, 3))
 
 plt.rc('font', size=10)    # defaults
 
-# Get the colormap
-#colors = sns.color_palette("hls", len(order))
-#colors = sns.color_palette("muted", len(order))
-#colors = sns.color_palette("Paired")
-colors = sns.color_palette("RdYlBu", len(order))
-
-# Tweak colors
-colors[0], colors[-1] = colors[-1], colors[0]
-colors[3], colors[-1] = colors[-1], colors[3]
-colors[5] = (0.5, 0.5, 0.7)
-
-#colors[1:4] = [(0.516078431372549, 0.8108573625528642, 0.7273510188389081), (0.31578623606305267, 0.7152633602460592, 0.5384390618992695), (0.17139561707035755, 0.5849288735101883, 0.3263514033064206)]
-
-# #colors = sns.color_palette("BuGn", len(order))
-# colors = sns.color_palette("Set2")
-# colors[0], colors[2] = colors[2], colors[0]
-# colors[5], colors[2] = colors[2], colors[5]
-# colors[4] = 'lightblue'
-# print(colors)
+# colors = [
+#     (0x49/256, 0x9f/256, 0xf8/256),
+#     (0x81/256, 0xd5/256, 0x53/256),
+#     (0x54/256, 0xaf/256, 0x32/256),
+#     (0x24/256, 0x8f/256, 0x16/256),
+#     #(0x35/256, 0x79/256, 0x76/256),
+#     (0x33/256, 0x74/256, 0xb5/256),
+#     #(0xef/256, 0xbd/256, 0x40/256),
+#     (0xd4/256, 0x70/256, 0xa4/256),
+# ]
 
 colors = [
-    (0.5529411764705883, 0.6274509803921569, 0.796078431372549),
-    (0xbb/256, 0xde/256, 0x94/256),
-    (0.4, 0.7607843137254902, 0.6470588235294118),
-    (0.9882352941176471, 0.5529411764705883, 0.3843137254901961),
-    'lightblue',
-    (0.9058823529411765, 0.5411764705882353, 0.7647058823529411),
+    #(0x49/256, 0x9f/256, 0xf8/256),
+    (0x59/256, 0xaf/256, 0xff/256),
+    (0x91/256, 0xe5/256, 0x63/256),
+    (0x64/256, 0xbf/256, 0x42/256),
+    (0x24/256, 0x8f/256, 0x16/256),
+    (0x38/256, 0x84/256, 0xc5/256),
+    (0xd4/256, 0x70/256, 0xa4/256),
 ]
 
 # Set the width of the bars and the positions of the bars on the x-axis
@@ -57,7 +49,7 @@ spacing = 0.7  # Add a spacing variable
 
 # ???
 rs = []
-rs.append(np.arange(len(fertility["NorthLM"])) * (groupWidth + spacing))
+rs.append(np.arange(len(fertility["Poro 34B"])) * (groupWidth + spacing))
 for i in range(len(order)-1):
     rs.append([x + barWidth for x in rs[-1]])
 
