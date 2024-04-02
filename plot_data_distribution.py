@@ -35,10 +35,10 @@ for data, name in ((original_data, 'original'), (sampled_data, 'sampled')):
 
     #colors = sns.color_palette("Set2")
     colors = [
-        (0xbb/256, 0xde/256, 0x94/256, 1.0),
-        (0xae/256, 0xcd/256, 0xe0/256, 1.0),
-        (0xed/256, 0x9f/256, 0x9b/256, 1.0),
-        (0xf3/256, 0xc2/256, 0x7c/256, 1.0),
+        (0x91/256, 0xe5/256, 0x63/256),
+        (0x59/256, 0xaf/256, 0xff/256),
+        (0xd4/256, 0x70/256, 0xa4/256),
+        (0xf0/256, 0xa8/256, 0x57/256),
     ]
 
     # Create the donut plot
