@@ -1,0 +1,25 @@
+{
+  "results": {
+    "arc_challenge_fi": {
+      "acc": 0.22098976109215018,
+      "acc_stderr": 0.012124929206818258,
+      "acc_norm": 0.24061433447098976,
+      "acc_norm_stderr": 0.012491468532390583
+    }
+  },
+  "versions": {
+    "arc_challenge_fi": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=norallm/normistral-7b-warm,use_accelerate=True,tokenizer=norallm/normistral-7b-warm,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 25,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

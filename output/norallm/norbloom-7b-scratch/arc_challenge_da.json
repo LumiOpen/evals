@@ -1,0 +1,25 @@
+{
+  "results": {
+    "arc_challenge_da": {
+      "acc": 0.2619453924914676,
+      "acc_stderr": 0.012849054826858117,
+      "acc_norm": 0.28924914675767915,
+      "acc_norm_stderr": 0.013250012579393443
+    }
+  },
+  "versions": {
+    "arc_challenge_da": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=norallm/norbloom-7b-scratch,use_accelerate=True,tokenizer=norallm/norbloom-7b-scratch,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 25,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

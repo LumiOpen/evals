@@ -1,0 +1,25 @@
+{
+  "results": {
+    "piqa": {
+      "acc": 0.7110990206746464,
+      "acc_stderr": 0.010575111841364901,
+      "acc_norm": 0.7268770402611534,
+      "acc_norm_stderr": 0.010395730264453264
+    }
+  },
+  "versions": {
+    "piqa": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=norallm/normistral-7b-warm,use_accelerate=True,tokenizer=norallm/normistral-7b-warm,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
