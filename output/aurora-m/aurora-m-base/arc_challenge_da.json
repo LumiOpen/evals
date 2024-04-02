@@ -1,0 +1,25 @@
+{
+  "results": {
+    "arc_challenge_da": {
+      "acc": 0.30887372013651876,
+      "acc_stderr": 0.013501770929344003,
+      "acc_norm": 0.35665529010238906,
+      "acc_norm_stderr": 0.013998056902620189
+    }
+  },
+  "versions": {
+    "arc_challenge_da": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=aurora-m/aurora-m-base,use_accelerate=True,tokenizer=aurora-m/aurora-m-base,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 25,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

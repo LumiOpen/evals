@@ -1,0 +1,198 @@
+{
+  "results": {
+    "bigbench_1_digit_addition": {
+      "multiple_choice_grade": 0.75,
+      "multiple_choice_grade_stderr": 0.04351941398892446
+    },
+    "bigbench_1_digit_division": {
+      "multiple_choice_grade": 1.0,
+      "multiple_choice_grade_stderr": 0.0
+    },
+    "bigbench_1_digit_multiplication": {
+      "multiple_choice_grade": 0.72,
+      "multiple_choice_grade_stderr": 0.04512608598542128
+    },
+    "bigbench_1_digit_subtraction": {
+      "multiple_choice_grade": 0.86,
+      "multiple_choice_grade_stderr": 0.03487350880197771
+    },
+    "bigbench_2_digit_addition": {
+      "multiple_choice_grade": 0.33,
+      "multiple_choice_grade_stderr": 0.047258156262526045
+    },
+    "bigbench_2_digit_division": {
+      "multiple_choice_grade": 0.8,
+      "multiple_choice_grade_stderr": 0.04020151261036843
+    },
+    "bigbench_2_digit_multiplication": {
+      "multiple_choice_grade": 0.23,
+      "multiple_choice_grade_stderr": 0.04229525846816505
+    },
+    "bigbench_2_digit_subtraction": {
+      "multiple_choice_grade": 0.67,
+      "multiple_choice_grade_stderr": 0.04725815626252607
+    },
+    "bigbench_3_digit_addition": {
+      "multiple_choice_grade": 0.48,
+      "multiple_choice_grade_stderr": 0.050211673156867795
+    },
+    "bigbench_3_digit_division": {
+      "multiple_choice_grade": 0.5,
+      "multiple_choice_grade_stderr": 0.050251890762960605
+    },
+    "bigbench_3_digit_multiplication": {
+      "multiple_choice_grade": 0.21,
+      "multiple_choice_grade_stderr": 0.040936018074033256
+    },
+    "bigbench_3_digit_subtraction": {
+      "multiple_choice_grade": 0.68,
+      "multiple_choice_grade_stderr": 0.04688261722621505
+    },
+    "bigbench_4_digit_addition": {
+      "multiple_choice_grade": 0.45,
+      "multiple_choice_grade_stderr": 0.05
+    },
+    "bigbench_4_digit_division": {
+      "multiple_choice_grade": 0.42,
+      "multiple_choice_grade_stderr": 0.049604496374885836
+    },
+    "bigbench_4_digit_multiplication": {
+      "multiple_choice_grade": 0.25,
+      "multiple_choice_grade_stderr": 0.04351941398892446
+    },
+    "bigbench_4_digit_subtraction": {
+      "multiple_choice_grade": 0.62,
+      "multiple_choice_grade_stderr": 0.048783173121456316
+    },
+    "bigbench_5_digit_addition": {
+      "multiple_choice_grade": 0.51,
+      "multiple_choice_grade_stderr": 0.05024183937956912
+    },
+    "bigbench_5_digit_division": {
+      "multiple_choice_grade": 0.29,
+      "multiple_choice_grade_stderr": 0.045604802157206845
+    },
+    "bigbench_5_digit_multiplication": {
+      "multiple_choice_grade": 0.24,
+      "multiple_choice_grade_stderr": 0.042923469599092816
+    },
+    "bigbench_5_digit_subtraction": {
+      "multiple_choice_grade": 0.68,
+      "multiple_choice_grade_stderr": 0.046882617226215034
+    },
+    "bigbench_analogies": {
+      "multiple_choice_grade": 0.8076923076923077,
+      "multiple_choice_grade_stderr": 0.03469975803447376
+    },
+    "bigbench_emotions": {
+      "multiple_choice_grade": 0.56875,
+      "multiple_choice_grade_stderr": 0.03927594984018919
+    },
+    "bigbench_empirical_judgments": {
+      "multiple_choice_grade": 0.42424242424242425,
+      "multiple_choice_grade_stderr": 0.04992451339684325
+    },
+    "bigbench_general_knowledge": {
+      "multiple_choice_grade": 0.6571428571428571,
+      "multiple_choice_grade_stderr": 0.05714285714285713
+    },
+    "bigbench_harmless": {
+      "multiple_choice_grade": 0.4482758620689655,
+      "multiple_choice_grade_stderr": 0.06587130109529918
+    },
+    "bigbench_helpful": {
+      "multiple_choice_grade": 0.3898305084745763,
+      "multiple_choice_grade_stderr": 0.06403968100905791
+    },
+    "bigbench_honest": {
+      "multiple_choice_grade": 0.4067796610169492,
+      "multiple_choice_grade_stderr": 0.06450206738198198
+    },
+    "bigbench_intent_recognition": {
+      "multiple_choice_grade": 0.819364161849711,
+      "multiple_choice_grade_stderr": 0.014635292876381748
+    },
+    "bigbench_misconceptions": {
+      "multiple_choice_grade": 0.5223880597014925,
+      "multiple_choice_grade_stderr": 0.043312014931941
+    },
+    "bigbench_one_sentence": {
+      "multiple_choice_grade": 0.5098039215686274,
+      "multiple_choice_grade_stderr": 0.07069708383262727
+    },
+    "bigbench_one_sentence_no_prompt": {
+      "multiple_choice_grade": 0.9215686274509803,
+      "multiple_choice_grade_stderr": 0.03802101848953983
+    },
+    "bigbench_other": {
+      "multiple_choice_grade": 0.5813953488372093,
+      "multiple_choice_grade_stderr": 0.07612251984976479
+    },
+    "bigbench_paraphrase": {
+      "multiple_choice_grade": 0.515,
+      "multiple_choice_grade_stderr": 0.03542810683297719
+    },
+    "bigbench_sentence_ambiguity": {
+      "multiple_choice_grade": 0.5,
+      "multiple_choice_grade_stderr": 0.06509445549041193
+    },
+    "bigbench_similarities_abstraction": {
+      "multiple_choice_grade": 0.6842105263157895,
+      "multiple_choice_grade_stderr": 0.05367388961676614
+    },
+    "bigbench_two_sentences": {
+      "multiple_choice_grade": 0.6470588235294118,
+      "multiple_choice_grade_stderr": 0.0675830899592709
+    }
+  },
+  "versions": {
+    "bigbench_1_digit_addition": 0,
+    "bigbench_1_digit_division": 0,
+    "bigbench_1_digit_multiplication": 0,
+    "bigbench_1_digit_subtraction": 0,
+    "bigbench_2_digit_addition": 0,
+    "bigbench_2_digit_division": 0,
+    "bigbench_2_digit_multiplication": 0,
+    "bigbench_2_digit_subtraction": 0,
+    "bigbench_3_digit_addition": 0,
+    "bigbench_3_digit_division": 0,
+    "bigbench_3_digit_multiplication": 0,
+    "bigbench_3_digit_subtraction": 0,
+    "bigbench_4_digit_addition": 0,
+    "bigbench_4_digit_division": 0,
+    "bigbench_4_digit_multiplication": 0,
+    "bigbench_4_digit_subtraction": 0,
+    "bigbench_5_digit_addition": 0,
+    "bigbench_5_digit_division": 0,
+    "bigbench_5_digit_multiplication": 0,
+    "bigbench_5_digit_subtraction": 0,
+    "bigbench_analogies": 0,
+    "bigbench_emotions": 0,
+    "bigbench_empirical_judgments": 0,
+    "bigbench_general_knowledge": 0,
+    "bigbench_harmless": 0,
+    "bigbench_helpful": 0,
+    "bigbench_honest": 0,
+    "bigbench_intent_recognition": 0,
+    "bigbench_misconceptions": 0,
+    "bigbench_one_sentence": 0,
+    "bigbench_one_sentence_no_prompt": 0,
+    "bigbench_other": 0,
+    "bigbench_paraphrase": 0,
+    "bigbench_sentence_ambiguity": 0,
+    "bigbench_similarities_abstraction": 0,
+    "bigbench_two_sentences": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=aurora-m/aurora-m-base,use_accelerate=True,tokenizer=aurora-m/aurora-m-base,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 3,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

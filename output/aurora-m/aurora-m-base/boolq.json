@@ -1,0 +1,23 @@
+{
+  "results": {
+    "boolq": {
+      "acc": 0.6443425076452599,
+      "acc_stderr": 0.008372726639977393
+    }
+  },
+  "versions": {
+    "boolq": 1
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=aurora-m/aurora-m-base,use_accelerate=True,tokenizer=aurora-m/aurora-m-base,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
