@@ -102,13 +102,13 @@ def main(argv):
     ax.yaxis.set_major_formatter(PercentFormatter(xmax=1.0, decimals=0))
     #ax.set_ylim([0.45, 0.65])    # TODO make arg
     
-    plt.plot(x, y, marker='o', color='darkblue', linestyle='solid', label="Poro")
+    plt.plot(x, y, marker='o', color='darkblue', linestyle='solid', label="Poro 34B")
 
     for label, y in other_results.items():
         style = STYLE_MAP[label]
         plt.axhline(y=y, label=label, **style)
 
-    plt.xlabel('Poro % trained')
+    plt.xlabel('Poro 34B % trained')
     plt.ylabel('FIN-bench performance')
 
     plt.legend()
