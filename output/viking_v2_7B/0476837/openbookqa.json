@@ -1,0 +1,25 @@
+{
+  "results": {
+    "openbookqa": {
+      "acc": 0.25,
+      "acc_stderr": 0.019384310743640384,
+      "acc_norm": 0.398,
+      "acc_norm_stderr": 0.021912377885779974
+    }
+  },
+  "versions": {
+    "openbookqa": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=/scratch/project_462000319/general-tools/viking_v2_checkpoints/viking_v2_7B_iter_0476837_bfloat16/,use_accelerate=True,tokenizer=/scratch/project_462000319/general-tools/viking_v2_checkpoints/viking_v2_7B_iter_0476837_bfloat16/,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}

@@ -1,0 +1,25 @@
+{
+  "results": {
+    "lambada_openai": {
+      "ppl": 6.5177498274376235,
+      "ppl_stderr": 0.16138839482091155,
+      "acc": 0.5643314574034543,
+      "acc_stderr": 0.006908079137757328
+    }
+  },
+  "versions": {
+    "lambada_openai": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=/scratch/project_462000319/general-tools/viking_v2_checkpoints/viking_v2_7B_iter_0476837_bfloat16/,use_accelerate=True,tokenizer=/scratch/project_462000319/general-tools/viking_v2_checkpoints/viking_v2_7B_iter_0476837_bfloat16/,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 0,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
