@@ -113,6 +113,28 @@ fi
 
 echo
 
+echo -n " arc_challenge_da: "
+if [ -f $DIR/arc_challenge_da.json ] ; then 
+    cat $DIR/arc_challenge_da.json | jq '.results.arc_challenge_da.acc_norm' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+echo -n " arc_challenge_nb: "
+if [ -f $DIR/arc_challenge_nb.json ] ; then 
+    cat $DIR/arc_challenge_nb.json | jq '.results.arc_challenge_nb.acc_norm' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+echo -n " arc_challenge_sv: "
+if [ -f $DIR/arc_challenge_sv.json ] ; then 
+    cat $DIR/arc_challenge_sv.json | jq '.results.arc_challenge_sv.acc_norm' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo
+
+
 echo -n " humaneval_pass@1: "
 if [ -f $DIR/humaneval_pass@1.json ] ; then
     cat $DIR/humaneval_pass@1.json | jq '.humaneval."pass@1"' | awk '{print $1 * 100 }'
