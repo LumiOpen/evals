@@ -83,11 +83,13 @@ cd lm-evaluation-harness2
 git checkout 5b0b8a56dcaf3df0c1d3787d2d9ca8a491241b66  
 
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.2
+pip install --upgrade transformers accelerate
 pip install --no-cache-dir -r requirements.txt
 pip install jinja2 --upgrade  # missing requirement?
 
 pip install sentencepiece --upgrade  # required for 01-ai/Yi
 pip install protobuf --upgrade       # required for Llama 2 tokenizer
+pip install tiktoken --upgrade
 
 pip install -e .
 pip install -e .[math]
@@ -104,7 +106,7 @@ echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available()
 
 lm_eval \
     --model hf \
-    --model_args pretrained=$MODEL,parallelize=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE \
+    --model_args pretrained=$MODEL,parallelize=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE,max_memory_per_gpu=60GB \
     --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
     --output_path $OUTPUT_FILE

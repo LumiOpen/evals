@@ -82,7 +82,11 @@ git clone https://github.com/bigcode-project/bigcode-evaluation-harness
 cd bigcode-evaluation-harness
 
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.2
+pip install transformers==4.37.2 accelerate
 pip install --no-cache-dir -r requirements.txt
+
+pip install sentencepiece --upgrade
+pip install tiktoken --upgrade
 
 # NOTE: humaneval uses a unix socket which fails with AF_UNIX path too long if
 # TMPDIR is longer than 108 characters, so revert TMPDIR here.

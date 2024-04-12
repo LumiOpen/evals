@@ -81,7 +81,11 @@ git clone -b finnish https://github.com/jonabur/lm-evaluation-harness.git
 cd lm-evaluation-harness
 
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.2
+pip install transformers==4.37.2 accelerate
 pip install --no-cache-dir -r requirements.txt
+
+pip install sentencepiece --upgrade
+pip install tiktoken --upgrade
 
 echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"
 
