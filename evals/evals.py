@@ -118,11 +118,24 @@ evals = {
     "arc_challenge_nb": LMEvalConfig("arc_challenge_nb", "acc_norm", num_fewshot=25),
     "arc_challenge_sv": LMEvalConfig("arc_challenge_sv", "acc_norm", num_fewshot=25),
 
+    "belebele_eng": LMEvalConfig2("belebele_eng_Latn", "acc,none", num_fewshot=5),
+    "belebele_dan": LMEvalConfig2("belebele_dan_Latn", "acc,none", num_fewshot=5),
+    "belebele_fin": LMEvalConfig2("belebele_fin_Latn", "acc,none", num_fewshot=5),
+    "belebele_isl": LMEvalConfig2("belebele_isl_Latn", "acc,none", num_fewshot=5),
+    "belebele_nno": LMEvalConfig2("belebele_nno_Latn", "acc,none", num_fewshot=5),
+    "belebele_nob": LMEvalConfig2("belebele_nob_Latn", "acc,none", num_fewshot=5),
+    "belebele_swe": LMEvalConfig2("belebele_swe_Latn", "acc,none", num_fewshot=5),
+
     # These are all configured as in the HF leaderboard for easy
     # comparison.
     "arc_challenge": LMEvalConfig("arc_challenge", "acc_norm", num_fewshot=25),
     "hellaswag": LMEvalConfig("hellaswag", "acc_norm", num_fewshot=10),
     "mmlu": LMEvalConfig("hendrycksTest-*", "custom", num_fewshot=5),
+    "mmlu_0shot": LMEvalConfig("hendrycksTest-*", "custom", num_fewshot=0),
+    "mmlu_1shot": LMEvalConfig("hendrycksTest-*", "custom", num_fewshot=1),
+    "mmlu_2shot": LMEvalConfig("hendrycksTest-*", "custom", num_fewshot=2),
+    "mmlu_3shot": LMEvalConfig("hendrycksTest-*", "custom", num_fewshot=3),
+    "mmlu_4shot": LMEvalConfig("hendrycksTest-*", "custom", num_fewshot=4),
     "truthfulqa_mc": LMEvalConfig("truthfulqa_mc", "mc2", num_fewshot=0),
     "winogrande": LMEvalConfig("winogrande", "acc", num_fewshot=5),
     "gsm8k": LMEvalConfig("gsm8k", "acc", num_fewshot=5), # llama 2 uses 8 shot in the paper.
@@ -160,8 +173,11 @@ evals = {
     # TODO tests on new harness
     "arc_challenge2": LMEvalConfig2("arc_challenge", "acc_norm", num_fewshot=25),
     "hellaswag2": LMEvalConfig2("hellaswag", "acc_norm", num_fewshot=10),
-    "mmlu2": LMEvalConfig2("hendrycksTest-*", "custom", num_fewshot=5),
+    "mmlu2": LMEvalConfig2("mmlu", "custom", num_fewshot=5),
     "truthfulqa_mc2": LMEvalConfig2("truthfulqa_mc", "mc2", num_fewshot=0),
     "winogrande2": LMEvalConfig2("winogrande", "acc", num_fewshot=5),
     "gsm8k2": LMEvalConfig2("gsm8k", "acc", num_fewshot=5), # llama 2 uses 8 shot in the paper.
+
+    "lambada_openai":  LMEvalConfig("lambada_openai", "acc", num_fewshot=0),
+    "lambada_standard":  LMEvalConfig("lambada_standard", "acc", num_fewshot=0),
 }
