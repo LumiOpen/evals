@@ -14,8 +14,8 @@ def parse_model(model):
     step = os.path.basename(model)
 
     # parse the model if we can do so
-    if "viking-v3" in model:
-        result = re.search(r"(viking_v3_\d+B)_iter_(\d+)_bfloat16", model)
+    if "viking_v3" in model:
+        result = re.search(r"(viking_v3_\d+B.*)_iter_(\d+)_bfloat16", model)
         if result:
             model_name = result.group(1)
             step = result.group(2)
