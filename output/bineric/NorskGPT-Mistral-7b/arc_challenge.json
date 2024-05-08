@@ -1,0 +1,25 @@
+{
+  "results": {
+    "arc_challenge": {
+      "acc": 0.5981228668941979,
+      "acc_stderr": 0.014327268614578276,
+      "acc_norm": 0.636518771331058,
+      "acc_norm_stderr": 0.014056207319068283
+    }
+  },
+  "versions": {
+    "arc_challenge": 0
+  },
+  "config": {
+    "model": "hf-causal-experimental",
+    "model_args": "pretrained=bineric/NorskGPT-Mistral-7b,use_accelerate=True,tokenizer=bineric/NorskGPT-Mistral-7b,dtype=bfloat16,trust_remote_code=False",
+    "num_fewshot": 25,
+    "batch_size": null,
+    "batch_sizes": [],
+    "device": "cuda:0",
+    "no_cache": true,
+    "limit": null,
+    "bootstrap_iters": 100000,
+    "description_dict": {}
+  }
+}
