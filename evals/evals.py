@@ -161,30 +161,39 @@ evals = {
     #    ], num_fewshot=1),
 
     "arc_easy": LMEvalConfig("arc_easy", "acc", num_fewshot=0),
-    "boolq": LMEvalConfig("boolq", "acc", num_fewshot=0),
+    "arc_easy2": LMEvalConfig2("arc_easy", "acc,none", num_fewshot=0),
+    "boolq": LMEvalConfig("boolq", "acc,none", num_fewshot=0),
+    "boolq2": LMEvalConfig2("boolq", "acc,none", num_fewshot=0),
     "drop": LMEvalConfig("drop", "f1", num_fewshot=3),
+    "drop2": LMEvalConfig2("drop", "f1,none", num_fewshot=3),
     "nq_open": LMEvalConfig("nq_open", "em", num_fewshot=0),
+    "nq_open2": LMEvalConfig2("nq_open", "em,none", num_fewshot=0),
     "openbookqa": LMEvalConfig("openbookqa", "acc", num_fewshot=0),
+    "openbookqa2": LMEvalConfig2("openbookqa", "acc,none", num_fewshot=0),
     "piqa": LMEvalConfig("piqa", "acc", num_fewshot=0),
+    "piqa2": LMEvalConfig2("piqa", "acc,none", num_fewshot=0),
     "squad2": LMEvalConfig("squad2", "f1", num_fewshot=0),
+    "squad22": LMEvalConfig2("squad2", "f1,none", num_fewshot=0),
     "triviaqa": LMEvalConfig("triviaqa", "em", num_fewshot=0),
-    "triviaqa_5shot": LMEvalConfig("triviaqa_5shot", "em", num_fewshot=5),
+    "triviaqa2": LMEvalConfig2("triviaqa", "em,none", num_fewshot=0),
 
     "toxigen": LMEvalConfig("toxigen", "acc", num_fewshot=0),
+    "toxigen2": LMEvalConfig2("toxigen", "acc", num_fewshot=0),
 
     "humaneval_pass@1": BigcodeConfig("humaneval", n_samples=1),
     "humaneval_pass@10": BigcodeConfig("humaneval", n_samples=10),
     "mbpp_pass@1": BigcodeConfig("mbpp", n_samples=1),
     "mbpp_pass@10": BigcodeConfig("mbpp", n_samples=10),
 
-    # TODO tests on new harness
-    "arc_challenge2": LMEvalConfig2("arc_challenge", "acc_norm", num_fewshot=25),
-    "hellaswag2": LMEvalConfig2("hellaswag", "acc_norm", num_fewshot=10),
+    "arc_challenge2": LMEvalConfig2("arc_challenge", "acc_norm,none", num_fewshot=25),
+    "hellaswag2": LMEvalConfig2("hellaswag", "acc_norm,none", num_fewshot=10),
     "mmlu2": LMEvalConfig2("mmlu", "custom", num_fewshot=5),
-    "truthfulqa_mc2": LMEvalConfig2("truthfulqa_mc", "mc2", num_fewshot=0),
-    "winogrande2": LMEvalConfig2("winogrande", "acc", num_fewshot=5),
-    "gsm8k2": LMEvalConfig2("gsm8k", "acc", num_fewshot=5), # llama 2 uses 8 shot in the paper.
+    "truthfulqa_mc2": LMEvalConfig2("truthfulqa", "mc2,none", num_fewshot=0),
+    "winogrande2": LMEvalConfig2("winogrande", "acc,none", num_fewshot=5),
+    "gsm8k2": LMEvalConfig2("gsm8k", "acc,none", num_fewshot=5), # llama 2 uses 8 shot in the paper.
 
     "lambada_openai":  LMEvalConfig("lambada_openai", "acc", num_fewshot=0),
+    "lambada_openai2":  LMEvalConfig2("lambada_openai", "acc,none", num_fewshot=0),
     "lambada_standard":  LMEvalConfig("lambada_standard", "acc", num_fewshot=0),
+    "lambada_standard2":  LMEvalConfig2("lambada_standard", "acc,none", num_fewshot=0),
 }
