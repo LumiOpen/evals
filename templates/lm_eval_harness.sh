@@ -81,6 +81,9 @@ git clone https://github.com/jonabur/lm-evaluation-harness.git
 cd lm-evaluation-harness
 
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.2
+# transformer versions past this point break, presumably due to the old lm eval
+# harness version. the solution is to upgrade to a modern version.
+# but this also means some newer models are not supported.
 pip install transformers==4.37.2 accelerate
 pip install --no-cache-dir -r requirements.txt
 
