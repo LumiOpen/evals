@@ -10,11 +10,18 @@ from evals.evals import evals
 
 def parse_model(model):
     # default usually applies to uniquely named finetune tests or failures to parse.
-    model_name = "other"
+    if model[-1] == '/':
+        model = model[:-1]
     step = os.path.basename(model)
+    model_name = "other"
 
     # parse the model if we can do so
-    if "viking_v3" in model:
+    if "europa" in model:
+        result = re.search("r(europa_71B)_iter_(\d+)_bfloat16", model)
+        if result:
+            model_name = result.group(1)
+            step = result.group(2)
+    elif "viking_v3" in model:
         result = re.search(r"(viking_v3_\d+B.*)_iter_(\d+)_bfloat16", model)
         if result:
             model_name = result.group(1)
@@ -33,13 +40,19 @@ def parse_model(model):
             step = model_info_search.group(2)
             if model_name == "33B":  # this labeling is ambihguous, fix it.
                 model_name = "poro-34b"
+    elif "_iter_" in model:
+        result = re.search(r"(.*)_iter_(\d+)")
+        if result:
+            model_name = result.group(1)
+            step = result.group(2)
     # match anything of the form "Org/Model" as used on huggingface.
     else:
-        result = re.search(r"^([^/]+)/([^/]+)$", model)
+        result = re.search(r"^([^/]+)/([^/]+)/?$", model)
         if result:
             # this is actually org / model but ...
             model_name = result.group(1)
             step = result.group(2)
+            
 
     return model_name, step
 
@@ -142,7 +155,7 @@ def main():
     parser.add_argument('--trust_remote_code', action='store_true', default=False, help="load model with trust_remote_code=True")
 
     # slurm config
-    parser.add_argument('--project', type=str, default="project_462000319", help="Project for sbatch job")
+    parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
     parser.add_argument('--gres', type=str, default="gpu:mi250:2", help="gres required for sbatch job")
     parser.add_argument('--time', type=str, default="48:00:00", help="Time limit for sbatch job")
