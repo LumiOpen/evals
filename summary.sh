@@ -10,44 +10,69 @@ DIR=$1
 
 echo -n "    arc_challenge: "
 if [ -f $DIR/arc_challenge.json ] ; then 
-    cat $DIR/arc_challenge.json | jq '.results.arc_challenge.acc_norm' | awk '{print $1 * 100}'
+    cat $DIR/arc_challenge.json | jq '.results.arc_challenge.acc_norm // .results.arc_challenge["acc_norm,none"]' | awk '{print $1 * 100}'
 else
     echo na
+fi
+if [ -f $DIR/arc_challenge2.json ] ; then 
+    echo -n "   arc_challenge2: "
+    cat $DIR/arc_challenge2.json | jq '.results.arc_challenge.acc_norm // .results.arc_challenge["acc_norm,none"]' | awk '{print $1 * 100}'
 fi
 
 echo -n "        hellaswag: "
 if [ -f $DIR/hellaswag.json ] ; then
-    cat $DIR/hellaswag.json | jq .results.hellaswag.acc_norm | awk '{print $1 * 100}'
+    cat $DIR/hellaswag.json | jq '.results.hellaswag.acc_norm // .results.hellaswag["acc_norm,none"]' | awk '{print $1 * 100}'
 else
     echo na
+fi
+if [ -f $DIR/hellaswag2.json ] ; then
+    echo -n "       hellaswag2: "
+    cat $DIR/hellaswag2.json | jq '.results.hellaswag.acc_norm // .results.hellaswag["acc_norm,none"]' | awk '{print $1 * 100}'
 fi
 
 echo -n "             mmlu: "
 if [ -f $DIR/mmlu.json ] ; then
     cat $DIR/mmlu.json | jq '.results | .[] | .acc' | awk '{ sum += $1; n++ } END { if (n > 0) print sum / n * 100; }' 
+    #cat $DIR/mmlu.json | jq '.results.mmlu."acc,none"' | awk '{print $1 * 100}'
 else
     echo na
+fi
+if [ -f $DIR/mmlu2.json ] ; then
+    echo -n "            mmlu2: "
+    cat $DIR/mmlu2.json | jq '.results.mmlu."acc,none"' | awk '{print $1 * 100}'
 fi
 
 echo -n "    truthfulqa_mc: "
 if [ -f $DIR/truthfulqa_mc.json ] ; then 
-    cat $DIR/truthfulqa_mc.json | jq .results.truthfulqa_mc.mc2 | awk '{print $1 * 100}'
+    cat $DIR/truthfulqa_mc.json | jq '.results.truthfulqa_mc.mc2 // .results.truthfulqa_mc2["acc,none"]' | awk '{print $1 * 100}'
 else
     echo na
+fi
+if [ -f $DIR/truthfulqa_mc2.json ] ; then 
+    echo -n "   truthfulqa_mc2: "
+    cat $DIR/truthfulqa_mc.json | jq '.results.truthfulqa_mc.mc2 // .results.truthfulqa_mc2["acc,none"]' | awk '{print $1 * 100}'
 fi
 
 echo -n "       winogrande: "
 if [ -f $DIR/winogrande.json ] ; then
-   cat $DIR/winogrande.json | jq .results.winogrande.acc | awk '{print $1 * 100}'
+   cat $DIR/winogrande.json | jq '.results.winogrande.acc // .results.winogrande["acc,none"]' | awk '{print $1 * 100}'
 else
     echo na
+fi
+if [ -f $DIR/winogrande2.json ] ; then
+    echo -n "      winogrande2: "
+   cat $DIR/winogrande2.json | jq '.results.winogrande.acc // .results.winogrande["acc,none"]' | awk '{print $1 * 100}'
 fi
 
 echo -n "            gsm8k: "
 if [ -f $DIR/gsm8k.json ] ; then
-    cat $DIR/gsm8k.json | jq .results.gsm8k.acc | awk '{print $1 * 100}'
+    cat $DIR/gsm8k.json | jq '.results.gsm8k.acc // .results.gsm8k["exact_match,flexible-extract"]' | awk '{print $1 * 100}'
 else
     echo na
+fi
+if [ -f $DIR/gsm8k2.json ] ; then
+    echo -n "           gsm8k2: "
+    cat $DIR/gsm8k2.json | jq '.results.gsm8k.acc // .results.gsm8k["exact_match,flexible-extract"]' | awk '{print $1 * 100}'
 fi
 
 echo
@@ -128,6 +153,51 @@ fi
 echo -n " arc_challenge_sv: "
 if [ -f $DIR/arc_challenge_sv.json ] ; then 
     cat $DIR/arc_challenge_sv.json | jq '.results.arc_challenge_sv.acc_norm' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo
+
+echo -n " arc_challenge_de: "
+if [ -f $DIR/arc_challenge_de.json ] ; then
+    cat $DIR/arc_challenge_de.json | jq '.results.arc_challenge_de.acc_norm' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+echo -n " arc_challenge_el: "
+if [ -f $DIR/arc_challenge_el.json ] ; then
+    cat $DIR/arc_challenge_el.json | jq '.results.arc_challenge_el.acc_norm' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+echo -n " arc_challenge_es: "
+if [ -f $DIR/arc_challenge_es.json ] ; then
+    cat $DIR/arc_challenge_es.json | jq '.results.arc_challenge_es.acc_norm' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+echo -n " arc_challenge_hu: "
+if [ -f $DIR/arc_challenge_hu.json ] ; then
+    cat $DIR/arc_challenge_hu.json | jq '.results.arc_challenge_hu.acc_norm' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+echo -n " arc_challenge_it: "
+if [ -f $DIR/arc_challenge_it.json ] ; then
+    cat $DIR/arc_challenge_it.json | jq '.results.arc_challenge_it.acc_norm' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+echo -n " arc_challenge_pl: "
+if [ -f $DIR/arc_challenge_pl.json ] ; then
+    cat $DIR/arc_challenge_pl.json | jq '.results.arc_challenge_pl.acc_norm' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+echo -n " arc_challenge_pt: "
+if [ -f $DIR/arc_challenge_pt.json ] ; then
+    cat $DIR/arc_challenge_pt.json | jq '.results.arc_challenge_pt.acc_norm' | awk '{print $1 * 100}'
 else
     echo na
 fi
