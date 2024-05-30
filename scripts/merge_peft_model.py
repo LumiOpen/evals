@@ -5,7 +5,7 @@ from peft import (
     PeftConfig
 )
 
-from transformers import AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from argparse import ArgumentParser
 def argparser():
@@ -31,6 +31,10 @@ def main(argv):
     merged_model = model_to_merge.merge_and_unload()
     merged_model.save_pretrained(args.output_dir)
     print("Done merging model! Saved merged model to", args.output_dir)
+
+    print("Loading tokenizer from:", config.base_model_name_or_path)
+    tokenizer = AutoTokenizer.from_pretrained(config.base_model_name_or_path)
+    tokenizer.save_pretrained(args.output_dir)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv))
