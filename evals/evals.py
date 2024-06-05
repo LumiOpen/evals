@@ -26,24 +26,8 @@ class EvalConfig(ABC):
         return None
         #raise NotImplementedError("custom results must be implemented in a subclass")
 
-class LMEvalConfig(EvalConfig):
-    def __init__(self, name, result_type, num_fewshot=0):
-        # TODO harnesses should be registered and the generate call should just use them to generate a script given a name and a fewshot config
-        # rather than being instantiated in every single eval.
-        super().__init__(name, result_type, LMEvalHarness([name], num_fewshot=num_fewshot))
-        self.num_fewshot = num_fewshot
-
-    def get_results_custom(self, json_data):
-        if self.name == "hendrycksTest-*":
-            # avg the acc
-            scores = [json_data["results"][task]["acc"] for task in json_data["results"]]
-            return sum(scores) / len(scores)
-        return None
-
-
-
 # These configs can be used directly for simple tests, or subclassed for more complex ones.
-class LMEvalConfig2(EvalConfig):
+class LMEvalConfig(EvalConfig):
     def __init__(self, name, result_type, num_fewshot=0):
         super().__init__(name, result_type, LMEvalHarness2([name], num_fewshot=num_fewshot))
         self.num_fewshot = num_fewshot
@@ -113,87 +97,51 @@ evals = {
     "finbench_2shot": FinBenchConfig("finbench", "custom", num_fewshot=2),
     "finbench_3shot": FinBenchConfig("finbench", "custom", num_fewshot=3),
 
-    "arc_challenge_da": LMEvalConfig("arc_challenge_da", "acc_norm", num_fewshot=25),
-    "arc_challenge_fi": LMEvalConfig("arc_challenge_fi", "acc_norm", num_fewshot=25),
-    "arc_challenge_nb": LMEvalConfig("arc_challenge_nb", "acc_norm", num_fewshot=25),
-    "arc_challenge_sv": LMEvalConfig("arc_challenge_sv", "acc_norm", num_fewshot=25),
-    "arc_challenge_de": LMEvalConfig("arc_challenge_de", "acc_norm", num_fewshot=25),
-    "arc_challenge_el": LMEvalConfig("arc_challenge_el", "acc_norm", num_fewshot=25),
-    "arc_challenge_es": LMEvalConfig("arc_challenge_es", "acc_norm", num_fewshot=25),
-    "arc_challenge_hu": LMEvalConfig("arc_challenge_hu", "acc_norm", num_fewshot=25),
-    "arc_challenge_it": LMEvalConfig("arc_challenge_it", "acc_norm", num_fewshot=25),
-    "arc_challenge_pl": LMEvalConfig("arc_challenge_pl", "acc_norm", num_fewshot=25),
-    "arc_challenge_pt": LMEvalConfig("arc_challenge_pt", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_da": LMEvalConfig("arc_challenge_mt_da", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_fi": LMEvalConfig("arc_challenge_mt_fi", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_nb": LMEvalConfig("arc_challenge_mt_nb", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_sv": LMEvalConfig("arc_challenge_mt_sv", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_de": LMEvalConfig("arc_challenge_mt_de", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_el": LMEvalConfig("arc_challenge_mt_el", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_es": LMEvalConfig("arc_challenge_mt_es", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_hu": LMEvalConfig("arc_challenge_mt_hu", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_it": LMEvalConfig("arc_challenge_mt_it", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_pl": LMEvalConfig("arc_challenge_mt_pl", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_pt": LMEvalConfig("arc_challenge_mt_pt", "acc_norm", num_fewshot=25),
 
-    "belebele_eng": LMEvalConfig2("belebele_eng_Latn", "acc,none", num_fewshot=5),
-    "belebele_dan": LMEvalConfig2("belebele_dan_Latn", "acc,none", num_fewshot=5),
-    "belebele_fin": LMEvalConfig2("belebele_fin_Latn", "acc,none", num_fewshot=5),
-    "belebele_isl": LMEvalConfig2("belebele_isl_Latn", "acc,none", num_fewshot=5),
-    "belebele_nno": LMEvalConfig2("belebele_nno_Latn", "acc,none", num_fewshot=5),
-    "belebele_nob": LMEvalConfig2("belebele_nob_Latn", "acc,none", num_fewshot=5),
-    "belebele_swe": LMEvalConfig2("belebele_swe_Latn", "acc,none", num_fewshot=5),
+    "belebele_eng": LMEvalConfig("belebele_eng_Latn", "acc,none", num_fewshot=5),
+    "belebele_dan": LMEvalConfig("belebele_dan_Latn", "acc,none", num_fewshot=5),
+    "belebele_fin": LMEvalConfig("belebele_fin_Latn", "acc,none", num_fewshot=5),
+    "belebele_isl": LMEvalConfig("belebele_isl_Latn", "acc,none", num_fewshot=5),
+    "belebele_nno": LMEvalConfig("belebele_nno_Latn", "acc,none", num_fewshot=5),
+    "belebele_nob": LMEvalConfig("belebele_nob_Latn", "acc,none", num_fewshot=5),
+    "belebele_swe": LMEvalConfig("belebele_swe_Latn", "acc,none", num_fewshot=5),
 
-    # These are all configured as in the HF leaderboard for easy
-    # comparison.
-    "arc_challenge": LMEvalConfig("arc_challenge", "acc_norm", num_fewshot=25),
-    "hellaswag": LMEvalConfig("hellaswag", "acc_norm", num_fewshot=10),
-    "mmlu": LMEvalConfig("hendrycksTest-*", "custom", num_fewshot=5),
-    "mmlu_0shot": LMEvalConfig("hendrycksTest-*", "custom", num_fewshot=0),
-    "mmlu_1shot": LMEvalConfig("hendrycksTest-*", "custom", num_fewshot=1),
-    "mmlu_2shot": LMEvalConfig("hendrycksTest-*", "custom", num_fewshot=2),
-    "mmlu_3shot": LMEvalConfig("hendrycksTest-*", "custom", num_fewshot=3),
-    "mmlu_4shot": LMEvalConfig("hendrycksTest-*", "custom", num_fewshot=4),
-    "truthfulqa_mc": LMEvalConfig("truthfulqa_mc", "mc2", num_fewshot=0),
-    "winogrande": LMEvalConfig("winogrande", "acc", num_fewshot=5),
-    "gsm8k": LMEvalConfig("gsm8k", "acc", num_fewshot=5), # llama 2 uses 8 shot in the paper.
+    # hugging face 6
+    "arc_challenge": LMEvalConfig("arc_challenge", "acc_norm,none", num_fewshot=25),
+    "hellaswag": LMEvalConfig("hellaswag", "acc_norm,none", num_fewshot=10),
+    "mmlu": LMEvalConfig("mmlu", "custom", num_fewshot=5),
+    "truthfulqa_mc": LMEvalConfig("truthfulqa", "mc2,none", num_fewshot=0),
+    "winogrande": LMEvalConfig("winogrande", "acc,none", num_fewshot=5),
+    "gsm8k": LMEvalConfig("gsm8k", "acc,none", num_fewshot=5), # llama 2 uses 8 shot in the paper.
 
-    # TODO: Evalconfigs need to support multiple tasks to convert these correctly.
-    # TODO: these don't execute in our time limit, and probably need to be split.
-    # TODO: these are broken.
-    #"math_1shot": LMEvalHarness([
-    #        "math_prealgebra",
-    #        "math_algebra",
-    #        "math_num_theory",
-    #        "math_counting_and_prob",
-    #        "math_geometry",
-    #        "math_intermediate_algebra",
-    #        "math_precalc"
-    #    ], num_fewshot=1),
-
-    "arc_easy": LMEvalConfig("arc_easy", "acc", num_fewshot=0),
-    "arc_easy2": LMEvalConfig2("arc_easy", "acc,none", num_fewshot=0),
+    # additional english
+    "arc_easy": LMEvalConfig("arc_easy", "acc,none", num_fewshot=0),
     "boolq": LMEvalConfig("boolq", "acc,none", num_fewshot=0),
-    "boolq2": LMEvalConfig2("boolq", "acc,none", num_fewshot=0),
-    "drop": LMEvalConfig("drop", "f1", num_fewshot=3),
-    "drop2": LMEvalConfig2("drop", "f1,none", num_fewshot=3),
-    "nq_open": LMEvalConfig("nq_open", "em", num_fewshot=0),
-    "nq_open2": LMEvalConfig2("nq_open", "em,none", num_fewshot=0),
-    "openbookqa": LMEvalConfig("openbookqa", "acc", num_fewshot=0),
-    "openbookqa2": LMEvalConfig2("openbookqa", "acc,none", num_fewshot=0),
-    "piqa": LMEvalConfig("piqa", "acc", num_fewshot=0),
-    "piqa2": LMEvalConfig2("piqa", "acc,none", num_fewshot=0),
-    "squad2": LMEvalConfig("squad2", "f1", num_fewshot=0),
-    "squad22": LMEvalConfig2("squad2", "f1,none", num_fewshot=0),
-    "triviaqa": LMEvalConfig("triviaqa", "em", num_fewshot=0),
-    "triviaqa2": LMEvalConfig2("triviaqa", "em,none", num_fewshot=0),
+    "drop": LMEvalConfig("drop", "f1,none", num_fewshot=3),
+    "nq_open": LMEvalConfig("nq_open", "em,none", num_fewshot=0),
+    "openbookqa": LMEvalConfig("openbookqa", "acc,none", num_fewshot=0),
+    "piqa": LMEvalConfig("piqa", "acc,none", num_fewshot=0),
+    "squad2": LMEvalConfig("squad2", "f1,none", num_fewshot=0),
+    "triviaqa": LMEvalConfig("triviaqa", "em,none", num_fewshot=0),
 
     "toxigen": LMEvalConfig("toxigen", "acc", num_fewshot=0),
-    "toxigen2": LMEvalConfig2("toxigen", "acc", num_fewshot=0),
 
     "humaneval_pass@1": BigcodeConfig("humaneval", n_samples=1),
     "humaneval_pass@10": BigcodeConfig("humaneval", n_samples=10),
     "mbpp_pass@1": BigcodeConfig("mbpp", n_samples=1),
     "mbpp_pass@10": BigcodeConfig("mbpp", n_samples=10),
 
-    "arc_challenge2": LMEvalConfig2("arc_challenge", "acc_norm,none", num_fewshot=25),
-    "hellaswag2": LMEvalConfig2("hellaswag", "acc_norm,none", num_fewshot=10),
-    "mmlu2": LMEvalConfig2("mmlu", "custom", num_fewshot=5),
-    "truthfulqa_mc2": LMEvalConfig2("truthfulqa", "mc2,none", num_fewshot=0),
-    "winogrande2": LMEvalConfig2("winogrande", "acc,none", num_fewshot=5),
-    "gsm8k2": LMEvalConfig2("gsm8k", "acc,none", num_fewshot=5), # llama 2 uses 8 shot in the paper.
-
-    "lambada_openai":  LMEvalConfig("lambada_openai", "acc", num_fewshot=0),
-    "lambada_openai2":  LMEvalConfig2("lambada_openai", "acc,none", num_fewshot=0),
-    "lambada_standard":  LMEvalConfig("lambada_standard", "acc", num_fewshot=0),
-    "lambada_standard2":  LMEvalConfig2("lambada_standard", "acc,none", num_fewshot=0),
+    "lambada_openai":  LMEvalConfig("lambada_openai", "acc,none", num_fewshot=0),
+    "lambada_standard":  LMEvalConfig("lambada_standard", "acc,none", num_fewshot=0),
 }
