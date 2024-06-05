@@ -17,7 +17,7 @@ def parse_model(model):
 
     # parse the model if we can do so
     if "europa" in model:
-        result = re.search("r(europa_71B)_iter_(\d+)_bfloat16", model)
+        result = re.search(r"(europa_.*)_iter_(\d+)", model)
         if result:
             model_name = result.group(1)
             step = result.group(2)
@@ -41,12 +41,12 @@ def parse_model(model):
             if model_name == "33B":  # this labeling is ambihguous, fix it.
                 model_name = "poro-34b"
     elif "_iter_" in model:
-        result = re.search(r"(.*)_iter_(\d+)")
+        result = re.search(r"([^/]+)_iter_(\d+)", model)
         if result:
             model_name = result.group(1)
             step = result.group(2)
-    # match anything of the form "Org/Model" as used on huggingface.
     else:
+        # match anything of the form "Org/Model" as used on huggingface.
         result = re.search(r"^([^/]+)/([^/]+)/?$", model)
         if result:
             # this is actually org / model but ...
@@ -61,7 +61,7 @@ def run_eval(eval_name, args):
     output_dir = args.output_dir
     if not output_dir:
         model, step = parse_model(args.model)
-        output_dir = os.path.join("./output", model, step)
+        output_dir = os.path.join("./output/v2", model, step)
 
     #
     # generate slurm script
@@ -157,7 +157,7 @@ def main():
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
-    parser.add_argument('--gres', type=str, default="gpu:mi250:2", help="gres required for sbatch job")
+    parser.add_argument('--gres', type=str, default="gpu:mi250:4", help="gres required for sbatch job")
     parser.add_argument('--time', type=str, default="48:00:00", help="Time limit for sbatch job")
     parser.add_argument('--log_dir', type=str, default="./logs", help="Dir for slurm logs")
 
