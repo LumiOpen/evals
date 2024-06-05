@@ -5,3 +5,4 @@ workdir
 command_history.jsonl
 .*.sw?
 __pycache__
+output
