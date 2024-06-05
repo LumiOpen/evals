@@ -77,10 +77,8 @@ module load cray-python
 python -m venv venv.lm-evaluation-harness2
 source venv.lm-evaluation-harness2/bin/activate
 
-git clone -b arc_mmlu https://github.com/jonabur/lm-evaluation-harness lm-evaluation-harness2
+git clone -b upstream-main https://github.com/jonabur/lm-evaluation-harness lm-evaluation-harness2
 cd lm-evaluation-harness2
-# nothing specific, just fixing at a particular point in time.
-#git checkout 5b0b8a56dcaf3df0c1d3787d2d9ca8a491241b66  
 
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm6.0
 
