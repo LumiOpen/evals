@@ -132,7 +132,7 @@ evals = {
     "nq_open": LMEvalConfig("nq_open", "em,none", num_fewshot=0),
     "openbookqa": LMEvalConfig("openbookqa", "acc,none", num_fewshot=0),
     "piqa": LMEvalConfig("piqa", "acc,none", num_fewshot=0),
-    "squad2": LMEvalConfig("squad2", "f1,none", num_fewshot=0),
+    "squad2": LMEvalConfig("squadv2", "f1,none", num_fewshot=0),
     "triviaqa": LMEvalConfig("triviaqa", "em,none", num_fewshot=0),
 
     "toxigen": LMEvalConfig("toxigen", "acc", num_fewshot=0),
