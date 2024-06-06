@@ -294,7 +294,7 @@ fi
 
 echo -n "      squad2 (f1): "
 if [ -f $DIR/squad2.json ] ; then
-    cat $DIR/squad2.json | jq '.results.squad2.f1 // .results.squad2["f1,none"]'
+    cat $DIR/squad2.json | jq '.results.squad2.f1 // .results.squadv2["f1,none"]'
 else
     echo na
 fi
