@@ -108,6 +108,7 @@ evals = {
     "arc_challenge_mt_it": LMEvalConfig("arc_challenge_mt_it", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_pl": LMEvalConfig("arc_challenge_mt_pl", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_pt": LMEvalConfig("arc_challenge_mt_pt", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_is": LMEvalConfig("arc_challenge_mt_is", "acc_norm", num_fewshot=25),
 
     "belebele_eng": LMEvalConfig("belebele_eng_Latn", "acc,none", num_fewshot=5),
     "belebele_dan": LMEvalConfig("belebele_dan_Latn", "acc,none", num_fewshot=5),
