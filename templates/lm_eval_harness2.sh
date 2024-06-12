@@ -82,7 +82,7 @@ cd lm-evaluation-harness2
 
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm6.0
 
-pip install --upgrade transformers accelerate
+pip install --upgrade transformers accelerate hf_transfer
 pip install --no-cache-dir -r requirements.txt
 pip install jinja2 --upgrade  # missing requirement?
 
