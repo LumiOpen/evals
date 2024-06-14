@@ -147,6 +147,14 @@ elif [ -f $DIR/arc_challenge_mt_da.json ] ; then
 else
     echo na
 fi
+echo -n " arc_challenge_is: "
+if [ -f $DIR/arc_challenge_is.json ] ; then 
+    cat $DIR/arc_challenge_is.json | jq '.results.arc_challenge_is.acc_norm' | awk '{print $1 * 100}'
+elif [ -f $DIR/arc_challenge_mt_is.json ] ; then 
+    cat $DIR/arc_challenge_mt_is.json | jq '.results.arc_challenge_mt_is["acc_norm,none"]' | awk '{print $1 * 100}'
+else
+    echo na
+fi
 echo -n " arc_challenge_nb: "
 if [ -f $DIR/arc_challenge_nb.json ] ; then 
     cat $DIR/arc_challenge_nb.json | jq '.results.arc_challenge_nb.acc_norm' | awk '{print $1 * 100}'
