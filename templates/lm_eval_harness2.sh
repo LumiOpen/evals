@@ -100,21 +100,23 @@ echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available()
 #--no_cache \
 #--batch_size auto
 
-# ignored with parallelize=True
-# --device cuda:0 \
+# lm_eval has changed so that --output_path is treated as a directory and the
+# file outputs are stored in a directory structure under that point.  we don't
+# want that.  so now we output to a temporary directory then move the resulting
+# file to $OUTPUT_FILE
+RANDOM_DIR="/tmp/lm_eval_$(date +%s%N)"
+mkdir -p "$RANDOM_DIR"
+echo Saving temporary results to $RANDOM_DIR
 
 lm_eval \
     --model hf \
     --model_args pretrained=$MODEL,parallelize=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE,max_memory_per_gpu=60GB \
     --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
-    --output_path $OUTPUT_FILE
+    --output_path $RANDOM_DIR
 
-#python main.py \
-#    --model hf-causal-experimental \
-#    --model_args pretrained=$MODEL,use_accelerate=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE \
-#    --device cuda:0 \
-#    --no_cache \
-#    --tasks "$TASK_LIST" \
-#    --num_fewshot $NUM_FEWSHOT \
-#    --output_path $OUTPUT_FILE
+echo Moving temporary results from $RANDOM_DIR to $OUTPUT_FILE
+find "$RANDOM_DIR" -name "results_*.json" -exec mv {} "$OUTPUT_FILE" \;
+rm -rf "$RANDOM_DIR"
+
+
