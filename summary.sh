@@ -198,6 +198,14 @@ elif [ -f $DIR/arc_challenge_mt_es.json ] ; then
 else
     echo na
 fi
+echo -n " arc_challenge_fr: "
+if [ -f $DIR/arc_challenge_fr.json ] ; then
+    cat $DIR/arc_challenge_fr.json | jq '.results.arc_challenge_fr.acc_norm' | awk '{print $1 * 100}'
+elif [ -f $DIR/arc_challenge_mt_fr.json ] ; then 
+    cat $DIR/arc_challenge_mt_fr.json | jq '.results.arc_challenge_mt_fr["acc_norm,none"]' | awk '{print $1 * 100}'
+else
+    echo na
+fi
 echo -n " arc_challenge_hu: "
 if [ -f $DIR/arc_challenge_hu.json ] ; then
     cat $DIR/arc_challenge_hu.json | jq '.results.arc_challenge_hu.acc_norm' | awk '{print $1 * 100}'
@@ -211,6 +219,14 @@ if [ -f $DIR/arc_challenge_it.json ] ; then
     cat $DIR/arc_challenge_it.json | jq '.results.arc_challenge_it.acc_norm' | awk '{print $1 * 100}'
 elif [ -f $DIR/arc_challenge_mt_it.json ] ; then 
     cat $DIR/arc_challenge_mt_it.json | jq '.results.arc_challenge_mt_it["acc_norm,none"]' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+echo -n " arc_challenge_nl: "
+if [ -f $DIR/arc_challenge_nl.json ] ; then
+    cat $DIR/arc_challenge_nl.json | jq '.results.arc_challenge_nl.acc_norm' | awk '{print $1 * 100}'
+elif [ -f $DIR/arc_challenge_mt_nl.json ] ; then 
+    cat $DIR/arc_challenge_mt_nl.json | jq '.results.arc_challenge_mt_nl["acc_norm,none"]' | awk '{print $1 * 100}'
 else
     echo na
 fi
