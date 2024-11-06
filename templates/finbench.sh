@@ -73,26 +73,28 @@ mkdir -p $TMPDIR
 echo TMPDIR is $TMPDIR
 
 # setup venv
-module load cray-python
-python -m venv venv
+ml use /appl/local/csc/modulefiles/
+ml pytorch/2.2
+python -m venv --system-site-packages venv
 source venv/bin/activate
 
 git clone -b finnish https://github.com/jonabur/lm-evaluation-harness.git
 cd lm-evaluation-harness
 
-pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.2
-pip install transformers==4.37.2 accelerate
+#pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.6
+pip install transformers==4.37.2
 pip install --no-cache-dir -r requirements.txt
 
-pip install sentencepiece --upgrade
-pip install tiktoken --upgrade
-
-echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"
+pip install datasets==2.20.0
+export HF_DATASETS_TRUST_REMOTE_CODE=TRUE
+export PYTHONPATH="${PYTHONPATH}:/scratch/project_462000353/akselir/.local/bin"
+echo Cuda Available: "$(python -c 'import torch; print(f"{torch.cuda.is_available()},version {torch.__version__}")')"
+device="$(python -c 'import torch; d=torch.device("cuda" if torch.cuda.is_available() else "cpu");print(d)')"
 
 python main.py \
     --model hf-causal-experimental \
     --model_args pretrained=$MODEL,use_accelerate=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE \
-    --device cuda:0 \
+    --device $device \
     --no_cache \
     --tasks bigbench_1_digit_addition,bigbench_1_digit_division,bigbench_1_digit_multiplication,bigbench_1_digit_subtraction,bigbench_2_digit_addition,bigbench_2_digit_division,bigbench_2_digit_multiplication,bigbench_2_digit_subtraction,bigbench_3_digit_addition,bigbench_3_digit_division,bigbench_3_digit_multiplication,bigbench_3_digit_subtraction,bigbench_4_digit_addition,bigbench_4_digit_division,bigbench_4_digit_multiplication,bigbench_4_digit_subtraction,bigbench_5_digit_addition,bigbench_5_digit_division,bigbench_5_digit_multiplication,bigbench_5_digit_subtraction,bigbench_analogies,bigbench_emotions,bigbench_empirical_judgments,bigbench_general_knowledge,bigbench_harmless,bigbench_helpful,bigbench_honest,bigbench_intent_recognition,bigbench_misconceptions,bigbench_one_sentence,bigbench_one_sentence_no_prompt,bigbench_other,bigbench_paraphrase,bigbench_sentence_ambiguity,bigbench_similarities_abstraction,bigbench_two_sentences \
     --num_fewshot $NUM_FEWSHOT \
