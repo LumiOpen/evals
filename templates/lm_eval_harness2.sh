@@ -89,10 +89,13 @@ pip install jinja2 --upgrade  # missing requirement?
 pip install sentencepiece --upgrade  # required for 01-ai/Yi
 pip install protobuf --upgrade       # required for Llama 2 tokenizer
 pip install tiktoken --upgrade
+echo "Starting to install datasets"
+pip install datasets==2.20.0
+export HF_DATASETS_TRUST_REMOTE_CODE=TRUE
 
 pip install -e .
 pip install -e .[math]
-
+export PYTHONPATH="${PYTHONPATH}:/scratch/project_462000353/akselir/.local/bin"
 echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"
 
 
