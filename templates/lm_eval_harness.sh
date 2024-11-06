@@ -90,13 +90,16 @@ pip install --no-cache-dir -r requirements.txt
 pip install sentencepiece --upgrade  # required for 01-ai/Yi
 pip install protobuf --upgrade       # required for Llama 2 tokenizer
 pip install tiktoken --upgrade
+echo "Starting to install datasets"
+pip install datasets==2.20.0
 
+export HF_DATASETS_TRUST_REMOTE_CODE=TRUE
+export PYTHONPATH="${PYTHONPATH}:/scratch/project_462000353/akselir/.local/bin"
 echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"
 
 python main.py \
     --model hf-causal-experimental \
     --model_args pretrained=$MODEL,use_accelerate=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE \
-    --device cuda:0 \
     --no_cache \
     --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
