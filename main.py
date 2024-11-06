@@ -61,8 +61,8 @@ def run_eval(eval_name, args):
     output_dir = args.output_dir
     if not output_dir:
         model, step = parse_model(args.model)
-        output_dir = os.path.join("./output/v2", model, step)
-
+        output_dir = os.path.join(os.path.realpath("./output/v2"), model, step)
+        
     #
     # generate slurm script
     #
@@ -114,6 +114,7 @@ def run_eval(eval_name, args):
     if not os.path.exists(args.log_dir):
         os.makedirs(args.log_dir)
     if not os.path.exists(output_dir):
+        print(output_dir)
         os.makedirs(output_dir)
 
     process = subprocess.run(['sbatch', script_name], capture_output=True, text=True)
