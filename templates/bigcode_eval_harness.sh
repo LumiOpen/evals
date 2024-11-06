@@ -74,23 +74,25 @@ mkdir -p $TMPDIR
 echo TMPDIR is $TMPDIR
 
 # setup venv
-module load cray-python
-python -m venv venv
+ml use /appl/local/csc/modulefiles/
+ml pytorch/2.2
+python -m venv --system-site-packages venv
 source venv/bin/activate
 
 git clone https://github.com/bigcode-project/bigcode-evaluation-harness
 cd bigcode-evaluation-harness
 
-pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.2
-pip install transformers==4.37.2 accelerate
+pip install transformers==4.37.2 
 pip install --no-cache-dir -r requirements.txt
-
+pip install datasets==2.20.0
 pip install sentencepiece --upgrade
 pip install tiktoken --upgrade
+export HF_DATASETS_TRUST_REMOTE_CODE=TRUE
 
 # NOTE: humaneval uses a unix socket which fails with AF_UNIX path too long if
 # TMPDIR is longer than 108 characters, so revert TMPDIR here.
 export TMPDIR=$OLD_TMPDIR
+export PYTHONPATH="${PYTHONPATH}:/scratch/project_462000353/akselir/.local/bin"
 echo TMPDIR is $TMPDIR
 
 echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"
@@ -105,3 +107,4 @@ python main.py \
     --n_samples $N_SAMPLES \
     --metric_output_path $OUTPUT_FILE \
     $( [ "$TRUST_REMOTE_CODE" = "True" ] && echo "--trust_remote_code" )
+
