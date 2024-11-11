@@ -1,19 +1,38 @@
 # evals
-
 This is a script to simplify running many evals simultaneously in our slurm environment.
-
+## Installation
+- these should be done and and modify the `templates/` according the changes
+- without the modifications evals may crash due depency issues caused by local instals &rarr; in case of failure just run single task to get working venv
+1. clone the repos and link output
+```bash
+git clone https://github.com/LumiOpen/evals
+git clone https://github.com/LumiOpen/evaluation-internal
+ln -s evaluation-internal evals/output 
+```
+2. Set up environment variables / venvs for:
+- lm-eval-harness2 related `$PYTHONUSERBASE` to `scratch`
+- lm-eval-harness related `$PYTHONUSERBASE` to `scratch`
+- finbench related `$PYTHONUSERBASE` to `scratch`
+- bigcode related `$PYTHONUSERBASE` to `scratch`
+3. venv for conversion script
+- include `transformers`
+- currently loads from `$PYTHONUSERBASE`
+## converting checkpoints
+- conversion scripts can be found from `convert-scripts`
+- based on our Megatron-LM fork and conversion is dependent on Megatron-LM 
+```bash
+sbatch convert_europa_7B-sbatch.sh path/to/megatron/checkpoint
+```
+- conversion is not working corretly &rarr; change manually `num_key_value_heads:1` to 32 in config
 ## usage
-
 ```bash
 python main.py \
     --model path/to/model_step1234 \
     --tokenizer path/to/model_step1234
     eval_name
 ```
-
+- evals fails from time to time due unstable environments &rarr; if it fails, just use `main.py` to run single task succesfully to restore the environment
 Commands will be logged to `command_history.jsonl` to help you look up job_ids and see which evals have been run.
-
-```
 {
     "timestamp": "2023-11-09 08:21:12",
     "script_name": "/tmp/tmpvv66ri7g",
