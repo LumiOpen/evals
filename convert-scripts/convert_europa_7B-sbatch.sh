@@ -12,17 +12,15 @@
 
 SCRIPT_DIR="/scratch/project_462000353/risto/Megatron-LM-319"
 CONTAINER="/scratch/project_462000353/containers/flashattention_v2_new"
-SING_BIND="/scratch/project_462000086,/scratch/project_462000444,/scratch/project_462000353"
+SING_BIND="/scratch/project_462000353"
 TOKENIZER="/scratch/project_462000353/europa-tokenizer"
 
-CONFIG_FILE="/scratch/project_462000353/risto/Megatron-LM-319/europa_7B_config.json"
-#mkdir -p pythonuserbase
-#export PYTHONUSERBASE=pythonuserbase
-
+CONFIG_FILE="/scratch/project_462000353/risto/Megatron-LM-319/convert_scripts/configs/europa_7B_config.json"
 if [ -z "$1" ]; 
     then
     echo "You need to pass the checkpoint path as an argument!"
 fi
+set -euo pipefail
 
 # Give checkpoint path and output dir as positional args
 CHECKPOINT_PATH=$1
@@ -38,19 +36,9 @@ CMD="python $SCRIPT_DIR/tools/checkpoint/custom/convert_to_llama.py \
     --output_dir $OUTPUT_DIR
     "
 
-if [ -n "$SINGULARITY_ENVIRONMENT" ]; then
 srun \
     singularity exec \
     -B "$SING_BIND" \
                 -B "$PWD" \
                 "$CONTAINER" \
-                bash -c "source /opt/miniconda3/bin/activate pytorch;" \
-                $CMD"
-else
-        singularity exec \
-                -B "$SING_BIND" \
-                -B "$PWD" \
-    "$CONTAINER" \
-    bash -c "source /opt/miniconda3/bin/activate pytorch" \
-    $CMD"
-fi
+                bash -c "source /opt/miniconda3/bin/activate pytorch; echo $PYTHONUSERBASE; python -V ;$CMD"
