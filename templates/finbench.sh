@@ -84,7 +84,9 @@ cd lm-evaluation-harness
 #pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.6
 pip install transformers==4.37.2
 pip install --no-cache-dir -r requirements.txt
-
+pip install sentencepiece --upgrade  # required for 01-ai/Yi
+pip install protobuf --upgrade       # required for Llama 2 tokenizer
+pip install tiktoken --upgrade
 pip install datasets==2.20.0
 export HF_DATASETS_TRUST_REMOTE_CODE=TRUE
 export PYTHONPATH="${PYTHONPATH}:/scratch/project_462000353/akselir/.local/bin"
