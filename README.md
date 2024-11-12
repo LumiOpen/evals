@@ -15,7 +15,7 @@ ln -s evaluation-internal evals/output
 - finbench related `$PYTHONUSERBASE` to `scratch`
 - bigcode related `$PYTHONUSERBASE` to `scratch`
 3. venv for conversion script
-- include `transformers`
+- include `transformers==4.37.2`
 - currently loads from `$PYTHONUSERBASE`
 ## converting checkpoints
 - conversion scripts can be found from `convert-scripts`
