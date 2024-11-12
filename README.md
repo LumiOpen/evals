@@ -7,32 +7,34 @@ This is a script to simplify running many evals simultaneously in our slurm envi
 ```bash
 git clone https://github.com/LumiOpen/evals
 git clone https://github.com/LumiOpen/evaluation-internal
-ln -s evaluation-internal evals/output 
+ln -s evaluation-internal evals/output
+cd evals 
 ```
-2. Set up environment variables / venvs for:
+2. Set up environment variables (TODO venvs):
 - lm-eval-harness2 related `$PYTHONUSERBASE` to `scratch`
 - lm-eval-harness related `$PYTHONUSERBASE` to `scratch`
 - finbench related `$PYTHONUSERBASE` to `scratch`
 - bigcode related `$PYTHONUSERBASE` to `scratch`
+- modify each template in `templates` so that you either specify pythonuserbase or PYTHONPATH to these folders
 3. venv for conversion script
 - include `transformers==4.37.2`
 - currently loads from `$PYTHONUSERBASE`
-## converting checkpoints
-- conversion scripts can be found from `convert-scripts`
-- based on our Megatron-LM fork and conversion is dependent on Megatron-LM 
+## Running the jobs
+1. convert a checkpoint
+    - conversion scripts can be found from `convert-scripts`
+    - based on our Megatron-LM fork and conversion is dependent on Megatron-LM 
+    ```bash
+    sbatch convert_europa_7B-sbatch.sh path/to/megatron/checkpoint
+    ```
+    - conversion is not working corretly &rarr; change manually `num_key_value_heads:1` to 32 in converted checkpoint
+2. run single eval
 ```bash
-sbatch convert_europa_7B-sbatch.sh path/to/megatron/checkpoint
+module load cray-python
+python python main.py --trust_remote_code --model /path/to/converted/ --partition dev-g --time 01:00:00 toxigen
 ```
-- conversion is not working corretly &rarr; change manually `num_key_value_heads:1` to 32 in config
-## usage
-```bash
-python main.py \
-    --model path/to/model_step1234 \
-    --tokenizer path/to/model_step1234
-    eval_name
+- evals fails from time to time due unstable environments &rarr; if it fails, just run `main.py` to run single task succesfully to restore the environment
+- Commands will be logged to `command_history.jsonl` to help you look up job_ids and see which evals have been run.
 ```
-- evals fails from time to time due unstable environments &rarr; if it fails, just use `main.py` to run single task succesfully to restore the environment
-Commands will be logged to `command_history.jsonl` to help you look up job_ids and see which evals have been run.
 {
     "timestamp": "2023-11-09 08:21:12",
     "script_name": "/tmp/tmpvv66ri7g",
@@ -44,9 +46,9 @@ Commands will be logged to `command_history.jsonl` to help you look up job_ids a
     "out_log": "/pfs/lustrep4/scratch/project_462000319/evals/logs/4868114.out",
     "output_file": "/pfs/lustrep4/scratch/project_462000319/evals/output/poro-34b/step70128/hellaswag.json"
 }
-```
 
-You can now specify multiple evals with a single command:
+```
+- You can specify multiple evals with a single command:
 
 ```
 python main.py --model foo --tokenizer foo arc_challenge hellaswag mmlu truthfulqa_mc winogrande gsm8k finbench_3shot
@@ -58,7 +60,16 @@ argument to override the default (2):
 ```
 python main.py --model foo --gre gpu:mi250:4 eval1 eval2
 ```
+3. Run all evals
+```bash
+module load cray-python
+bash all.sh /path/to/converted/checkpoint/
+```
+4. Gather summary of results
+```bash
 
+bash summary.sh /output/v2/your_model/your_iter
+```
 ## Watching
 
 You can use the included watch.py to monitor squeue to catch when jobs
