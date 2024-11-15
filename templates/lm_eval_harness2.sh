@@ -77,11 +77,14 @@ module load cray-python
 python -m venv venv.lm-evaluation-harness2
 source venv.lm-evaluation-harness2/bin/activate
 
-git clone -b upstream-main https://github.com/jonabur/lm-evaluation-harness lm-evaluation-harness2
+if [ ! -d lm-evaluation-harness2 ] ; then
+    git clone -b main https://github.com/jonabur/lm-evaluation-harness lm-evaluation-harness2
+fi
 cd lm-evaluation-harness2
+git fetch origin
+git reset --hard origin/main
 
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm6.0
-
 pip install --upgrade transformers accelerate hf_transfer
 pip install --no-cache-dir -r requirements.txt
 pip install jinja2 --upgrade  # missing requirement?
@@ -118,5 +121,3 @@ lm_eval \
 echo Moving temporary results from $RANDOM_DIR to $OUTPUT_FILE
 find "$RANDOM_DIR" -name "results_*.json" -exec mv {} "$OUTPUT_FILE" \;
 rm -rf "$RANDOM_DIR"
-
-
