@@ -15,7 +15,7 @@ CONTAINER="/scratch/project_462000353/containers/flashattention_v2_new"
 SING_BIND="/scratch/project_462000353"
 TOKENIZER="/scratch/project_462000353/europa-tokenizer"
 
-CONFIG_FILE="/scratch/project_462000353/risto/Megatron-LM-319/convert_scripts/configs/europa_7B_config.json"
+CONFIG_FILE="/scratch/project_462000353/risto/Megatron-LM-319/conversion_scripts/configs/europa_7B_config.json"
 if [ -z "$1" ]; 
     then
     echo "You need to pass the checkpoint path as an argument!"
