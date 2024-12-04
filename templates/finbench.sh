@@ -80,8 +80,8 @@ source venv/bin/activate
 git clone -b finnish https://github.com/jonabur/lm-evaluation-harness.git
 cd lm-evaluation-harness
 
-pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.2
-pip install transformers==4.37.2 accelerate
+pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm6.0
+pip install transformers==4.37.2 datasets==2.21.0 accelerate
 pip install --no-cache-dir -r requirements.txt
 
 pip install sentencepiece --upgrade
