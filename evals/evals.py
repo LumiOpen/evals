@@ -151,5 +151,5 @@ evals = {
     # IFEval
     "ifeval": LMEvalConfig("ifeval", "acc,none", num_fewshot=0),
     "ifeval_fi": LMEvalConfig("ifeval_fi", "acc,none", num_fewshot=0),
-    "ifeval_sv": LMEvalConfig("ifeval_fi", "acc,none", num_fewshot=0),
+    "ifeval_sv": LMEvalConfig("ifeval_sv", "acc,none", num_fewshot=0),
 }
