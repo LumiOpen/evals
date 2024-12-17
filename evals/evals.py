@@ -147,4 +147,9 @@ evals = {
 
     "lambada_openai":  LMEvalConfig("lambada_openai", "acc,none", num_fewshot=0),
     "lambada_standard":  LMEvalConfig("lambada_standard", "acc,none", num_fewshot=0),
+
+    # IFEval
+    "ifeval": LMEvalConfig("ifeval", "acc,none", num_fewshot=0),
+    "ifeval_fi": LMEvalConfig("ifeval_fi", "acc,none", num_fewshot=0),
+    "ifeval_sv": LMEvalConfig("ifeval_fi", "acc,none", num_fewshot=0),
 }

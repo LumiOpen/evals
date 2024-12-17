@@ -172,7 +172,10 @@ lm_eval \
     --model_args pretrained=$MODEL,parallelize=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE,max_memory_per_gpu=60GB \
     --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
-    --output_path $RANDOM_DIR
+    --output_path $RANDOM_DIR \
+    ## uncomment below if testing a chat model
+    # --apply_chat_template True \
+    # --log_samples 
 
 echo Moving temporary results from $RANDOM_DIR to $OUTPUT_FILE
 find "$RANDOM_DIR" -name "results_*.json" -exec mv {} "$OUTPUT_FILE" \;
