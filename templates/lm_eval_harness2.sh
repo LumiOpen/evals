@@ -130,13 +130,25 @@ python -m venv venv.lm-evaluation-harness2
 source venv.lm-evaluation-harness2/bin/activate
 
 if [ ! -d lm-evaluation-harness2 ] ; then
-   	git clone -b main https://github.com/jonabur/lm-evaluation-harness lm-evaluation-harness2
+   	git clone -b open_lm https://github.com/LumiOpen/lm-evaluation-harness.git lm-evaluation-harness2
 fi
 cd lm-evaluation-harness2
 git fetch origin
-git reset --hard origin/main
+git reset --hard origin/open_lm
 
-pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm6.0
+# Install OpenLM
+if [ ! -d open_lm ] ; then
+   	git clone https://github.com/mlfoundations/open_lm.git open_lm
+fi
+
+cd open_lm
+pip install -e .
+cd ..
+
+# This has to happen after OpenLM has been installed,
+# since OpenLM will install a wrong version of torch
+pip uninstall -y torch
+pip install --upgrade torch torchvision --index-url https://download.pytorch.org/whl/rocm6.0
 pip install --upgrade transformers accelerate hf_transfer
 pip install --no-cache-dir -r requirements.txt
 pip install jinja2 --upgrade  # missing requirement?
@@ -167,9 +179,10 @@ RANDOM_DIR="/tmp/lm_eval_$(date +%s%N)"
 mkdir -p "$RANDOM_DIR"
 echo Saving temporary results to $RANDOM_DIR
 
+# DCLM doesn't seem to support parallelize=True
 lm_eval \
     --model hf \
-    --model_args pretrained=$MODEL,parallelize=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE,max_memory_per_gpu=60GB \
+    --model_args pretrained=$MODEL,parallelize=False,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE,max_memory_per_gpu=60GB \
     --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
     --output_path $RANDOM_DIR \
