@@ -45,6 +45,13 @@ def parse_model(model):
         if result:
             model_name = result.group(1)
             step = result.group(2)
+    elif "checkpoint-" in model:
+        # output from rahul's CPT lora script
+        # e.g. .../cpt-fi-salamandra-base/checkpoint-8000
+        result = re.search(r"([^/]+)/checkpoint-(\d+)", model)
+        if result:
+            model_name = result.group(1)
+            step = result.group(2)
     else:
         # match anything of the form "Org/Model" as used on huggingface.
         result = re.search(r"^([^/]+)/([^/]+)/?$", model)
