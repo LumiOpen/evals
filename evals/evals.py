@@ -107,6 +107,7 @@ evals = {
     "arc_challenge_mt_fi": LMEvalConfig("arc_challenge_mt_fi", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_fr": LMEvalConfig("arc_challenge_mt_fr", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_hu": LMEvalConfig("arc_challenge_mt_hu", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_is": LMEvalConfig("arc_challenge_mt_is", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_it": LMEvalConfig("arc_challenge_mt_it", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_lt": LMEvalConfig("arc_challenge_mt_lt", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_lv": LMEvalConfig("arc_challenge_mt_lv", "acc_norm", num_fewshot=25),
