@@ -111,6 +111,13 @@ evals = {
     "arc_challenge_mt_pl": LMEvalConfig("arc_challenge_mt_pl", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_pt": LMEvalConfig("arc_challenge_mt_pt", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_is": LMEvalConfig("arc_challenge_mt_is", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_cs": LMEvalConfig("arc_challenge_mt_cs", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_et": LMEvalConfig("arc_challenge_mt_et", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_lt": LMEvalConfig("arc_challenge_mt_lt", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_lv": LMEvalConfig("arc_challenge_mt_lv", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_ro": LMEvalConfig("arc_challenge_mt_ro", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_sk": LMEvalConfig("arc_challenge_mt_sk", "acc_norm", num_fewshot=25),
+    "arc_challenge_mt_sl": LMEvalConfig("arc_challenge_mt_sl", "acc_norm", num_fewshot=25),
 
     "belebele_eng": LMEvalConfig("belebele_eng_Latn", "acc,none", num_fewshot=5),
     "belebele_dan": LMEvalConfig("belebele_dan_Latn", "acc,none", num_fewshot=5),
