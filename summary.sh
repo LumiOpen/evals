@@ -249,6 +249,79 @@ fi
 
 echo
 
+echo -n " arc_challenge_bg: "
+if [ -f $DIR/arc_challenge_bg.json ] ; then
+    cat $DIR/arc_challenge_bg.json | jq '.results.arc_challenge_bg.acc_norm' | awk '{print $1 * 100}'
+elif [ -f $DIR/arc_challenge_mt_bg.json ] ; then 
+    cat $DIR/arc_challenge_mt_bg.json | jq '.results.arc_challenge_mt_bg["acc_norm,none"]' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n " arc_challenge_cs: "
+if [ -f $DIR/arc_challenge_cs.json ] ; then
+    cat $DIR/arc_challenge_cs.json | jq '.results.arc_challenge_cs.acc_norm' | awk '{print $1 * 100}'
+elif [ -f $DIR/arc_challenge_mt_cs.json ] ; then 
+    cat $DIR/arc_challenge_mt_cs.json | jq '.results.arc_challenge_mt_cs["acc_norm,none"]' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n " arc_challenge_et: "
+if [ -f $DIR/arc_challenge_et.json ] ; then
+    cat $DIR/arc_challenge_et.json | jq '.results.arc_challenge_et.acc_norm' | awk '{print $1 * 100}'
+elif [ -f $DIR/arc_challenge_mt_et.json ] ; then 
+    cat $DIR/arc_challenge_mt_et.json | jq '.results.arc_challenge_mt_et["acc_norm,none"]' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n " arc_challenge_lt: "
+if [ -f $DIR/arc_challenge_lt.json ] ; then
+    cat $DIR/arc_challenge_lt.json | jq '.results.arc_challenge_lt.acc_norm' | awk '{print $1 * 100}'
+elif [ -f $DIR/arc_challenge_mt_lt.json ] ; then 
+    cat $DIR/arc_challenge_mt_lt.json | jq '.results.arc_challenge_mt_lt["acc_norm,none"]' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n " arc_challenge_lv: "
+if [ -f $DIR/arc_challenge_lv.json ] ; then
+    cat $DIR/arc_challenge_lv.json | jq '.results.arc_challenge_lv.acc_norm' | awk '{print $1 * 100}'
+elif [ -f $DIR/arc_challenge_mt_lv.json ] ; then 
+    cat $DIR/arc_challenge_mt_lv.json | jq '.results.arc_challenge_mt_lv["acc_norm,none"]' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n " arc_challenge_ro: "
+if [ -f $DIR/arc_challenge_ro.json ] ; then
+    cat $DIR/arc_challenge_ro.json | jq '.results.arc_challenge_ro.acc_norm' | awk '{print $1 * 100}'
+elif [ -f $DIR/arc_challenge_mt_ro.json ] ; then 
+    cat $DIR/arc_challenge_mt_ro.json | jq '.results.arc_challenge_mt_ro["acc_norm,none"]' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n " arc_challenge_sk: "
+if [ -f $DIR/arc_challenge_sk.json ] ; then
+    cat $DIR/arc_challenge_sk.json | jq '.results.arc_challenge_sk.acc_norm' | awk '{print $1 * 100}'
+elif [ -f $DIR/arc_challenge_mt_sk.json ] ; then 
+    cat $DIR/arc_challenge_mt_sk.json | jq '.results.arc_challenge_mt_sk["acc_norm,none"]' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n " arc_challenge_sl: "
+if [ -f $DIR/arc_challenge_sl.json ] ; then
+    cat $DIR/arc_challenge_sl.json | jq '.results.arc_challenge_sl.acc_norm' | awk '{print $1 * 100}'
+elif [ -f $DIR/arc_challenge_mt_sl.json ] ; then 
+    cat $DIR/arc_challenge_mt_sl.json | jq '.results.arc_challenge_mt_sl["acc_norm,none"]' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo
 
 echo -n " humaneval_pass@1: "
 if [ -f $DIR/humaneval_pass@1.json ] ; then
@@ -337,6 +410,12 @@ if [ -f $DIR/toxigen.json ] ; then
     cat $DIR/toxigen.json | jq '.results.toxigen.acc // .results.toxigen["acc,none"]' | awk '{print $1 * 100}'
 else
     echo na
+fi
+
+if [ -f $DIR/belebele_fin.json ] ; then
+    echo
+    echo -n "     belebele_fin: "
+    cat $DIR/belebele_fin.json | jq '.results.belebele_fin_Latn["acc,none"]' | awk '{print $1 * 100}'
 fi
 
 
