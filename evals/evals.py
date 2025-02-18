@@ -92,11 +92,13 @@ class BigcodeConfig(EvalConfig):
 
 
 evals = {
+    # finbench
     "finbench_0shot": FinBenchConfig("finbench", "custom", num_fewshot=0),
     "finbench_1shot": FinBenchConfig("finbench", "custom", num_fewshot=1),
     "finbench_2shot": FinBenchConfig("finbench", "custom", num_fewshot=2),
     "finbench_3shot": FinBenchConfig("finbench", "custom", num_fewshot=3),
 
+    # non-english evals
     "arc_challenge_mt_bg": LMEvalConfig("arc_challenge_mt_bg", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_cs": LMEvalConfig("arc_challenge_mt_cs", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_da": LMEvalConfig("arc_challenge_mt_da", "acc_norm", num_fewshot=25),
@@ -119,6 +121,27 @@ evals = {
     "arc_challenge_mt_sk": LMEvalConfig("arc_challenge_mt_sk", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_sl": LMEvalConfig("arc_challenge_mt_sl", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_sv": LMEvalConfig("arc_challenge_mt_sv", "acc_norm", num_fewshot=25),
+
+    "mmlu_mt_bg": LMEvalConfig("ogx_mmlux_BG", "custom", num_fewshot=5),
+    "mmlu_mt_cs": LMEvalConfig("ogx_mmlux_CS", "custom", num_fewshot=5),
+    "mmlu_mt_da": LMEvalConfig("ogx_mmlux_DA", "custom", num_fewshot=5),
+    "mmlu_mt_de": LMEvalConfig("ogx_mmlux_DE", "custom", num_fewshot=5),
+    "mmlu_mt_el": LMEvalConfig("ogx_mmlux_EL", "custom", num_fewshot=5),
+    "mmlu_mt_es": LMEvalConfig("ogx_mmlux_ES", "custom", num_fewshot=5),
+    "mmlu_mt_et": LMEvalConfig("ogx_mmlux_ET", "custom", num_fewshot=5),
+    "mmlu_mt_fi": LMEvalConfig("ogx_mmlux_FI", "custom", num_fewshot=5),
+    "mmlu_mt_fr": LMEvalConfig("ogx_mmlux_FR", "custom", num_fewshot=5),
+    "mmlu_mt_hu": LMEvalConfig("ogx_mmlux_HU", "custom", num_fewshot=5),
+    "mmlu_mt_it": LMEvalConfig("ogx_mmlux_IT", "custom", num_fewshot=5),
+    "mmlu_mt_lt": LMEvalConfig("ogx_mmlux_LT", "custom", num_fewshot=5),
+    "mmlu_mt_lv": LMEvalConfig("ogx_mmlux_LV", "custom", num_fewshot=5),
+    "mmlu_mt_nl": LMEvalConfig("ogx_mmlux_NL", "custom", num_fewshot=5),
+    "mmlu_mt_pl": LMEvalConfig("ogx_mmlux_PL", "custom", num_fewshot=5),
+    "mmlu_mt_pt": LMEvalConfig("ogx_mmlux_PT-PT", "custom", num_fewshot=5),
+    "mmlu_mt_ro": LMEvalConfig("ogx_mmlux_RO", "custom", num_fewshot=5),
+    "mmlu_mt_sk": LMEvalConfig("ogx_mmlux_SK", "custom", num_fewshot=5),
+    "mmlu_mt_sl": LMEvalConfig("ogx_mmlux_SL", "custom", num_fewshot=5),
+    "mmlu_mt_sv": LMEvalConfig("ogx_mmlux_SV", "custom", num_fewshot=5),
 
     "belebele_eng": LMEvalConfig("belebele_eng_Latn", "acc,none", num_fewshot=5),
     "belebele_dan": LMEvalConfig("belebele_dan_Latn", "acc,none", num_fewshot=5),
@@ -148,13 +171,14 @@ evals = {
 
     "toxigen": LMEvalConfig("toxigen", "acc", num_fewshot=0),
 
+    "lambada_openai":  LMEvalConfig("lambada_openai", "acc,none", num_fewshot=0),
+    "lambada_standard":  LMEvalConfig("lambada_standard", "acc,none", num_fewshot=0),
+
+    # code
     "humaneval_pass@1": BigcodeConfig("humaneval", n_samples=1),
     "humaneval_pass@10": BigcodeConfig("humaneval", n_samples=10),
     "mbpp_pass@1": BigcodeConfig("mbpp", n_samples=1),
     "mbpp_pass@10": BigcodeConfig("mbpp", n_samples=10),
-
-    "lambada_openai":  LMEvalConfig("lambada_openai", "acc,none", num_fewshot=0),
-    "lambada_standard":  LMEvalConfig("lambada_standard", "acc,none", num_fewshot=0),
 
     # IFEval
     "ifeval": LMEvalConfig("ifeval", "acc,none", num_fewshot=0),
