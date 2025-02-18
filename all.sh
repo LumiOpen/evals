@@ -8,4 +8,5 @@ python main.py --time 04:00:00 --partition $QUEUE --model $1 arc_challenge_mt_de
 python main.py --time 04:00:00 --partition $QUEUE --model $1 arc_challenge_mt_bg arc_challenge_mt_cs arc_challenge_mt_et arc_challenge_mt_lt arc_challenge_mt_lv arc_challenge_mt_ro arc_challenge_mt_sk arc_challenge_mt_sl
 python main.py --time 06:00:00 --partition $QUEUE --model $1 finbench_3shot
 python main.py --time 10:00:00 --partition $QUEUE --model $1 mmlu
-python main.py --time 24:00:00 --partition $QUEUE --model $1 squad2 hellaswag gsm8k triviaqa
+python main.py --time 24:00:00 --partition $QUEUE --model $1 hellaswag gsm8k triviaqa
+# squad2 is broken right now
