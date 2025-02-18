@@ -52,6 +52,12 @@ def parse_model(model):
         if result:
             model_name = result.group(1)
             step = result.group(2)
+    elif "iter_" in model:
+        # .../some_model_name/iter_001000"
+        result = re.search(r"([^/]+)/iter_(\d+)", model)
+        if result:
+            model_name = result.group(1)
+            step = result.group(2)
     else:
         # match anything of the form "Org/Model" as used on huggingface.
         result = re.search(r"^([^/]+)/([^/]+)/?$", model)
