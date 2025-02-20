@@ -132,12 +132,7 @@ def main():
                     else:
                         print(f"    {entry['eval']} no err log, cancelled?")
             print("")
-            
-                
-            
-            
         return
-
 
     jobs = []
     while True:
@@ -150,15 +145,17 @@ def main():
                 if entry is None:
                     # unrecognized job
                     continue
-                comment = entry.get("comment", None)
-                if comment is not None:
-                    print(f'{job} {entry["model"]} {entry["eval"]} is running. ({comment})')
-                else:
-                    print(f'{job} {entry["model"]} {entry["eval"]} is running.')
                 if os.path.exists(entry["err_log"]):
+                    print(f'{job} {entry["model"]} {entry["eval"]} is running.')
                     with open(entry["err_log"], "r") as f:
                         lines = f.readlines()
-                        print(lines[-1])
+                        if lines:
+                            print(lines[-1])
+                        else:
+                            print("<no log entries>")
+                else:
+                    print(f'{job} {entry["model"]} {entry["eval"]} is queued.')
+
                 
         for job in jobs:
             if job not in new_jobs:
