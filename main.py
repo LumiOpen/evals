@@ -4,6 +4,7 @@ import json
 import os
 import re
 import subprocess
+import sys
 import tempfile
 
 from evals.evals import evals
@@ -130,13 +131,20 @@ def run_eval(eval_name, args):
         os.makedirs(output_dir)
 
     process = subprocess.run(['sbatch', script_name], capture_output=True, text=True)
+    if process.return_code != 0:
+        print(f"Error: sbatch command failed with return code {process.returncode}")
+        print(process.stderr)
+        return
+
     # parse the jobid from stdout
     job_id_search = re.search(r"Submitted batch job (\d+)", process.stdout)
     if job_id_search:
         job_id = job_id_search.group(1)
     else:
         print("Failed to parse job id from sbatch output:")
-        print(process)
+        print(process.stderr)
+        # we could possibly return here instead of logging this entry, as we do
+        # for a return code != 0
         job_id = None
 
     # save to command log to help figure out which jobs were which commands
@@ -182,6 +190,17 @@ def main():
     args = parser.parse_args()
     if args.tokenizer == "":
         args.tokenizer = args.model
+
+    # sanity check model and tokenizer before queueing things up
+    if args.model.count('/') != 1:
+        # not a hugging face model identifier
+        if not os.path.exists(os.path.join(args.model, "config.json")):
+            print(f"Error: model '{args.model}' looks like a directory, but does not contain a config.json")
+            sys.exit(1)
+    if args.tokenizer.count('/') != 1:
+        if not os.path.exists(os.path.join(args.model, "tokenizer.json")):
+            print(f"Error: tokenizer '{args.tokenizer}' looks like a directory, but does not contain a tokenizer.json")
+            sys.exit(1)
 
     for eval_name in args.eval:
         run_eval(eval_name, args)
