@@ -131,7 +131,7 @@ def run_eval(eval_name, args):
         os.makedirs(output_dir)
 
     process = subprocess.run(['sbatch', script_name], capture_output=True, text=True)
-    if process.return_code != 0:
+    if process.returncode != 0:
         print(f"Error: sbatch command failed with return code {process.returncode}")
         print(process.stderr)
         return
