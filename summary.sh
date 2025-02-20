@@ -136,6 +136,12 @@ else
     echo na
 fi
 
+echo -n "       mmlu_mt_fi: "
+if [ -f $DIR/mmlu_mt_fi.json ] ; then
+    cat $DIR/mmlu_mt_fi.json | jq '.groups.ogx_mmlux_FI."acc,none"' | awk '{print $1 * 100}'
+else
+    echo na
+fi
 
 echo
 
