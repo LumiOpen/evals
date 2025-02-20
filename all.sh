@@ -6,7 +6,9 @@ QUEUE=standard-g
 python main.py --time 04:00:00 --partition $QUEUE --model $1 arc_challenge_mt_fi arc_challenge_mt_da arc_challenge_mt_is arc_challenge_mt_nb arc_challenge_mt_sv arc_challenge truthfulqa_mc winogrande arc_easy boolq nq_open openbookqa piqa toxigen 
 python main.py --time 04:00:00 --partition $QUEUE --model $1 arc_challenge_mt_de arc_challenge_mt_el arc_challenge_mt_es arc_challenge_mt_hu arc_challenge_mt_it arc_challenge_mt_pl arc_challenge_mt_pt arc_challenge_mt_fr arc_challenge_mt_nl
 python main.py --time 04:00:00 --partition $QUEUE --model $1 arc_challenge_mt_bg arc_challenge_mt_cs arc_challenge_mt_et arc_challenge_mt_lt arc_challenge_mt_lv arc_challenge_mt_ro arc_challenge_mt_sk arc_challenge_mt_sl
-python main.py --time 06:00:00 --partition $QUEUE --model $1 finbench_3shot
 python main.py --time 10:00:00 --partition $QUEUE --model $1 mmlu
 python main.py --time 24:00:00 --partition $QUEUE --model $1 hellaswag gsm8k triviaqa
 # squad2 is broken right now
+
+# finbench is broken
+#python main.py --time 06:00:00 --partition $QUEUE --model $1 finbench_3shot
