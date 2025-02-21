@@ -75,7 +75,7 @@ def run_eval(eval_name, args):
     output_dir = args.output_dir
     if not output_dir:
         model, step = parse_model(args.model)
-        output_dir = os.path.join("./output/v2", model, step)
+        output_dir = os.path.join(args.output_root, model, step)
 
     #
     # generate slurm script
@@ -172,6 +172,7 @@ def main():
     parser.add_argument('--model', type=str, required=True, help='Path to the model')
     parser.add_argument('--tokenizer', type=str, required=False, default="", help='Path to the tokenizer')
     parser.add_argument('--output_dir', type=str, required=False, default="")
+    parser.add_argument('--output_root', type=str, required=False, default="./output/v2")
     parser.add_argument('--work_dir', type=str, required=False, default="./workdir")
     parser.add_argument('--trust_remote_code', action='store_true', default=False, help="load model with trust_remote_code=True")
 
