@@ -93,6 +93,7 @@ def run_eval(eval_name, args):
         'WORK_DIR': os.path.abspath(args.work_dir),
         'OUTPUT_FILE': output_file,
         'TRUST_REMOTE_CODE': "True" if args.trust_remote_code else "False",
+        'APPLY_CHAT_TEMPLATE': "True" if args.apply_chat_template else "False",
     }
 
     slurm_config = {
@@ -175,6 +176,7 @@ def main():
     parser.add_argument('--output_root', type=str, required=False, default="./output/v2")
     parser.add_argument('--work_dir', type=str, required=False, default="./workdir")
     parser.add_argument('--trust_remote_code', action='store_true', default=False, help="load model with trust_remote_code=True")
+    parser.add_argument('--apply_chat_template', action='store_true', default=False, help="Use chat template with this model")
 
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
