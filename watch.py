@@ -5,63 +5,7 @@ import json
 import os
 import subprocess
 import time
-
-STATUS_RUNNING = [
-    "CONFIGURING",
-    "COMPLETING",
-    "PENDING",
-    "RUNNING",
-    "RESV_DEL_HOLD",
-    "REQUEUE_FED",
-    "REQUEUE_HOLD",
-    "REQUEUED",
-    "RESIZING",
-    "SIGNALING",
-    "SPECIAL_EXIT",  # unclear if this should be treated as a pending state
-    "STAGE_OUT",
-    "STOPPED",       # unclear if this should be treated as a pending state
-    "SUSPENDED",     # unclear if this should be treated as a pending state
-]
-
-# in all of these states, the job is not running and will not run again
-# so it would be safe to restart if necessary.
-STATUS_NOT_RUNNING = [
-    "BOOT_FAIL",
-    "CANCELLED",
-    "COMPLETED",
-    "DEADLINE",
-    "FAILED",
-    "NODE_FAIL",
-    "OUT_OF_MEMORY",
-    "PREEMPTED",
-    "REVOKED",
-    "TIMEOUT",
-]
-
-def read_command_log():
-    entries = {}
-    with open("command_history.jsonl", "r") as f:
-        for line in f.readlines():
-            entry = json.loads(line.rstrip())
-            entries[entry["job_id"]] = entry
-    return entries
-
-def get_running_jobs():
-    command = ['squeue', '--me', '-o', '%i %T %j']
-    process = subprocess.Popen(command, stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    if error:
-        print(f"Error: {error}")
-        return None
-
-    running_jobs = []
-    output_lines = output.decode('utf-8').split('\n')[1:]  # Skip the header line
-    for line in output_lines:
-        if line:  # Skip empty lines
-            job_id, status, job_name = line.split()
-            if status in STATUS_RUNNING:
-                running_jobs.append(job_id)
-    return running_jobs
+from evals.slurm import read_command_log, get_jobs
 
 
 def main():
@@ -90,7 +34,7 @@ def main():
             if now - timestamp <= delta:
                 report[entry["model"]].append(entry)
 
-        running_jobs = set(get_running_jobs())
+        running_jobs = set(get_jobs())
         for model in sorted(report.keys()):
             entries = sorted(report[model], key=lambda x: x["eval"])
 
@@ -137,7 +81,7 @@ def main():
     jobs = []
     while True:
         entries = read_command_log()
-        new_jobs = get_running_jobs()
+        new_jobs = get_jobs()
         for job in new_jobs:
             if job not in jobs:
                 # newly running job
