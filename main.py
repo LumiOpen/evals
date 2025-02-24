@@ -101,8 +101,13 @@ def run_eval(eval_name, args):
         'WORK_DIR': os.path.abspath(args.work_dir),
         'OUTPUT_FILE': output_file,
         'TRUST_REMOTE_CODE': "True" if args.trust_remote_code else "False",
-        'APPLY_CHAT_TEMPLATE': "True" if args.apply_chat_template else "False",
     }
+    if args.apply_chat_template is False:
+        env_vars['APPLY_CHAT_TEMPLATE'] = "False"
+    elif args.apply_chat_template is True:
+        env_vars['APPLY_CHAT_TEMPLATE'] = "True"
+    else:
+        env_vars['APPLY_CHAT_TEMPLATE'] = args.apply_chat_template
 
     slurm_config = {
         'name': eval_name,
@@ -184,7 +189,18 @@ def main():
     parser.add_argument('--output_root', type=str, required=False, default="./output/v2")
     parser.add_argument('--work_dir', type=str, required=False, default="./workdir")
     parser.add_argument('--trust_remote_code', action='store_true', default=False, help="load model with trust_remote_code=True")
-    parser.add_argument('--apply_chat_template', action='store_true', default=False, help="Use chat template with this model")
+    parser.add_argument(
+        '--apply_chat_template',
+        nargs='?',
+        const=True,
+        default=False,
+        type=str,
+        help=(
+            "If true, apply the default chat template. "
+            "If provided without an argument, applies the default template. "
+            "To specificy a particular template, supply its name (see lm_eval options)"
+        )
+    )
 
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
