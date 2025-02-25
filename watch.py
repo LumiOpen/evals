@@ -41,20 +41,24 @@ def main():
             print(f"Model: {model}")
             print(f"Results dir: {os.path.dirname(entries[0]['output_file'])}")
 
-            completed = []
+            # we deduplicated completed evals by eval_name because the logic
+            # below can't differentiate between which of a number of possible
+            # jobs actually was the one that completed, and there's no real
+            # reason to care so long as at least one of them has.
+            completed = {}
             incomplete = []
             running = []
             for entry in entries:
                 if entry["job_id"] in running_jobs:
                     running.append(entry)
                 elif os.path.exists(entry["output_file"]):
-                    completed.append(entry)
+                    completed[entry["eval"]] = entry
                 else:
                     incomplete.append(entry)
             if completed:
                 print(f"Completed:")
-                for entry in completed:
-                    print(f"    {entry['eval']}")
+                for eval_name in sorted(completed.keys()):
+                    print(f"    {eval_name}")
             if running:
                 print("Running/Queued:")
                 for entry in running:
@@ -64,7 +68,7 @@ def main():
             # subsequently succeeded.
             complete_failures = []
             if incomplete:
-                succeeded = set([i["eval"] for i in completed])
+                succeeded = set(completed.keys())
                 complete_failures = [i for i in incomplete if i["eval"] not in succeeded]
 
             if complete_failures:
