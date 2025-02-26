@@ -78,11 +78,15 @@ module load cray-python
 python -m venv venv
 source venv/bin/activate
 
-git clone https://github.com/bigcode-project/bigcode-evaluation-harness
+if [ ! -d bigcode-evaluation-harness ] ; then
+    git clone -b main https://github.com/bigcode-project/bigcode-evaluation-harness bigcode-evaluation-harness
+fi
 cd bigcode-evaluation-harness
+git fetch origin
+git reset --hard origin/main
 
-pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm5.2
-pip install transformers==4.37.2 accelerate
+pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm6.0
+pip install --upgrade transformers accelerate hf_transfer
 pip install --no-cache-dir -r requirements.txt
 
 pip install sentencepiece --upgrade
