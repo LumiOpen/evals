@@ -100,4 +100,5 @@ python main.py \
     --no_cache \
     --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
-    --output_path $OUTPUT_FILE
+    --output_path $OUTPUT_FILE \
+    --batch 64
