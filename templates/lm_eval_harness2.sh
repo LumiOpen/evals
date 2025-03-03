@@ -171,14 +171,25 @@ RANDOM_DIR="/tmp/lm_eval_$(date +%s%N)"
 mkdir -p "$RANDOM_DIR"
 echo Saving temporary results to $RANDOM_DIR
 
+
+if [ "$APPLY_CHAT_TEMPLATE" = "False" ]; then
+    CHAT_TEMPLATE_FLAG=""
+elif [ "$APPLY_CHAT_TEMPLATE" = "True" ]; then
+    CHAT_TEMPLATE_FLAG="--apply_chat_template"
+else
+    CHAT_TEMPLATE_FLAG="--apply_chat_template ${APPLY_CHAT_TEMPLATE}"
+fi
+
+set -x
 lm_eval \
     --model hf \
     --model_args pretrained=$MODEL,parallelize=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE,max_memory_per_gpu=60GB \
     --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
     --output_path $RANDOM_DIR \
-{% if APPLY_CHAT_TEMPLATE != "False" %}--apply_chat_template{% if APPLY_CHAT_TEMPLATE != "True" %} {{ APPLY_CHAT_TEMPLATE }}{% endif %}{% endif %}
+    $CHAT_TEMPLATE_FLAG
     # --log_samples 
+set +x
 
 echo Moving temporary results from $RANDOM_DIR to $OUTPUT_FILE
 find "$RANDOM_DIR" -name "results_*.json" -exec mv {} "$OUTPUT_FILE" \;
