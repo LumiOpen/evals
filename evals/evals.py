@@ -216,6 +216,9 @@ evals = {
     "belebele_nob": LMEvalConfig("belebele_nob_Latn", "acc,none", num_fewshot=5),
     "belebele_swe": LMEvalConfig("belebele_swe_Latn", "acc,none", num_fewshot=5),
 
+    "flores200_trans_en_fi": LMEvalConfig("ogx_flores200-trans-eng_Latn-fin_Latn", "bleu_flores200,none", num_fewshot=8),
+    "flores200_trans_fi_en": LMEvalConfig("ogx_flores200-trans-fin_Latn-eng_Latn", "bleu_flores200,none", num_fewshot=8),
+
     # hugging face 6
     "arc_challenge": LMEvalConfig("arc_challenge", "acc_norm,none", num_fewshot=25),
     "hellaswag": LMEvalConfig("hellaswag", "acc_norm,none", num_fewshot=10),
