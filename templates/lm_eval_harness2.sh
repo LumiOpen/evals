@@ -177,9 +177,7 @@ lm_eval \
     --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
     --output_path $RANDOM_DIR \
-{% if APPLY_CHAT_TEMPLATE != "False" %}
-  --apply_chat_template{% if APPLY_CHAT_TEMPLATE != "True" %} {{ APPLY_CHAT_TEMPLATE }}{% endif %}
-{% endif %}
+{% if APPLY_CHAT_TEMPLATE != "False" %}--apply_chat_template{% if APPLY_CHAT_TEMPLATE != "True" %} {{ APPLY_CHAT_TEMPLATE }}{% endif %}{% endif %}
     # --log_samples 
 
 echo Moving temporary results from $RANDOM_DIR to $OUTPUT_FILE
