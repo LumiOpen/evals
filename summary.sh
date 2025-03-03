@@ -76,7 +76,7 @@ fi
 
 echo
 
-echo -n "   finbench_3shot: "
+echo -n "     finbench_3shot: "
 if [ -f $DIR/finbench_3shot.json ] ; then 
     #cat $DIR/finbench_3shot.json | jq -r '.results | to_entries | .[] | [.key, .value.multiple_choice_grade] | @csv'
     cat $DIR/finbench_3shot.json | jq  '.results | 
@@ -127,7 +127,7 @@ if [ -f $DIR/finbench_3shot.json ] ; then
 else
     echo na
 fi
-echo -n " arc_challenge_fi: "
+echo -n "   arc_challenge_fi: "
 if [ -f $DIR/arc_challenge_fi.json ] ; then 
     cat $DIR/arc_challenge_fi.json | jq '.results.arc_challenge_fi.acc_norm' | awk '{print $1 * 100}'
 elif [ -f $DIR/arc_challenge_mt_fi.json ] ; then 
@@ -136,14 +136,52 @@ else
     echo na
 fi
 
-echo -n "       mmlu_mt_fi: "
+echo -n "    hellaswag_mt_fi: "
+if [ -f $DIR/hellaswag_mt_fi.json ] ; then
+    cat $DIR/hellaswag_mt_fi.json | jq '.results.ogx_hellaswagx_fi."acc,none"' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n "         mmlu_mt_fi: "
 if [ -f $DIR/mmlu_mt_fi.json ] ; then
     cat $DIR/mmlu_mt_fi.json | jq '.groups.ogx_mmlux_FI."acc,none"' | awk '{print $1 * 100}'
 else
     echo na
 fi
 
+echo -n "truthfulqa_mc_mt_fi: "
+if [ -f $DIR/truthfulqa_mc_mt_fi.json ] ; then
+    cat $DIR/truthfulqa_mc_mt_fi.json | jq '.results.ogx_truthfulqax_mc2_fi."acc,none"' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n "        gsm8k_mt_fi: "
+if [ -f $DIR/gsm8k_mt_fi.json ] ; then
+    cat $DIR/gsm8k_mt_fi.json | jq '.results.ogx_gsm8kx_fi."acc,none"' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
 echo
+
+echo -n "    flores200_en_fi: "
+if [ -f $DIR/flores200_trans_en_fi.json ] ; then
+    cat $DIR/flores200_trans_en_fi.json | jq '.results."ogx_flores200-trans-eng_Latn-fin_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
+else
+    echo na
+fi
+
+echo -n "    flores200_fi_en: "
+if [ -f $DIR/flores200_trans_fi_en.json ] ; then
+    cat $DIR/flores200_trans_fi_en.json | jq '.results."ogx_flores200-trans-fin_Latn-eng_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
+else
+    echo na
+fi
+
+echo
+
 
 echo -n " arc_challenge_da: "
 if [ -f $DIR/arc_challenge_da.json ] ; then 
