@@ -89,8 +89,9 @@ pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm6.0
 pip install --upgrade transformers accelerate hf_transfer
 pip install --no-cache-dir -r requirements.txt
 
-pip install sentencepiece --upgrade
-pip install tiktoken --upgrade
+# various model tokenizer etc. requirements
+pip install sentencepiece tiktoken protobuf --upgrade
+
 
 # NOTE: humaneval uses a unix socket which fails with AF_UNIX path too long if
 # TMPDIR is longer than 108 characters, so revert TMPDIR here.
