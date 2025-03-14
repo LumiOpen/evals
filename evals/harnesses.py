@@ -3,24 +3,6 @@ import copy
 import datetime
 
 
-class FinBench:
-    def __init__(self, num_fewshot=0):
-        self.num_fewshot = num_fewshot
-        self.harness = self
-
-    def generate_script(self, slurm_config, env_vars):
-        env_vars = copy.deepcopy(env_vars)
-        env_vars["NUM_FEWSHOT"] = self.num_fewshot
-        config = {}
-        config["env_vars"] = env_vars
-        config["slurm_config"] = slurm_config
-
-        template_str = open('templates/finbench.sh', 'r').read()
-        template = Template(template_str)
-        rendered_script = template.render(**config)
-
-        return rendered_script
-
 class LMEvalHarness:
     def __init__(self, task_list, num_fewshot=0):
         self.task_list = task_list
@@ -36,26 +18,6 @@ class LMEvalHarness:
         config["slurm_config"] = slurm_config
 
         template_str = open('templates/lm_eval_harness.sh', 'r').read()
-        template = Template(template_str)
-        rendered_script = template.render(**config)
-
-        return rendered_script
-
-class LMEvalHarness2:
-    def __init__(self, task_list, num_fewshot=0):
-        self.task_list = task_list
-        self.num_fewshot = num_fewshot
-        self.harness = self # TODO remove
-
-    def generate_script(self, slurm_config, env_vars):
-        env_vars = copy.deepcopy(env_vars)
-        env_vars["TASK_LIST"] = ",".join(self.task_list)
-        env_vars["NUM_FEWSHOT"] = self.num_fewshot
-        config = {}
-        config["env_vars"] = env_vars
-        config["slurm_config"] = slurm_config
-
-        template_str = open('templates/lm_eval_harness2.sh', 'r').read()
         template = Template(template_str)
         rendered_script = template.render(**config)
 

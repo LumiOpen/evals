@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from .harnesses import FinBench, LMEvalHarness, LMEvalHarness2, BigcodeEvaluationHarness
+from .harnesses import LMEvalHarness, BigcodeEvaluationHarness
 import json
 
 
@@ -29,12 +29,12 @@ class EvalConfig(ABC):
 # These configs can be used directly for simple tests, or subclassed for more complex ones.
 class LMEvalConfig(EvalConfig):
     def __init__(self, name, result_type, num_fewshot=0):
-        super().__init__(name, result_type, LMEvalHarness2([name], num_fewshot=num_fewshot))
+        super().__init__(name, result_type, LMEvalHarness([name], num_fewshot=num_fewshot))
         self.num_fewshot = num_fewshot
 
 class FinBenchConfig(EvalConfig):
     def __init__(self, name, result_type, num_fewshot=0):
-        super().__init__(name, result_type, FinBench(num_fewshot=num_fewshot))
+        super().__init__(name, result_type, LMEvalHarness([name], num_fewshot=num_fewshot))
         self.num_fewshot = num_fewshot
 
     def get_results_custom(self, json_data):
@@ -93,10 +93,10 @@ class BigcodeConfig(EvalConfig):
 
 evals = {
     # finbench
-    "finbench_0shot": FinBenchConfig("finbench", "custom", num_fewshot=0),
-    "finbench_1shot": FinBenchConfig("finbench", "custom", num_fewshot=1),
-    "finbench_2shot": FinBenchConfig("finbench", "custom", num_fewshot=2),
-    "finbench_3shot": FinBenchConfig("finbench", "custom", num_fewshot=3),
+    "finbench_0shot": FinBenchConfig("finbench_multiple_choice", "custom", num_fewshot=0),
+    "finbench_1shot": FinBenchConfig("finbench_multiple_choice", "custom", num_fewshot=1),
+    "finbench_2shot": FinBenchConfig("finbench_multiple_choice", "custom", num_fewshot=2),
+    "finbench_3shot": FinBenchConfig("finbench_multiple_choice", "custom", num_fewshot=3),
 
     # non-english evals
     "arc_challenge_mt_bg": LMEvalConfig("arc_challenge_mt_bg", "acc_norm", num_fewshot=25),
