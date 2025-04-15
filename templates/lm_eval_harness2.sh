@@ -148,6 +148,7 @@ pip install jinja2 --upgrade  # missing requirement?
 pip install sentencepiece --upgrade  # required for 01-ai/Yi
 pip install protobuf --upgrade       # required for Llama 2 tokenizer
 pip install tiktoken --upgrade
+pip install langdetect --upgrade # required for ifeval_fi and ifeval_sv
 
 pip install -e .
 pip install -e .[math]
