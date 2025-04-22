@@ -166,20 +166,33 @@ fi
 
 echo
 
-echo -n "    flores200_en_fi: "
+echo -n "    flores200_en_fi bleu: "
 if [ -f $DIR/flores200_trans_en_fi.json ] ; then
     cat $DIR/flores200_trans_en_fi.json | jq '.results."ogx_flores200-trans-eng_Latn-fin_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
 else
     echo na
 fi
 
-echo -n "    flores200_fi_en: "
+echo -n "    flores200_fi_en bleu: "
 if [ -f $DIR/flores200_trans_fi_en.json ] ; then
     cat $DIR/flores200_trans_fi_en.json | jq '.results."ogx_flores200-trans-fin_Latn-eng_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
 else
     echo na
 fi
 
+echo -n "    flores200_en_fi chrf: "
+if [ -f $DIR/flores200_trans_en_fi.json ] ; then
+    cat $DIR/flores200_trans_en_fi.json | jq '.results."ogx_flores200-trans-eng_Latn-fin_Latn"."chrf,none"' | awk '{print $1 * 1.0}'
+else
+    echo na
+fi
+
+echo -n "    flores200_fi_en chrf: "
+if [ -f $DIR/flores200_trans_fi_en.json ] ; then
+    cat $DIR/flores200_trans_fi_en.json | jq '.results."ogx_flores200-trans-fin_Latn-eng_Latn"."chrf,none"' | awk '{print $1 * 1.0}'
+else
+    echo na
+fi
 echo
 
 
