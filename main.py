@@ -249,12 +249,12 @@ def main():
             print(f"Error: tokenizer '{args.tokenizer}' looks like a directory, but does not contain a tokenizer.json")
             sys.exit(1)
 
-    # scheduled_tasks = identify_scheduled_tasks()
+    scheduled_tasks = identify_scheduled_tasks()
     for eval_name in args.eval:
-        # task = scheduled_tasks.get((args.model, eval_name), None)
-        # if task is not None and not args.force:
-        #     print(f"Already detected job for {task['eval']} on {task['model']} on slurm job {task['job_id']} and --force not specified, skipping...")
-        #     continue
+        task = scheduled_tasks.get((args.model, eval_name), None)
+        if task is not None and not args.force:
+            print(f"Already detected job for {task['eval']} on {task['model']} on slurm job {task['job_id']} and --force not specified, skipping...")
+            continue
         run_eval(eval_name, args)
 
 if __name__ == "__main__":
