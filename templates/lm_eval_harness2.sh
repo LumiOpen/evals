@@ -58,6 +58,10 @@ if [ -z "$WORK_DIR" ]; then
     echo "WORK_DIR is not set"
     exit 1
 fi
+if [ -z "$FEWSHOT_AS_MULTITURN" ]; then
+    echo "FEWSHOT_AS_MULTITURN is not set"
+    exit 1
+fi
 
 # set up environment
 WORK_DIR=$WORK_DIR/lm_eval_harness
@@ -133,6 +137,8 @@ echo "Acquired lock (Job ID: $SLURM_JOB_ID), executing environment setup code."
 python -m venv venv.lm-evaluation-harness2
 source venv.lm-evaluation-harness2/bin/activate
 
+export HF_HOME="/scratch/project_462000353/hf_cache"
+
 if [ ! -d lm-evaluation-harness2 ] ; then
    	git clone -b main https://github.com/jonabur/lm-evaluation-harness lm-evaluation-harness2
 fi
@@ -148,8 +154,9 @@ pip install jinja2 --upgrade  # missing requirement?
 pip install sentencepiece --upgrade  # required for 01-ai/Yi
 pip install protobuf --upgrade       # required for Llama 2 tokenizer
 pip install tiktoken --upgrade
-pip install langdetect --upgrade # required for ifeval_fi and ifeval_sv
-pip install immutabledict --upgrade # required for ifeval_fi and ifeval_sv
+pip install langdetect --upgrade # required for ifeval
+pip install immutabledict --upgrade # required for ifeval
+pip install heliport --upgrade # required for ifeval_fi, use heli-ots instead of langdetect
 
 pip install -e .
 pip install -e .[math]
@@ -182,6 +189,14 @@ else
     CHAT_TEMPLATE_FLAG="--apply_chat_template ${APPLY_CHAT_TEMPLATE}"
 fi
 
+if [ "$FEWSHOT_AS_MULTITURN" = "False" ]; then
+    FEWSHOT_AS_MULTITURN=""
+elif [ "$FEWSHOT_AS_MULTITURN" = "True" ]; then
+    FEWSHOT_AS_MULTITURN="--fewshot_as_multiturn"
+else
+    FEWSHOT_AS_MULTITURN="--fewshot_as_multiturn ${FEWSHOT_AS_MULTITURN}"
+fi
+
 set -x
 lm_eval \
     --model hf \
@@ -189,8 +204,10 @@ lm_eval \
     --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
     --output_path $RANDOM_DIR \
-    $CHAT_TEMPLATE_FLAG
-    # --log_samples 
+    --log_samples \
+    $CHAT_TEMPLATE_FLAG \
+    $FEWSHOT_AS_MULTITURN 
+    
 set +x
 
 echo Moving temporary results from $RANDOM_DIR to $OUTPUT_FILE

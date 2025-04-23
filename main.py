@@ -109,6 +109,13 @@ def run_eval(eval_name, args):
     else:
         env_vars['APPLY_CHAT_TEMPLATE'] = args.apply_chat_template
 
+    if args.fewshot_as_multiturn is False:
+        env_vars['FEWSHOT_AS_MULTITURN'] = "False"
+    elif args.fewshot_as_multiturn is True:
+        env_vars['FEWSHOT_AS_MULTITURN'] = "True"
+    else:
+        env_vars['FEWSHOT_AS_MULTITURN'] = args.apply_chat_template
+
     slurm_config = {
         'name': eval_name,
         'account': args.project,
@@ -144,7 +151,10 @@ def run_eval(eval_name, args):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    process = subprocess.run(['sbatch', script_name], capture_output=True, text=True)
+    # process = subprocess.run(['sbatch', script_name], capture_output=True, text=True)
+    process = subprocess.run(['sbatch', script_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    stdout = process.stdout
+    stderr = process.stderr
     if process.returncode != 0:
         print(f"Error: sbatch command failed with return code {process.returncode}")
         print(process.stderr)
@@ -201,7 +211,17 @@ def main():
             "To specificy a particular template, supply its name (see lm_eval options)"
         )
     )
-
+    parser.add_argument(
+        '--fewshot_as_multiturn',
+        nargs='?',
+        const=True,
+        default=False,
+        type=str,
+        help=(
+            "If true, treat few-shot prompts as multiturn conversation. "
+            "If provided without an argument, applies the default behaviour. "
+        )
+    )
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
@@ -229,12 +249,12 @@ def main():
             print(f"Error: tokenizer '{args.tokenizer}' looks like a directory, but does not contain a tokenizer.json")
             sys.exit(1)
 
-    scheduled_tasks = identify_scheduled_tasks()
+    # scheduled_tasks = identify_scheduled_tasks()
     for eval_name in args.eval:
-        task = scheduled_tasks.get((args.model, eval_name), None)
-        if task is not None and not args.force:
-            print(f"Already detected job for {task['eval']} on {task['model']} on slurm job {task['job_id']} and --force not specified, skipping...")
-            continue
+        # task = scheduled_tasks.get((args.model, eval_name), None)
+        # if task is not None and not args.force:
+        #     print(f"Already detected job for {task['eval']} on {task['model']} on slurm job {task['job_id']} and --force not specified, skipping...")
+        #     continue
         run_eval(eval_name, args)
 
 if __name__ == "__main__":
