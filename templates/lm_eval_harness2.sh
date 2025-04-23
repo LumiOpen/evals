@@ -204,7 +204,6 @@ lm_eval \
     --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
     --output_path $RANDOM_DIR \
-    --log_samples \
     $CHAT_TEMPLATE_FLAG \
     $FEWSHOT_AS_MULTITURN 
     
