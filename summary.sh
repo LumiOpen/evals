@@ -475,4 +475,15 @@ if [ -f $DIR/belebele_fin.json ] ; then
     cat $DIR/belebele_fin.json | jq '.results.belebele_fin_Latn["acc,none"]' | awk '{print $1 * 100}'
 fi
 
+if [ -f $DIR/ifeval.json ] ; then
+    echo
+    echo -n "     ifeval prompt_loose: "
+    cat $DIR/ifeval.json | jq '.results.ifeval["prompt_level_loose_acc,none"]' | awk '{print $1 * 100}'
+fi
 
+if [ -f $DIR/ifeval_fi.json ] ; then
+    echo -n "     ifeval_fi prompt_loose: "
+    cat $DIR/ifeval_fi.json | jq '.results.ifeval_fi["prompt_level_loose_acc,none"]' | awk '{print $1 * 100}'
+fi
+
+echo
