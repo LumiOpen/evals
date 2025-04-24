@@ -109,6 +109,11 @@ def run_eval(eval_name, args):
     else:
         env_vars['APPLY_CHAT_TEMPLATE'] = args.apply_chat_template
 
+    if args.fewshot_as_multiturn is None:
+        env_vars['FEWSHOT_AS_MULTITURN'] = str(args.apply_chat_template)
+    else:
+        env_vars['FEWSHOT_AS_MULTITURN'] = str(args.fewshot_as_multiturn)
+
     slurm_config = {
         'name': eval_name,
         'account': args.project,
@@ -144,7 +149,7 @@ def run_eval(eval_name, args):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    process = subprocess.run(['sbatch', script_name], capture_output=True, text=True)
+    process = subprocess.run(['sbatch', script_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     if process.returncode != 0:
         print(f"Error: sbatch command failed with return code {process.returncode}")
         print(process.stderr)
@@ -201,7 +206,17 @@ def main():
             "To specificy a particular template, supply its name (see lm_eval options)"
         )
     )
-
+    parser.add_argument(
+        '--fewshot_as_multiturn',
+        nargs='?',
+        const=True,
+        default=False,
+        type=lambda x: str(x).lower() == 'true' if x is not None else True,
+        help=(
+            "If true, treat few-shot prompts as multiturn conversation. "
+            "If provided without an argument, applies the default behaviour. "
+        )
+    )
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
