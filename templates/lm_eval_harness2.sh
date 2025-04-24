@@ -193,8 +193,6 @@ if [ "$FEWSHOT_AS_MULTITURN" = "False" ]; then
     FEWSHOT_AS_MULTITURN=""
 elif [ "$FEWSHOT_AS_MULTITURN" = "True" ]; then
     FEWSHOT_AS_MULTITURN="--fewshot_as_multiturn"
-else
-    FEWSHOT_AS_MULTITURN="--fewshot_as_multiturn ${FEWSHOT_AS_MULTITURN}"
 fi
 
 set -x
