@@ -245,6 +245,8 @@ evals = {
     # code
     "humaneval_pass@1": BigcodeConfig("humaneval", n_samples=1),
     "humaneval_pass@10": BigcodeConfig("humaneval", n_samples=10),
+    "humaneval-unstripped_pass@1": BigcodeConfig("humaneval-unstripped", n_samples=1),
+    "humaneval-unstripped_pass@10": BigcodeConfig("humaneval-unstripped", n_samples=10),
     "mbpp_pass@1": BigcodeConfig("mbpp", n_samples=1),
     "mbpp_pass@10": BigcodeConfig("mbpp", n_samples=10),
 
