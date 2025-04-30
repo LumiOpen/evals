@@ -78,55 +78,62 @@ echo
 
 echo -n "     finbench_3shot: "
 if [ -f $DIR/finbench_3shot.json ] ; then 
-    #cat $DIR/finbench_3shot.json | jq -r '.results | to_entries | .[] | [.key, .value.multiple_choice_grade] | @csv'
-    cat $DIR/finbench_3shot.json | jq  '.results | 
-  [
-    .bigbench_1_digit_addition.multiple_choice_grade,
-    .bigbench_1_digit_division.multiple_choice_grade,
-    .bigbench_1_digit_multiplication.multiple_choice_grade,
-    .bigbench_1_digit_subtraction.multiple_choice_grade,
-    .bigbench_2_digit_addition.multiple_choice_grade,
-    .bigbench_2_digit_division.multiple_choice_grade,
-    .bigbench_2_digit_multiplication.multiple_choice_grade,
-    .bigbench_2_digit_subtraction.multiple_choice_grade,
-    .bigbench_3_digit_addition.multiple_choice_grade,
-    .bigbench_3_digit_division.multiple_choice_grade,
-    .bigbench_3_digit_multiplication.multiple_choice_grade,
-    .bigbench_3_digit_subtraction.multiple_choice_grade,
-    .bigbench_4_digit_addition.multiple_choice_grade,
-    .bigbench_4_digit_division.multiple_choice_grade,
-    .bigbench_4_digit_multiplication.multiple_choice_grade,
-    .bigbench_4_digit_subtraction.multiple_choice_grade,
-    .bigbench_5_digit_addition.multiple_choice_grade,
-    .bigbench_5_digit_division.multiple_choice_grade,
-    .bigbench_5_digit_multiplication.multiple_choice_grade,
-    .bigbench_5_digit_subtraction.multiple_choice_grade
-  ] as $math_ops | {
-  other: [
-    .bigbench_analogies.multiple_choice_grade,
-    .bigbench_emotions.multiple_choice_grade,
-    .bigbench_empirical_judgments.multiple_choice_grade,
-    .bigbench_general_knowledge.multiple_choice_grade,
-    .bigbench_harmless.multiple_choice_grade,
-    .bigbench_helpful.multiple_choice_grade,
-    .bigbench_honest.multiple_choice_grade,
-    .bigbench_intent_recognition.multiple_choice_grade,
-    .bigbench_misconceptions.multiple_choice_grade,
-    .bigbench_one_sentence.multiple_choice_grade,
-    .bigbench_one_sentence_no_prompt.multiple_choice_grade,
-    .bigbench_other.multiple_choice_grade,
-    .bigbench_paraphrase.multiple_choice_grade,
-    .bigbench_sentence_ambiguity.multiple_choice_grade,
-    .bigbench_similarities_abstraction.multiple_choice_grade,
-    .bigbench_two_sentences.multiple_choice_grade,
-    (($math_ops) | add / length)
-  ]
-} | {
-  overall_average: ((.other) | add / length)
-} | .overall_average' | awk '{print $1 * 100}'
+    if grep FIN-bench $DIR/finbench_3shot.json > /dev/null 2>&1 ; then 
+        # new version
+        cat $DIR/finbench_3shot.json | jq  '.results | to_entries | map(.value."acc,none") | add / length' | awk '{print $1 * 100}'
+    else
+        # old version
+        cat $DIR/finbench_3shot.json | jq  '.results | 
+            [
+            .bigbench_1_digit_addition.multiple_choice_grade,
+            .bigbench_1_digit_division.multiple_choice_grade,
+            .bigbench_1_digit_multiplication.multiple_choice_grade,
+            .bigbench_1_digit_subtraction.multiple_choice_grade,
+            .bigbench_2_digit_addition.multiple_choice_grade,
+            .bigbench_2_digit_division.multiple_choice_grade,
+            .bigbench_2_digit_multiplication.multiple_choice_grade,
+            .bigbench_2_digit_subtraction.multiple_choice_grade,
+            .bigbench_3_digit_addition.multiple_choice_grade,
+            .bigbench_3_digit_division.multiple_choice_grade,
+            .bigbench_3_digit_multiplication.multiple_choice_grade,
+            .bigbench_3_digit_subtraction.multiple_choice_grade,
+            .bigbench_4_digit_addition.multiple_choice_grade,
+            .bigbench_4_digit_division.multiple_choice_grade,
+            .bigbench_4_digit_multiplication.multiple_choice_grade,
+            .bigbench_4_digit_subtraction.multiple_choice_grade,
+            .bigbench_5_digit_addition.multiple_choice_grade,
+            .bigbench_5_digit_division.multiple_choice_grade,
+            .bigbench_5_digit_multiplication.multiple_choice_grade,
+            .bigbench_5_digit_subtraction.multiple_choice_grade
+        ] as $math_ops | {
+        other: [
+            .bigbench_analogies.multiple_choice_grade,
+            .bigbench_emotions.multiple_choice_grade,
+            .bigbench_empirical_judgments.multiple_choice_grade,
+            .bigbench_general_knowledge.multiple_choice_grade,
+            .bigbench_harmless.multiple_choice_grade,
+            .bigbench_helpful.multiple_choice_grade,
+            .bigbench_honest.multiple_choice_grade,
+            .bigbench_intent_recognition.multiple_choice_grade,
+            .bigbench_misconceptions.multiple_choice_grade,
+            .bigbench_one_sentence.multiple_choice_grade,
+            .bigbench_one_sentence_no_prompt.multiple_choice_grade,
+            .bigbench_other.multiple_choice_grade,
+            .bigbench_paraphrase.multiple_choice_grade,
+            .bigbench_sentence_ambiguity.multiple_choice_grade,
+            .bigbench_similarities_abstraction.multiple_choice_grade,
+            .bigbench_two_sentences.multiple_choice_grade,
+            (($math_ops) | add / length)
+        ]
+        } | {
+        overall_average: ((.other) | add / length)
+        } | .overall_average' | awk '{print $1 * 100}'
+    fi
+
 else
     echo na
 fi
+
 echo -n "   arc_challenge_fi: "
 if [ -f $DIR/arc_challenge_fi.json ] ; then 
     cat $DIR/arc_challenge_fi.json | jq '.results.arc_challenge_fi.acc_norm' | awk '{print $1 * 100}'
@@ -193,10 +200,11 @@ if [ -f $DIR/flores200_trans_fi_en.json ] ; then
 else
     echo na
 fi
+
+
 echo
 
-
-echo -n " arc_challenge_da: "
+echo -n "   arc_challenge_da: "
 if [ -f $DIR/arc_challenge_da.json ] ; then 
     cat $DIR/arc_challenge_da.json | jq '.results.arc_challenge_da.acc_norm' | awk '{print $1 * 100}'
 elif [ -f $DIR/arc_challenge_mt_da.json ] ; then 
@@ -204,6 +212,51 @@ elif [ -f $DIR/arc_challenge_mt_da.json ] ; then
 else
     echo na
 fi
+
+echo -n "    hellaswag_mt_da: "
+if [ -f $DIR/hellaswag_mt_da.json ] ; then
+    cat $DIR/hellaswag_mt_da.json | jq '.results.ogx_hellaswagx_da."acc,none"' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n "         mmlu_mt_da: "
+if [ -f $DIR/mmlu_mt_da.json ] ; then
+    cat $DIR/mmlu_mt_da.json | jq '.groups.ogx_mmlux_DA."acc,none"' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n "truthfulqa_mc_mt_da: "
+if [ -f $DIR/truthfulqa_mc_mt_da.json ] ; then
+    cat $DIR/truthfulqa_mc_mt_da.json | jq '.results.ogx_truthfulqax_mc2_da."acc,none"' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n "        gsm8k_mt_da: "
+if [ -f $DIR/gsm8k_mt_da.json ] ; then
+    cat $DIR/gsm8k_mt_da.json | jq '.results.ogx_gsm8kx_da."acc,none"' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n "    flores200_en_da: "
+if [ -f $DIR/flores200_trans_en_da.json ] ; then
+    cat $DIR/flores200_trans_en_da.json | jq '.results."ogx_flores200-trans-eng_Latn-dan_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
+else
+    echo na
+fi
+
+echo -n "    flores200_da_en: "
+if [ -f $DIR/flores200_trans_da_en.json ] ; then
+    cat $DIR/flores200_trans_da_en.json | jq '.results."ogx_flores200-trans-dan_Latn-eng_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
+else
+    echo na
+fi
+
+echo
+
 echo -n " arc_challenge_is: "
 if [ -f $DIR/arc_challenge_is.json ] ; then 
     cat $DIR/arc_challenge_is.json | jq '.results.arc_challenge_is.acc_norm' | awk '{print $1 * 100}'
@@ -212,6 +265,24 @@ elif [ -f $DIR/arc_challenge_mt_is.json ] ; then
 else
     echo na
 fi
+
+echo -n "    flores200_en_is: "
+if [ -f $DIR/flores200_trans_en_is.json ] ; then
+    cat $DIR/flores200_trans_en_is.json | jq '.results."ogx_flores200-trans-eng_Latn-isl_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
+else
+    echo na
+fi
+
+echo -n "    flores200_is_en: "
+if [ -f $DIR/flores200_trans_is_en.json ] ; then
+    cat $DIR/flores200_trans_is_en.json | jq '.results."ogx_flores200-trans-isl_Latn-eng_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
+else
+    echo na
+fi
+
+echo
+
+
 echo -n " arc_challenge_nb: "
 if [ -f $DIR/arc_challenge_nb.json ] ; then 
     cat $DIR/arc_challenge_nb.json | jq '.results.arc_challenge_nb.acc_norm' | awk '{print $1 * 100}'
@@ -220,11 +291,70 @@ elif [ -f $DIR/arc_challenge_mt_nb.json ] ; then
 else
     echo na
 fi
-echo -n " arc_challenge_sv: "
+
+echo -n "    flores200_en_nb: "
+if [ -f $DIR/flores200_trans_en_nb.json ] ; then
+    cat $DIR/flores200_trans_en_nb.json | jq '.results."ogx_flores200-trans-eng_Latn-nob_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
+else
+    echo na
+fi
+
+echo -n "    flores200_nb_en: "
+if [ -f $DIR/flores200_trans_nb_en.json ] ; then
+    cat $DIR/flores200_trans_nb_en.json | jq '.results."ogx_flores200-trans-nob_Latn-eng_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
+else
+    echo na
+fi
+
+echo 
+
+echo -n "   arc_challenge_sv: "
 if [ -f $DIR/arc_challenge_sv.json ] ; then 
     cat $DIR/arc_challenge_sv.json | jq '.results.arc_challenge_sv.acc_norm' | awk '{print $1 * 100}'
 elif [ -f $DIR/arc_challenge_mt_sv.json ] ; then 
     cat $DIR/arc_challenge_mt_sv.json | jq '.results.arc_challenge_mt_sv["acc_norm,none"]' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n "    hellaswag_mt_sv: "
+if [ -f $DIR/hellaswag_mt_sv.json ] ; then
+    cat $DIR/hellaswag_mt_sv.json | jq '.results.ogx_hellaswagx_sv."acc,none"' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n "         mmlu_mt_sv: "
+if [ -f $DIR/mmlu_mt_sv.json ] ; then
+    cat $DIR/mmlu_mt_sv.json | jq '.groups.ogx_mmlux_SV."acc,none"' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n "truthfulqa_mc_mt_sv: "
+if [ -f $DIR/truthfulqa_mc_mt_sv.json ] ; then
+    cat $DIR/truthfulqa_mc_mt_sv.json | jq '.results.ogx_truthfulqax_mc2_sv."acc,none"' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n "        gsm8k_mt_sv: "
+if [ -f $DIR/gsm8k_mt_sv.json ] ; then
+    cat $DIR/gsm8k_mt_sv.json | jq '.results.ogx_gsm8kx_sv."acc,none"' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+
+echo -n "    flores200_en_sv: "
+if [ -f $DIR/flores200_trans_en_sv.json ] ; then
+    cat $DIR/flores200_trans_en_sv.json | jq '.results."ogx_flores200-trans-eng_Latn-swe_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
+else
+    echo na
+fi
+
+echo -n "    flores200_sv_en: "
+if [ -f $DIR/flores200_trans_sv_en.json ] ; then
+    cat $DIR/flores200_trans_sv_en.json | jq '.results."ogx_flores200-trans-swe_Latn-eng_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
 else
     echo na
 fi
