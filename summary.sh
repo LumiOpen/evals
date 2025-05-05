@@ -155,6 +155,12 @@ if [ -f $DIR/goldenswag_mt_fi.json ] ; then
 else
     echo na
 fi
+echo -n "    goldenswag_mt_fi_10shot: "
+if [ -f $DIR/goldenswag_mt_fi_10shot.json ] ; then
+    cat $DIR/goldenswag_mt_fi_10shot.json | jq '.results.ogx_goldenswagx_fi."acc,none"' | awk '{print $1 * 100}'
+else
+    echo na
+fi
 
 echo -n "         mmlu_mt_fi: "
 if [ -f $DIR/mmlu_mt_fi.json ] ; then
