@@ -229,8 +229,8 @@ if [ "$APPLY_CHAT_TEMPLATE" = "auto" ]; then
     echo Detecting chat template for tokenizer $TOKENIZER
     CHAT_TEMPLATE_DETECTED=$(detect_chat_template)
     echo Chat template for $TOKENIZER is $CHAT_TEMPLATE_DETECTED
-fi
-if [ "$APPLY_CHAT_TEMPLATE" = "auto" ] ; then 
+
+    # update value to True or False for subsequent logic
     APPLY_CHAT_TEMPLATE=$CHAT_TEMPLATE_DETECTED
 fi
 
