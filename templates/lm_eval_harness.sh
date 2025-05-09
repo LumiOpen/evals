@@ -50,19 +50,26 @@ if [ -z "$TRUST_REMOTE_CODE" ]; then
     echo "TRUST_REMOTE_CODE is not set"
     exit 1
 fi
-if [ -z "$APPLY_CHAT_TEMPLATE" ]; then
-    echo "APPLY_CHAT_TEMPLATE is not set"
-    exit 1
-fi
 if [ -z "$WORK_DIR" ]; then
     echo "WORK_DIR is not set"
     exit 1
 fi
+if [ -z "$APPLY_CHAT_TEMPLATE" ]; then
+    echo "APPLY_CHAT_TEMPLATE is not set"
+    exit 1
+fi
+if [ -z "$FEWSHOT_AS_MULTITURN" ]; then
+    echo "FEWSHOT_AS_MULTITURN is not set"
+    exit 1
+fi
+
 
 # Remove any venv settings that might confuse things.
 unset PYTHONPATH
 unset PYTHONHOME
 unset VIRTUAL_ENV
+
+export HF_HOME="/scratch/project_462000353/hf_cache"
 
 # Prepare work dir
 WORK_DIR=$WORK_DIR/lm_eval_harness
@@ -183,14 +190,15 @@ echo PYTHONUSERBASE is $PYTHONUSERBASE
 export PATH=$PATH:$PYTHONUSERBASE/bin
 pip install --upgrade setuptools pip
 pip --python=/appl/local/csc/soft/ai/bin/python install --user  -e .[hf_transfer,math,multilingual,sentencepiece,ifeval]
+pip install --upgrade langdetect immutabledict heliport
 
 # remove cleanup trap and release lock
 trap - EXIT
 cleanup
 echo "Environment setup complete."
 
-### Prepare to run command
 
+### Prepare to run command
 echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"
 
 # lm_eval has changed so that --output_path is treated as a directory and the
@@ -204,13 +212,45 @@ echo Saving temporary results to $RANDOM_DIR
 mkdir -p $OUTPUT_DIR
 echo Final results will be saved to: $OUTPUT_FILE
 
-if [ "$APPLY_CHAT_TEMPLATE" = "False" ]; then
-    CHAT_TEMPLATE_FLAG=""
-elif [ "$APPLY_CHAT_TEMPLATE" = "True" ]; then
+
+### Chat template detection and configuration
+
+detect_chat_template () {
+  python - <<'PY'
+from transformers import AutoTokenizer
+import json, os, sys
+name   = os.environ["TOKENIZER"]
+trust  = os.getenv("TRUST_REMOTE_CODE", "False").lower() == "true"
+cfg    = AutoTokenizer.from_pretrained(name, trust_remote_code=trust)
+print("True" if getattr(cfg, "chat_template", None) else "False")
+PY
+}
+if [ "$APPLY_CHAT_TEMPLATE" = "auto" ]; then 
+    echo Detecting chat template for tokenizer $TOKENIZER
+    CHAT_TEMPLATE_DETECTED=$(detect_chat_template)
+    echo Chat template for $TOKENIZER is $CHAT_TEMPLATE_DETECTED
+fi
+if [ "$APPLY_CHAT_TEMPLATE" = "auto" ] ; then 
+    APPLY_CHAT_TEMPLATE=$CHAT_TEMPLATE_DETECTED
+fi
+
+if [ "$APPLY_CHAT_TEMPLATE" = "True" ]; then
     CHAT_TEMPLATE_FLAG="--apply_chat_template"
 else
-    CHAT_TEMPLATE_FLAG="--apply_chat_template ${APPLY_CHAT_TEMPLATE}"
+    CHAT_TEMPLATE_FLAG=""
 fi
+
+if [ "$FEWSHOT_AS_MULTITURN" = "auto" ] ; then
+    FEWSHOT_AS_MULTITURN=$APPLY_CHAT_TEMPLATE
+fi
+
+if [ "$FEWSHOT_AS_MULTITURN" = "True" ]; then
+    FEWSHOT_AS_MULTITURN_FLAG="--fewshot_as_multiturn"
+else
+    FEWSHOT_AS_MULTITURN_FLAG=""
+fi
+
+### Launch command
 
 set -x
 lm_eval \
@@ -219,8 +259,9 @@ lm_eval \
     --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
     --output_path $RANDOM_DIR \
-    $CHAT_TEMPLATE_FLAG
-    # --log_samples 
+    $CHAT_TEMPLATE_FLAG \
+    $FEWSHOT_AS_MULTITURN_FLAG
+    # --log_samples \
 set +x
 
 echo Moving temporary results from $RANDOM_DIR to $OUTPUT_FILE
