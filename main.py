@@ -101,18 +101,9 @@ def run_eval(eval_name, args):
         'WORK_DIR': os.path.abspath(args.work_dir),
         'OUTPUT_FILE': output_file,
         'TRUST_REMOTE_CODE': "True" if args.trust_remote_code else "False",
+        'APPLY_CHAT_TEMPLATE': args.apply_chat_template,
+        'FEWSHOT_AS_MULTITURN': args.fewshot_as_multiturn,
     }
-    if args.apply_chat_template is False:
-        env_vars['APPLY_CHAT_TEMPLATE'] = "False"
-    elif args.apply_chat_template is True:
-        env_vars['APPLY_CHAT_TEMPLATE'] = "True"
-    else:
-        env_vars['APPLY_CHAT_TEMPLATE'] = args.apply_chat_template
-
-    if args.fewshot_as_multiturn is None:
-        env_vars['FEWSHOT_AS_MULTITURN'] = str(args.apply_chat_template)
-    else:
-        env_vars['FEWSHOT_AS_MULTITURN'] = str(args.fewshot_as_multiturn)
 
     slurm_config = {
         'name': eval_name,
@@ -183,6 +174,18 @@ def run_eval(eval_name, args):
         f.write(json.dumps(log_entry) + "\n")
     print(json.dumps(log_entry, indent=4))
 
+def parse_chat_flag(v):
+    if v is None:  # flag supplied without value -> True
+        return "True"
+    v_low = v.lower()
+    if v_low in {"true", "t", "1"}:
+        return "True"
+    if v_low in {"false", "f", "0"}:
+        return "False"
+    if v_low == "auto":
+        return "auto"
+    raise argparse.ArgumentTypeError("Expected True / False / auto (leave blank for True)")
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('eval', type=str, nargs='+', choices=list(evals.keys()), default='finbench', help='Which eval to run')
@@ -197,25 +200,18 @@ def main():
     parser.add_argument(
         '--apply_chat_template',
         nargs='?',
-        const=True,
-        default=False,
-        type=str,
-        help=(
-            "If true, apply the default chat template. "
-            "If provided without an argument, applies the default template. "
-            "To specificy a particular template, supply its name (see lm_eval options)"
-        )
+        const=None,
+        default="auto",
+        type=parse_chat_flag,
+        help="auto (default) = detect from tokenizer; True/False = force",
     )
     parser.add_argument(
         '--fewshot_as_multiturn',
         nargs='?',
-        const=True,
-        default=False,
-        type=lambda x: str(x).lower() == 'true' if x is not None else True,
-        help=(
-            "If true, treat few-shot prompts as multiturn conversation. "
-            "If provided without an argument, applies the default behaviour. "
-        )
+        const=None,
+        default="auto",
+        type=parse_chat_flag,
+        help="auto (default) = match apply_chat_template setting; True/False = force",
     )
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
