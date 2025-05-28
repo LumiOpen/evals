@@ -86,7 +86,8 @@ git fetch origin
 git reset --hard origin/main
 
 pip install --upgrade torch --index-url https://download.pytorch.org/whl/rocm6.0
-pip install --upgrade transformers accelerate hf_transfer
+# transformers 4.53 issues, may be fixed after 4.53.3+
+pip install --upgrade "transformers<4.52" accelerate hf_transfer
 pip install --no-cache-dir -r requirements.txt
 
 # various model tokenizer etc. requirements
