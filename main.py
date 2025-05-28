@@ -200,18 +200,25 @@ def main():
     parser.add_argument(
         '--apply_chat_template',
         nargs='?',
-        const=None,
-        default="auto",
-        type=parse_chat_flag,
-        help="auto (default) = detect from tokenizer; True/False = force",
+        const=True,
+        default=False,
+        type=str,
+        help=(
+            "If true, apply the default chat template. "
+            "If provided without an argument, applies the default template. "
+            "To specificy a particular template, supply its name (see lm_eval options)"
+        )
     )
     parser.add_argument(
         '--fewshot_as_multiturn',
         nargs='?',
-        const=None,
-        default="auto",
-        type=parse_chat_flag,
-        help="auto (default) = match apply_chat_template setting; True/False = force",
+        const=True,
+        default=False,
+        type=lambda x: str(x).lower() == 'true' if x is not None else True,
+        help=(
+            "If true, treat few-shot prompts as multiturn conversation. "
+            "If provided without an argument, applies the default behaviour. "
+        )
     )
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")

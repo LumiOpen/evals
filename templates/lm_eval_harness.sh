@@ -213,36 +213,12 @@ mkdir -p $OUTPUT_DIR
 echo Final results will be saved to: $OUTPUT_FILE
 
 
-### Chat template detection and configuration
-
-detect_chat_template () {
-  python - <<'PY'
-from transformers import AutoTokenizer
-import json, os, sys
-name   = os.environ["TOKENIZER"]
-trust  = os.getenv("TRUST_REMOTE_CODE", "False").lower() == "true"
-cfg    = AutoTokenizer.from_pretrained(name, trust_remote_code=trust)
-print("True" if getattr(cfg, "chat_template", None) else "False")
-PY
-}
-if [ "$APPLY_CHAT_TEMPLATE" = "auto" ]; then 
-    echo Detecting chat template for tokenizer $TOKENIZER
-    CHAT_TEMPLATE_DETECTED=$(detect_chat_template)
-    echo Chat template for $TOKENIZER is $CHAT_TEMPLATE_DETECTED
-
-    # update value to True or False for subsequent logic
-    APPLY_CHAT_TEMPLATE=$CHAT_TEMPLATE_DETECTED
-fi
-
 if [ "$APPLY_CHAT_TEMPLATE" = "True" ]; then
     CHAT_TEMPLATE_FLAG="--apply_chat_template"
 else
     CHAT_TEMPLATE_FLAG=""
 fi
 
-if [ "$FEWSHOT_AS_MULTITURN" = "auto" ] ; then
-    FEWSHOT_AS_MULTITURN=$APPLY_CHAT_TEMPLATE
-fi
 
 if [ "$FEWSHOT_AS_MULTITURN" = "True" ]; then
     FEWSHOT_AS_MULTITURN_FLAG="--fewshot_as_multiturn"
