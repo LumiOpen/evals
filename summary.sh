@@ -522,6 +522,19 @@ fi
 
 echo
 
+echo -n " humaneval-unstripped_pass@1: "
+if [ -f $DIR/humaneval-unstripped_pass@1.json ] ; then
+    cat $DIR/humaneval-unstripped_pass@1.json | jq '."humaneval-unstripped"."pass@1"' | awk '{print $1 * 100 }'
+else
+    echo na
+fi
+
+echo -n "humaneval-unstripped_pass@10: "
+if [ -f $DIR/humaneval-unstripped_pass@10.json ] ; then
+    cat $DIR/humaneval-unstripped_pass@10.json | jq '."humaneval-unstripped"."pass@10"' | awk '{print $1 * 100 }'
+else
+    echo na
+fi
 echo -n " humaneval_pass@1: "
 if [ -f $DIR/humaneval_pass@1.json ] ; then
     cat $DIR/humaneval_pass@1.json | jq '.humaneval."pass@1"' | awk '{print $1 * 100 }'
