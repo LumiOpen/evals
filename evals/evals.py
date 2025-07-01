@@ -305,4 +305,7 @@ evals = {
     "ifeval": LMEvalConfig("ifeval", "acc,none", num_fewshot=0),
     "ifeval_fi": LMEvalConfig("ifeval_fi", "acc,none", num_fewshot=0),
     "ifeval_sv": LMEvalConfig("ifeval_sv", "acc,none", num_fewshot=0),
+
+    # INCLUDE  
+    "include_finnish": LMEvalConfig("include_base_44_finnish", "acc,none", num_fewshot=5),
 }
