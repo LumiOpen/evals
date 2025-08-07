@@ -293,6 +293,9 @@ evals = {
     "lambada_openai":  LMEvalConfig("lambada_openai", "acc,none", num_fewshot=0),
     "lambada_standard":  LMEvalConfig("lambada_standard", "acc,none", num_fewshot=0),
 
+    "goldenswag": LMEvalConfig("goldenswag", "acc_norm,none", num_fewshot=10),
+    "goldenswag_0shot": LMEvalConfig("goldenswag", "acc_norm,none", num_fewshot=0),
+
     # code
     "humaneval_pass@1": BigcodeConfig("humaneval", n_samples=1),
     "humaneval_pass@10": BigcodeConfig("humaneval", n_samples=10),

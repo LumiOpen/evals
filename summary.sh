@@ -30,6 +30,17 @@ if [ -f $DIR/hellaswag2.json ] ; then
     cat $DIR/hellaswag2.json | jq '.results.hellaswag.acc_norm // .results.hellaswag["acc_norm,none"]' | awk '{print $1 * 100}'
 fi
 
+echo -n "       goldenswag: "
+if [ -f $DIR/goldenswag.json ] ; then
+    cat $DIR/goldenswag.json | jq '.results.goldenswag.acc_norm // .results.goldenswag["acc_norm,none"]' | awk '{print $1 * 100}'
+else
+    echo na
+fi
+if [ -f $DIR/goldenswag_0shot.json ] ; then
+    echo -n " goldenswag_0shot: "
+    cat $DIR/goldenswag_0shot.json | jq '.results.goldenswag.acc_norm // .results.goldenswag["acc_norm,none"]' | awk '{print $1 * 100}'
+fi
+
 echo -n "             mmlu: "
 if [ -f $DIR/mmlu.json ] ; then
     cat $DIR/mmlu.json | jq '[if .results.mmlu | has("acc,none") then .results.mmlu["acc,none"] else .results | .[] | .acc end] | add / length * 100'
