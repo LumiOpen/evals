@@ -311,4 +311,7 @@ evals = {
 
     # INCLUDE  
     "include_finnish": LMEvalConfig("include_base_44_finnish", "acc,none", num_fewshot=5),
+
+    # MATH 4-shot  
+    "minerva_math": LMEvalConfig("minerva_math", "exact_match,none", num_fewshot=4),
 }
