@@ -314,4 +314,10 @@ evals = {
 
     # MATH 4-shot  
     "minerva_math": LMEvalConfig("minerva_math", "exact_match,none", num_fewshot=4),
+
+    # harder evals
+    "gpqa_diamond_zeroshot": LMEvalConfig("gpqa_diamond_zeroshot", "acc,none", num_fewshot=0),
+    "gpqa_diamond_5shot": LMEvalConfig("gpqa_diamond_nshot", "acc,none", num_fewshot=5),
+    "gpqa_diamond_cot_zeroshot": LMEvalConfig("gpqa_diamond_cot_zeroshot", "acc,none", num_fewshot=0),
+    "gpqa_diamond_cot_5shot": LMEvalConfig("gpqa_diamond_cot_nshot", "acc,none", num_fewshot=5),
 }
