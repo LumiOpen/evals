@@ -36,10 +36,6 @@ if [ -f $DIR/goldenswag.json ] ; then
 else
     echo na
 fi
-if [ -f $DIR/goldenswag_0shot.json ] ; then
-    echo -n " goldenswag_0shot: "
-    cat $DIR/goldenswag_0shot.json | jq '.results.goldenswag.acc_norm // .results.goldenswag["acc_norm,none"]' | awk '{print $1 * 100}'
-fi
 
 echo -n "             mmlu: "
 if [ -f $DIR/mmlu.json ] ; then
@@ -163,12 +159,6 @@ fi
 echo -n "    goldenswag_mt_fi: "
 if [ -f $DIR/goldenswag_mt_fi.json ] ; then
     cat $DIR/goldenswag_mt_fi.json | jq '.results.ogx_goldenswagx_fi."acc,none"' | awk '{print $1 * 100}'
-else
-    echo na
-fi
-echo -n "    goldenswag_mt_fi_10shot: "
-if [ -f $DIR/goldenswag_mt_fi_10shot.json ] ; then
-    cat $DIR/goldenswag_mt_fi_10shot.json | jq '.results.ogx_goldenswagx_fi."acc,none"' | awk '{print $1 * 100}'
 else
     echo na
 fi
