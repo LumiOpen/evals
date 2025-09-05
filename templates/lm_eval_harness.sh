@@ -192,6 +192,15 @@ pip install --upgrade setuptools pip
 pip --python=/appl/local/csc/soft/ai/bin/python install --user  -e .[hf_transfer,math,multilingual,sentencepiece,ifeval]
 pip install --upgrade langdetect immutabledict heliport
 
+# there is an incompatibility with versions of vllm < 0.10.1 and transformers
+# >= 4.54.0.  the following installs a non-functional vllm because it is not
+# built for ROCm, but we don't use vllm and lm_eval_harness will continue after
+# the vllm fails to load.  the startup does seem to take a long time, for
+# whatever reason.
+# this is a temporary workaround until we convert to running in our own
+# clean singularity container, which is coming Soon.
+pip install transformers==4.56.1 vllm==0.10.1.1 outlines_core==0.2.10
+
 # remove cleanup trap and release lock
 trap - EXIT
 cleanup
@@ -227,6 +236,10 @@ else
 fi
 
 ### Launch command
+
+# current versions of accelerate are very picky about these environment
+# variables and demand only one be set.
+unset ROCR_VISIBLE_DEVICES
 
 set -x
 lm_eval \
