@@ -77,22 +77,28 @@ def parse_model(model):
 
     return model_name, step
 
+def parse_output_file(eval_name,args):
+    output_dir = args.output_dir
+    if not output_dir:
+        model, step = parse_model(args.model)
+        output_dir = os.path.join(args.output_root, model, step)
+    if args.ruler_seq_length is not None:
+        output_file = os.path.join(os.path.abspath(output_dir), f"{eval_name}_{args.ruler_seq_length}.json")
+        print(f"Note: using ruler_seq_length in output filename: {output_file}")
+    else:
+        output_file = os.path.join(os.path.abspath(output_dir), f"{eval_name}.json")
+    return output_file
+
 
 def run_eval(eval_name, args):
     output_dir = args.output_dir
     if not output_dir:
         model, step = parse_model(args.model)
         output_dir = os.path.join(args.output_root, model, step)
-
-    #
-    # generate slurm script
-    #
-
-    output_file = os.path.join(os.path.abspath(output_dir), f"{eval_name}.json")
+    output_file = parse_output_file(eval_name, args)
     if os.path.exists(output_file) and not args.force:
         print(f"Output file {output_file} already exists and --force not specified, skipping...")
         return
-
 
     env_vars = {
         'MODEL': args.model,
@@ -103,6 +109,7 @@ def run_eval(eval_name, args):
         'TRUST_REMOTE_CODE': "True" if args.trust_remote_code else "False",
         'APPLY_CHAT_TEMPLATE': args.apply_chat_template,
         'FEWSHOT_AS_MULTITURN': args.fewshot_as_multiturn,
+        'RULER_SEQ_LENGTH': str(args.ruler_seq_length) if args.ruler_seq_length is not None else "",
     }
 
     slurm_config = {
@@ -220,10 +227,19 @@ def main():
             "If provided without an argument, applies the default behaviour. "
         )
     )
+    parser.add_argument(
+        '--ruler_seq_length',
+        type=int,
+        default=None,
+        help=(
+            "Sequence length (single integer, e.g. 4096) for RULER / long-context tasks. "
+            "If provided, passed as metadata max_seq_lengths and appended to output filename."
+        )
+    )
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
-    parser.add_argument('--gres', type=str, default="gpu:mi250:4", help="gres required for sbatch job")
+    parser.add_argument('--gres', type=str, default="gpu:mi250:8", help="gres required for sbatch job")
     parser.add_argument('--time', type=str, default="48:00:00", help="Time limit for sbatch job")
     parser.add_argument('--log_dir', type=str, default="./logs", help="Dir for slurm logs")
 
@@ -248,10 +264,14 @@ def main():
             sys.exit(1)
 
     scheduled_tasks = identify_scheduled_tasks()
+    print("Scheduled tasks:", scheduled_tasks,flush=True)
     for eval_name in args.eval:
-        task = scheduled_tasks.get((args.model, eval_name), None)
+        output_file=parse_output_file(eval_name, args)
+        print(f"Output file: {output_file}",flush=True)
+        task = scheduled_tasks.get((args.model, eval_name, output_file), None)
+        print("Task: ", task,flush=True)
         if task is not None and not args.force:
-            print(f"Already detected job for {task['eval']} on {task['model']} on slurm job {task['job_id']} and --force not specified, skipping...")
+            print(f"Already detected job for {task['eval']} on {task['model']} and output file {task['output_file']} on slurm job {task['job_id']} and --force not specified, skipping...")
             continue
         run_eval(eval_name, args)
 

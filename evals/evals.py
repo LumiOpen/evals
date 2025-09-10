@@ -28,8 +28,8 @@ class EvalConfig(ABC):
 
 # These configs can be used directly for simple tests, or subclassed for more complex ones.
 class LMEvalConfig(EvalConfig):
-    def __init__(self, name, result_type, num_fewshot=0):
-        super().__init__(name, result_type, LMEvalHarness([name], num_fewshot=num_fewshot))
+    def __init__(self, name, result_type, num_fewshot=0, task_args=""):
+        super().__init__(name, result_type, LMEvalHarness([name], num_fewshot=num_fewshot, task_args=task_args))
         self.num_fewshot = num_fewshot
 
 class FinBenchConfig(EvalConfig):
@@ -320,4 +320,20 @@ evals = {
     "gpqa_diamond_5shot": LMEvalConfig("gpqa_diamond_nshot", "acc,none", num_fewshot=5),
     "gpqa_diamond_cot_zeroshot": LMEvalConfig("gpqa_diamond_cot_zeroshot", "acc,none", num_fewshot=0),
     "gpqa_diamond_cot_5shot": LMEvalConfig("gpqa_diamond_cot_nshot", "acc,none", num_fewshot=5),
+
+    # RULER tasks (pass sequence lengths etc. via --task_args, e.g. --task_args "lengths=4096,8192")
+    "ruler": LMEvalConfig("ruler", "acc,none", num_fewshot=0),
+    "niah_single_1": LMEvalConfig("niah_single_1", "acc,none", num_fewshot=0),
+    "niah_single_2": LMEvalConfig("niah_single_2", "acc,none", num_fewshot=0),
+    "niah_single_3": LMEvalConfig("niah_single_3", "acc,none", num_fewshot=0),
+    "niah_multikey_1": LMEvalConfig("niah_multikey_1", "acc,none", num_fewshot=0),
+    "niah_multikey_2": LMEvalConfig("niah_multikey_2", "acc,none", num_fewshot=0),
+    "niah_multikey_3": LMEvalConfig("niah_multikey_3", "acc,none", num_fewshot=0),
+    "niah_multiquery": LMEvalConfig("niah_multiquery", "acc,none", num_fewshot=0),
+    "niah_multivalue": LMEvalConfig("niah_multivalue", "acc,none", num_fewshot=0),
+    "ruler_vt": LMEvalConfig("ruler_vt", "acc,none", num_fewshot=0),
+    "ruler_cwe": LMEvalConfig("ruler_cwe", "acc,none", num_fewshot=0),
+    "ruler_fwe": LMEvalConfig("ruler_fwe", "acc,none", num_fewshot=0),
+    "ruler_qa_hotpot": LMEvalConfig("ruler_qa_hotpot", "acc,none", num_fewshot=0),
+    "ruler_qa_squad": LMEvalConfig("ruler_qa_squad", "acc,none", num_fewshot=0),
 }

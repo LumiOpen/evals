@@ -70,7 +70,7 @@ def identify_scheduled_tasks():
     for job_id in get_jobs():
         if job_id in log_entries:
             entry = log_entries[job_id]
-            identified_jobs[(entry["model"], entry["eval"])] = entry
+            identified_jobs[(entry["model"], entry["eval"],entry["output_file"])] = entry
     return identified_jobs
         
 

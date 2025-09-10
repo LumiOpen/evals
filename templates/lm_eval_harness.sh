@@ -62,14 +62,14 @@ if [ -z "$FEWSHOT_AS_MULTITURN" ]; then
     echo "FEWSHOT_AS_MULTITURN is not set"
     exit 1
 fi
-
+# RULER_SEQ_LENGTH is optional; no hard check.
 
 # Remove any venv settings that might confuse things.
 unset PYTHONPATH
 unset PYTHONHOME
 unset VIRTUAL_ENV
 
-export HF_HOME="/scratch/project_462000353/hf_cache"
+export HF_HOME="/scratch/project_462000963/hf_cache"
 
 # Prepare work dir
 WORK_DIR=$WORK_DIR/lm_eval_harness
@@ -123,12 +123,12 @@ until (set -o noclobber; echo "$SLURM_JOB_ID" > "$LOCKFILE") 2>/dev/null; do
         LOCK_JOBID=$(cat "$LOCKFILE")
         if ! squeue -j "$LOCK_JOBID" &>/dev/null; then
             # Lock holder is no longer running, attempt to acquire cleanup lock.
-			# this it to avoid a race during cleanup when multiple jobs are waiting.
-			if (set -o noclobber; echo "$SLURM_JOB_ID" > "$CLEANUP_LOCK") 2>/dev/null ; then
-            	rm -f "$LOCKFILE"
-				rm -f "$CLEANUP_LOCK"
-			fi
-			# if we didn't get the lock, another process will clean it up.
+            # this it to avoid a race during cleanup when multiple jobs are waiting.
+            if (set -o noclobber; echo "$SLURM_JOB_ID" > "$CLEANUP_LOCK") 2>/dev/null ; then
+                rm -f "$LOCKFILE"
+                rm -f "$CLEANUP_LOCK"
+            fi
+            # if we didn't get the lock, another process will clean it up.
         fi
     fi
         
@@ -189,7 +189,7 @@ mkdir -p $PYTHONUSERBASE
 echo PYTHONUSERBASE is $PYTHONUSERBASE
 export PATH=$PATH:$PYTHONUSERBASE/bin
 pip install --upgrade setuptools pip
-pip --python=/appl/local/csc/soft/ai/bin/python install --user  -e .[hf_transfer,math,multilingual,sentencepiece,ifeval]
+pip --python=/appl/local/csc/soft/ai/bin/python install --user  -e .[hf_transfer,math,multilingual,sentencepiece,ifeval,ruler]
 pip install --upgrade langdetect immutabledict heliport
 
 # remove cleanup trap and release lock
@@ -226,6 +226,12 @@ else
     FEWSHOT_AS_MULTITURN_FLAG=""
 fi
 
+# Task args (optional). Pass arbitrary per-task args through to lm_eval.
+TASK_ARGS_FLAG=""
+if [ -n "$RULER_SEQ_LENGTH" ]; then
+    TASK_ARGS_FLAG="--metadata {\"max_seq_lengths\":[${RULER_SEQ_LENGTH}]}"
+fi
+
 ### Launch command
 
 set -x
@@ -236,7 +242,8 @@ lm_eval \
     --num_fewshot $NUM_FEWSHOT \
     --output_path $RANDOM_DIR \
     $CHAT_TEMPLATE_FLAG \
-    $FEWSHOT_AS_MULTITURN_FLAG
+    $FEWSHOT_AS_MULTITURN_FLAG \
+    $TASK_ARGS_FLAG
     # --log_samples \
 set +x
 
