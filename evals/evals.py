@@ -98,7 +98,7 @@ evals = {
     "finbench_2shot": FinBenchConfig("finbench_multiple_choice", "custom", num_fewshot=2),
     "finbench_3shot": FinBenchConfig("finbench_multiple_choice", "custom", num_fewshot=3),
 
-    # non-english evals
+    # non-english and multilingual evals
     "arc_challenge_mt_bg": LMEvalConfig("arc_challenge_mt_bg", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_cs": LMEvalConfig("arc_challenge_mt_cs", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_da": LMEvalConfig("arc_challenge_mt_da", "acc_norm", num_fewshot=25),
@@ -121,6 +121,10 @@ evals = {
     "arc_challenge_mt_sk": LMEvalConfig("arc_challenge_mt_sk", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_sl": LMEvalConfig("arc_challenge_mt_sl", "acc_norm", num_fewshot=25),
     "arc_challenge_mt_sv": LMEvalConfig("arc_challenge_mt_sv", "acc_norm", num_fewshot=25),
+
+    # TildeOpen
+    "multiblimp_eng": LMEvalConfig("multiblimp_eng", "acc_norm", num_fewshot=0),
+    "multiblimp_fin": LMEvalConfig("multiblimp_fin", "acc_norm", num_fewshot=0),
 
     "mmlu_mt_bg": LMEvalConfig("ogx_mmlux_BG", "custom", num_fewshot=5),
     "mmlu_mt_cs": LMEvalConfig("ogx_mmlux_CS", "custom", num_fewshot=5),
