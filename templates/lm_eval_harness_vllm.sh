@@ -196,9 +196,17 @@ RANDOM_DIR="/tmp/lm_eval_$(date +%s%N)"
 mkdir -p "$RANDOM_DIR"
 echo "Saving temporary results to $RANDOM_DIR"
 
-# Prepare final output directory
-mkdir -p "{{ env_vars.OUTPUT_DIR }}"
-echo "Final results will be saved to: {{ env_vars.OUTPUT_FILE }}"
+# Convert host paths to container paths
+# OUTPUT_DIR and OUTPUT_FILE contain host paths, but we need container paths
+CONTAINER_OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
+# If the path starts with host working directory, convert to /workspace
+if [[ "$CONTAINER_OUTPUT_FILE" == "$SCR"* ]]; then
+    CONTAINER_OUTPUT_FILE="/workspace${CONTAINER_OUTPUT_FILE#$SCR}"
+fi
+
+# Prepare final output directory inside container
+mkdir -p "$(dirname "$CONTAINER_OUTPUT_FILE")"
+echo "Final results will be saved to: $CONTAINER_OUTPUT_FILE"
 
 # Set up chat template flags
 {% if env_vars.APPLY_CHAT_TEMPLATE == "True" %}
@@ -225,10 +233,10 @@ python -m lm_eval \
   $FEWSHOT_AS_MULTITURN_FLAG \
   --log_samples
 
-echo "Moving temporary results from $RANDOM_DIR to {{ env_vars.OUTPUT_FILE }}"
-find "$RANDOM_DIR" -name "results_*.json" -exec mv {} "{{ env_vars.OUTPUT_FILE }}" \;
+echo "Moving temporary results from $RANDOM_DIR to $CONTAINER_OUTPUT_FILE"
+find "$RANDOM_DIR" -name "results_*.json" -exec mv {} "$CONTAINER_OUTPUT_FILE" \;
 rm -rf "$RANDOM_DIR"
 
-echo "== results saved to {{ env_vars.OUTPUT_FILE }} =="
-ls -l "{{ env_vars.OUTPUT_FILE }}" || true
+echo "== results saved to $CONTAINER_OUTPUT_FILE =="
+ls -l "$CONTAINER_OUTPUT_FILE" || true
 '
