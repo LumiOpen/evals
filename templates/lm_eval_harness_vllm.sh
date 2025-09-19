@@ -46,6 +46,7 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --bind /usr/share/libdrm:/usr/share/libdrm \
     --env MODEL_ID="$MODEL_ID" \
     --env TP="$TP" \
+    --env SCR="$SCR" \
     "$IMG" bash -lc '
 set -euo pipefail
 umask 002
@@ -54,10 +55,8 @@ umask 002
 MODEL_ID="${MODEL_ID:?MODEL_ID not set}"
 TP="${TP:-4}"
 MODEL_SAFE="${MODEL_ID//\//-}"
-OUT_BASENAME="${MODEL_SAFE}_$(echo "{{ env_vars.TASK_LIST }}" | tr "," "_")"
 PREFETCH_LOCAL_DIR="/project/hf-cache/models/${MODEL_SAFE}"
 MODEL_LOCAL="${PREFETCH_LOCAL_DIR}"
-OUTDIR="/workspace/evals/${OUT_BASENAME}"
 
 # ---- env & caches (disable xet + telemetry) ----
 export HF_HUB_DISABLE_XET=1
@@ -84,7 +83,7 @@ unset HIP_VISIBLE_DEVICES
 
 mkdir -p /project/hf-cache/{hub,models,datasets,torchinductor,xdg,vllm-compile} \
          /dev/shm/torch_ext "$HOME/.aiter/jit/build" "$HOME/.aiter/jit/install" \
-         /workspace/evals /workspace/tools
+         /workspace/tools
 
 # Prefer ROCm clang toolchain (for Triton/Inductor & aiter)
 if command -v /opt/rocm/llvm/bin/clang++ >/dev/null 2>&1; then
@@ -249,22 +248,33 @@ CONTAINER_OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
 USER_SCRATCH_DIR="/scratch/project_462000353/$USER"
 PFS_USER_PREFIX="/pfs/lustrep2/scratch/project_462000353/$USER/"
 
+echo "DEBUG: Original OUTPUT_FILE: $CONTAINER_OUTPUT_FILE"
+echo "DEBUG: SCR inside container: $SCR"
+
 # Convert various host path patterns to container paths
 if [[ "$CONTAINER_OUTPUT_FILE" == "$SCR"* ]]; then
+    echo "DEBUG: Path matches SCR prefix, converting..."
     # Path relative to current working directory - remove SCR prefix and add /workspace
     RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$SCR}"
     # Remove leading slash if present
     RELATIVE_PATH="${RELATIVE_PATH#/}"
     CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
+    echo "DEBUG: Converted to: $CONTAINER_OUTPUT_FILE"
 elif [[ "$CONTAINER_OUTPUT_FILE" == "$PFS_USER_PREFIX"* ]]; then
+    echo "DEBUG: Path matches PFS prefix, converting..."
     # /pfs paths under user directory
     CONTAINER_OUTPUT_FILE="/workspace/${CONTAINER_OUTPUT_FILE#$PFS_USER_PREFIX}"
+    echo "DEBUG: Converted to: $CONTAINER_OUTPUT_FILE"
 elif [[ "$CONTAINER_OUTPUT_FILE" == "$USER_SCRATCH_DIR"* ]]; then
+    echo "DEBUG: Path matches USER_SCRATCH_DIR prefix, converting..."
     # Direct /scratch paths under user directory
     RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$USER_SCRATCH_DIR}"
     # Remove leading slash if present
     RELATIVE_PATH="${RELATIVE_PATH#/}"
     CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
+    echo "DEBUG: Converted to: $CONTAINER_OUTPUT_FILE"
+else
+    echo "DEBUG: No path conversion matched - keeping original path"
 fi
 
 # Prepare final output directory inside container
@@ -283,6 +293,7 @@ FEWSHOT_AS_MULTITURN_FLAG="--fewshot_as_multiturn"
 {% else %}
 FEWSHOT_AS_MULTITURN_FLAG=""
 {% endif %}
+
 
 # Build vLLM model arguments
 BASE_VLLM_ARGS="pretrained=${MODEL_LOCAL},dtype=auto,download_dir=/project/hf-cache/models,tensor_parallel_size=${TP}"
