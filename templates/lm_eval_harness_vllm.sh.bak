@@ -245,11 +245,6 @@ echo "Saving temporary results to $RANDOM_DIR"
 # Convert host paths to container paths
 # OUTPUT_DIR and OUTPUT_FILE contain host paths, but we need container paths
 CONTAINER_OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
-if [[ -z "$CONTAINER_OUTPUT_FILE" ]]; then
-  echo "ERROR: OUTPUT_FILE is empty. Check main.py env_vars." >&2
-  exit 2
-fi
-CONTAINER_OUTPUT_FILE="${CONTAINER_OUTPUT_FILE//\/workspace\/evals\//\/workspace\/}"
 USER_SCRATCH_DIR="/scratch/project_462000353/$USER"
 PFS_USER_PREFIX="/pfs/lustrep2/scratch/project_462000353/$USER/"
 

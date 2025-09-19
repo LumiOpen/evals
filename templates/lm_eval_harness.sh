@@ -141,13 +141,6 @@ done
 trap cleanup EXIT
 echo "Acquired lock (Job ID: $SLURM_JOB_ID), executing environment setup code."
 
-### Begin protected code
-
-# Check out correct lm-evaluation-harness code
-
-# We have migrated repositories, this following code:
-# 1. Ensures we have a copy of the right repo
-# 2. Checks out the current version of the code from the repo
 REPO_DIR="lm-evaluation-harness2"
 REPO_URL="https://github.com/LumiOpen/lm-evaluation-harness"
 BRANCH="main"
