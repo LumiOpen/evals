@@ -109,6 +109,7 @@ def run_eval(eval_name, args):
         'APPLY_CHAT_TEMPLATE': args.apply_chat_template,
         'FEWSHOT_AS_MULTITURN': args.fewshot_as_multiturn,
         'BACKEND': backend,
+        'VLLM_ARGS': args.vllm_args,
     }
 
     slurm_config = {
@@ -228,6 +229,7 @@ def main():
         )
     )
     parser.add_argument('--backend', type=str, choices=['hf', 'vllm', 'auto'], default='hf', help='Backend to use for inference (hf=HuggingFace, vllm=vLLM, auto=HuggingFace)')
+    parser.add_argument('--vllm_args', type=str, default='', help='Additional vLLM model arguments (e.g., "max_model_len=8192,gpu_memory_utilization=0.95")')
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")

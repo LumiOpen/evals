@@ -231,10 +231,24 @@ FEWSHOT_AS_MULTITURN_FLAG="--fewshot_as_multiturn"
 FEWSHOT_AS_MULTITURN_FLAG=""
 {% endif %}
 
+# Build vLLM model arguments
+BASE_VLLM_ARGS="pretrained=${MODEL_LOCAL},dtype=auto,download_dir=/project/hf-cache/models,tensor_parallel_size=${TP}"
+DEFAULT_VLLM_ARGS="max_model_len=4096,gpu_memory_utilization=0.90"
+
+# Add custom vLLM arguments if provided
+{% if env_vars.VLLM_ARGS %}
+CUSTOM_VLLM_ARGS="{{ env_vars.VLLM_ARGS }}"
+VLLM_MODEL_ARGS="${BASE_VLLM_ARGS},${DEFAULT_VLLM_ARGS},${CUSTOM_VLLM_ARGS}"
+{% else %}
+VLLM_MODEL_ARGS="${BASE_VLLM_ARGS},${DEFAULT_VLLM_ARGS}"
+{% endif %}
+
+echo "Using vLLM model args: $VLLM_MODEL_ARGS"
+
 # ------- run the eval (point to local model dir) -------
 python -m lm_eval \
   --model vllm \
-  --model_args pretrained=${MODEL_LOCAL},dtype=auto,download_dir=/project/hf-cache/models,max_model_len=4096,tensor_parallel_size=${TP},gpu_memory_utilization=0.90 \
+  --model_args "$VLLM_MODEL_ARGS" \
   --tasks "{{ env_vars.TASK_LIST }}" \
   --num_fewshot {{ env_vars.NUM_FEWSHOT }} \
   --batch_size auto \

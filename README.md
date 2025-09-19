@@ -42,6 +42,7 @@ python main.py <eval_name> --model <model_path> [options]
 - `--model`: Path to model (local path or HuggingFace model ID)
 - `--tokenizer`: Tokenizer path (defaults to model path)
 - `--backend`: Inference backend (hf/vllm/auto)
+- `--vllm_args`: Custom vLLM model arguments (only for vllm backend)
 - `--partition`: SLURM partition (default: small-g)
 - `--gres`: GPU resources (default: gpu:mi250:4)
 - `--time`: Job time limit (default: 48:00:00)
@@ -98,6 +99,12 @@ python main.py arc_challenge \
   --model LumiOpen/Llama-Poro-2-70B-base \
   --backend vllm \
   --dryrun
+
+# High-performance vLLM with custom settings
+python main.py arc_challenge \
+  --model LumiOpen/Llama-Poro-2-70B-base \
+  --backend vllm \
+  --vllm_args "max_model_len=8192,gpu_memory_utilization=0.95,max_num_batched_tokens=16384"
 ```
 
 ### Legacy Script Support
