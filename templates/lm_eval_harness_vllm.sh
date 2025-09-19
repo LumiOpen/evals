@@ -213,8 +213,9 @@ setup_lm_eval() {
         sleep 1
     done
 
-    # We have the lock, set up cleanup trap
-    trap 'rm -f "$EVAL_HARNESS_LOCK"' EXIT
+    # We have the lock, set up cleanup trap (expand variable now)
+    local lock_file="$EVAL_HARNESS_LOCK"
+    trap "rm -f \"$lock_file\"" EXIT
 
     # Now safely setup lm-eval
     if [ ! -d "$EVAL_HARNESS_DIR" ]; then
