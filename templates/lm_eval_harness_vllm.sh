@@ -251,14 +251,20 @@ PFS_USER_PREFIX="/pfs/lustrep2/scratch/project_462000353/$USER/"
 
 # Convert various host path patterns to container paths
 if [[ "$CONTAINER_OUTPUT_FILE" == "$SCR"* ]]; then
-    # Path relative to current working directory
-    CONTAINER_OUTPUT_FILE="/workspace${CONTAINER_OUTPUT_FILE#$SCR}"
+    # Path relative to current working directory - remove SCR prefix and add /workspace
+    RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$SCR}"
+    # Remove leading slash if present
+    RELATIVE_PATH="${RELATIVE_PATH#/}"
+    CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
 elif [[ "$CONTAINER_OUTPUT_FILE" == "$PFS_USER_PREFIX"* ]]; then
     # /pfs paths under user directory
     CONTAINER_OUTPUT_FILE="/workspace/${CONTAINER_OUTPUT_FILE#$PFS_USER_PREFIX}"
 elif [[ "$CONTAINER_OUTPUT_FILE" == "$USER_SCRATCH_DIR"* ]]; then
     # Direct /scratch paths under user directory
-    CONTAINER_OUTPUT_FILE="/workspace${CONTAINER_OUTPUT_FILE#$USER_SCRATCH_DIR}"
+    RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$USER_SCRATCH_DIR}"
+    # Remove leading slash if present
+    RELATIVE_PATH="${RELATIVE_PATH#/}"
+    CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
 fi
 
 # Prepare final output directory inside container
