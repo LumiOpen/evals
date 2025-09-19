@@ -1,119 +1,276 @@
-# evals
+# LUMI Evaluation Harness
 
-This is a script to simplify running many evals simultaneously in our slurm
-environment.  It accepts hugging face model IDs (i.e. org/modelname) or
-directory paths to models in the huggingface format.
+A SLURM-based evaluation system for running language model benchmarks on the LUMI supercomputer. Supports both HuggingFace Transformers and vLLM backends for efficient model evaluation.
+
+## Quick Start
+
+```bash
+# Basic evaluation with HuggingFace backend (default)
+python main.py arc_challenge --model LumiOpen/Llama-Poro-2-70B-base
+
+# Evaluation with vLLM backend for faster inference
+python main.py arc_challenge --model LumiOpen/Llama-Poro-2-70B-base --backend vllm
+
+# Multiple evaluations
+python main.py arc_challenge hellaswag mmlu --model your-model-name
+```
+
+## Features
+
+- **Multiple backends**: HuggingFace Transformers and vLLM support
+- **SLURM integration**: Automatic job scheduling and resource management
+- **Comprehensive benchmarks**: 100+ evaluation tasks including multilingual support
+- **Result tracking**: Built-in monitoring and result aggregation tools
+- **Container support**: Optimized Singularity containers for vLLM inference
 
 ## Usage
 
-Common run configs can be found in command line scripts like `cpt.sh` which you
-can run like
+### Basic Command Structure
 
 ```bash
-# run common tests for finnish CPT evals
+python main.py <eval_name> --model <model_path> [options]
+```
+
+### Backend Selection
+
+- `--backend hf` (default): HuggingFace Transformers backend
+- `--backend vllm`: vLLM backend with Singularity container
+- `--backend auto`: Auto-selection (currently defaults to HF)
+
+### Common Options
+
+- `--model`: Path to model (local path or HuggingFace model ID)
+- `--tokenizer`: Tokenizer path (defaults to model path)
+- `--backend`: Inference backend (hf/vllm/auto)
+- `--partition`: SLURM partition (default: small-g)
+- `--gres`: GPU resources (default: gpu:mi250:4)
+- `--time`: Job time limit (default: 48:00:00)
+- `--dryrun`: Generate script without submitting job
+
+### Available Evaluations
+
+**Core English benchmarks:**
+- `arc_challenge`, `hellaswag`, `mmlu`, `truthfulqa_mc`, `winogrande`, `gsm8k`
+
+**Multilingual benchmarks:**
+- `arc_challenge_mt_fi`, `mmlu_mt_fi`, `gsm8k_mt_fi` (Finnish)
+- `hellaswag_mt_sv`, `truthfulqa_mc_mt_da` (Nordic languages)
+- And many more...
+
+**Code benchmarks:**
+- `humaneval_pass@1`, `humaneval_pass@10`
+- `mbpp_pass@1`, `mbpp_pass@10`
+
+**Finnish-specific:**
+- `finbench_0shot`, `finbench_3shot`
+- `include_finnish`, `ifeval_fi`
+
+See `python main.py --help` for the complete list.
+
+### Examples
+
+```bash
+# Standard HF evaluation
+python main.py arc_challenge \
+  --model LumiOpen/Llama-Poro-2-70B-base \
+  --partition small-g \
+  --time 24:00:00
+
+# vLLM evaluation with custom GPU configuration
+python main.py hellaswag \
+  --model LumiOpen/Llama-Poro-2-70B-base \
+  --backend vllm \
+  --gres gpu:mi250:8 \
+  --partition dev-g
+
+# Multiple evaluations with chat template
+python main.py arc_challenge hellaswag mmlu \
+  --model your-chat-model \
+  --apply_chat_template \
+  --backend vllm
+
+# Finnish language evaluations
+python main.py finbench_3shot arc_challenge_mt_fi gsm8k_mt_fi \
+  --model LumiOpen/Llama-Poro-2-70B-base
+
+# Dry run to check generated script
+python main.py arc_challenge \
+  --model LumiOpen/Llama-Poro-2-70B-base \
+  --backend vllm \
+  --dryrun
+```
+
+### Legacy Script Support
+
+Common run configs can be found in command line scripts:
+
+```bash
+# Run common tests for Finnish CPT evals
 sh cpt.sh /path/to/somemodel
+
+# Other available scripts
+sh all.sh /path/to/model      # Comprehensive evaluation suite
+sh chat.sh /path/to/model     # Chat model evaluations
 ```
 
-You can also invoke the script directly to run individual evals as needed.
+## Backend Details
+
+### HuggingFace Backend
+
+- Runs directly on LUMI compute nodes
+- Uses `lm-evaluation-harness` with `--model hf`
+- Supports all standard HF model formats
+- Good for smaller models and development
+
+### vLLM Backend
+
+- Runs in optimized Singularity container
+- Uses `lm-evaluation-harness` with `--model vllm`
+- Includes ROCm optimizations for AMD GPUs
+- Automatic tensor parallelism configuration
+- Recommended for large models and production runs
+
+Key vLLM features:
+- Model prefetching and caching
+- ROCm compiler optimizations
+- Automatic GPU topology detection
+- Memory-efficient inference
+
+## Monitoring and Results
+
+### Watch Running Jobs
 
 ```bash
-python main.py \
-    --partition standard-g
-    --time 04:00:00
-    --model path/to/model_step1234 \
-    eval_name1 eval_name2
+# Monitor active jobs with live updates
+python watch.py
+
+# Check status once and exit
+python watch.py --once
+
+# Show recent job history
+python watch.py --hist --days 7
 ```
 
-The script will try to avoid running nevals for which you already have results
-or for which there already appear to be jobs in the slurm queue.  It determines
-this latter case by reviewing the logs in `command_history.jsonl`.
-
-Slurm job output is stored in the `logs` subdir.
-
-## Results
-
-Output is written by default into the `output` subdirectory.  The results are
-stored in json format which is not particularly convenient.  There is
-a `summary.sh` script which will extract the correct scores each eval that is
-available.
-
+Example output:
 ```bash
-sh summary.sh output/v2/meta-llama/Llama-3.1-8B
-```
-
-## Watching job status.
-
-The `watch.py` script is a convenience script to help keep track of the jobs you
-have running, it has two operational modes.
-
-In the default mode it prints the jobs that are currently in the queue or
-running, and if available it prints the last line in the error log in each
-file, which often contains the most recent tqdm progress bar for jobs that are
-running.  If you specify the `--once` flag it will do this and exit, if you do
-not specify the `--once` flag it will keep checking job status periodically and
-provide updates as jobs complete.
-
-```bash
-$ python watch.py --once 
-9678732 /scratch/project_462000353/converted-checkpoints/llama31_8B_culturax50B_2e-5/iter_0011920 hellaswag_mt_fi is queued.
-9678731 /scratch/project_462000353/converted-checkpoints/llama31_8B_culturax50B_2e-5/iter_0011920 hellaswag is queued.
-9678730 /scratch/project_462000353/converted-checkpoints/llama31_8B_culturax50B_2e-5/iter_0011920 gsm8k_mt_fi is queued.
-9678729 /scratch/project_462000353/converted-checkpoints/llama31_8B_culturax50B_2e-5/iter_0011920 gsm8k is queued.
-9678728 /scratch/project_462000353/converted-checkpoints/llama31_8B_culturax50B_2e-5/iter_0011920 mmlu_mt_fi is queued.
-9670938 meta-llama/Llama-3.1-70B hellaswag_mt_fi is running.
+$ python watch.py --once
+9678732 /path/to/model hellaswag_mt_fi is queued.
+9678731 /path/to/model hellaswag is running.
 Running loglikelihood requests:  43%|████▎     | 17337/40168 [13:41:50<16:37:51,  2.62s/it]
-9678481 /scratch/project_462000353/converted-checkpoints/llama31-8b-tp2-pp1-megatron-format-lr5e-5_iter_0011920_bfloat16 gsm8k is running.
-Running generate_until requests:   4%|▍         | 59/1319 [07:29<1:57:40, 5.60s/it]
-9678727 /scratch/project_462000353/converted-checkpoints/llama31_8B_culturax50B_2e-5/iter_0011920 mmlu is running.
-Running loglikelihood requests:  83%|████████▎ | 46725/56168 [34:57<03:33, 44.33it/s]
 ```
 
-There is another new operational mode recently added that might be more useful.
-Specifying the `--hist` flag will show a report of the jobs that have completed
-in the last 3 days (controllable with the `--days` flag) sorted by model name
-and status.  It also does some coalescing: if an eval is ultimately successful,
-it won't bother reporting on failed runs, etc.  This is helpful to identify
-evals which have failed and need to be investigated or rerun.
+### View Results
 
 ```bash
-$ python watch.py --hist --days 1
-Model: meta-llama/Llama-3.1-70B
-Results dir: /pfs/lustrep2/scratch/project_462000353/jburdge/git/evals/output/v2/meta-llama/Llama-3.1-70B
-Completed:
-    gsm8k_mt_fi
-    gsm8k_mt_fi
-Running/Queued:
-    hellaswag_mt_fi 9670938
-Failed:
-    hellaswag_mt_fi /pfs/lustrep2/scratch/project_462000353/jburdge/git/evals/logs/9639428.err
+# Summarize results for a model
+./summary.sh ./output/v2/LumiOpen/Llama-Poro-2-70B-base/
+
+# Generate reports
+python report.py
+```
+
+Results are saved as JSON files in the output directory structure:
+```
+output/v2/{model_name}/{step_or_version}/{eval_name}.json
+```
+
+## File Structure
+
+```
+├── main.py                      # Main entry point
+├── evals/
+│   ├── evals.py                # Evaluation configurations
+│   ├── harnesses.py            # Backend harness implementations
+│   └── slurm.py               # SLURM integration utilities
+├── templates/
+│   ├── lm_eval_harness.sh      # HuggingFace template
+│   ├── lm_eval_harness_vllm.sh # vLLM template
+│   └── bigcode_eval_harness.sh # Code evaluation template
+├── watch.py                    # Job monitoring tool
+├── summary.sh                  # Results summary script
+├── command_history.jsonl       # Job execution log
+└── output/                     # Results directory
 ```
 
 ## Command History
 
-All evals are logged in `command_history.jsonl`, which is used by various
-scripts to monitor job status and report history.
+All evaluations are logged in `command_history.jsonl`, which is used by monitoring scripts to track job status and report history.
 
-An entry looks like this.
-
-```bash
+Example entry:
+```json
 {
     "timestamp": "2023-11-09 08:21:12",
     "script_name": "/tmp/tmpvv66ri7g",
     "job_id": "4868114",
     "eval": "hellaswag",
-    "model": "/scratch/project_462000319/general-tools/checkpoints/33B_torch_step70128_bfloat16",
-    "tokenizer": "/scratch/project_462000319/tokenizers/tokenizer_v6_fixed_fin",
-    "err_log": "/pfs/lustrep4/scratch/project_462000319/evals/logs/4868114.err",
-    "out_log": "/pfs/lustrep4/scratch/project_462000319/evals/logs/4868114.out",
-    "output_file": "/pfs/lustrep4/scratch/project_462000319/evals/output/poro-34b/step70128/hellaswag.json"
+    "model": "/path/to/model",
+    "tokenizer": "/path/to/tokenizer",
+    "backend": "vllm",
+    "err_log": "/path/to/logs/4868114.err",
+    "out_log": "/path/to/logs/4868114.out",
+    "output_file": "/path/to/output/hellaswag.json"
 }
 ```
 
-You can utilize the information directly as well. If you've just
-queued up a bunch of evals against a model and realized you made a mistake and
-need to cancel them all, you could do something like this to save a lot of
-typing:
+Useful commands:
+```bash
+# Cancel all jobs for a specific model
+grep /path/to/model command_history.jsonl | jq -r .job_id | xargs scancel
+
+# Check results for recent jobs
+python watch.py --hist --days 3
+```
+
+## Configuration
+
+### SLURM Defaults
 
 ```bash
-grep /path/to/model command_history.jsonl | jq -r .job_id | xargs scancel
+--project project_462000353
+--partition small-g
+--gres gpu:mi250:4
+--time 48:00:00
 ```
+
+### vLLM Container Configuration
+
+The vLLM backend uses a pre-built container located at:
+`/scratch/project_462000353/danizaut/containers/vllm_v10.1.1.sif.bak`
+
+Model cache location: `/project/hf-cache/`
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"Model not found"**: Ensure model path is correct and accessible
+2. **"SLURM job failed"**: Check logs in `./logs/` directory
+3. **"Container not found"**: Verify vLLM container path in template
+4. **"Permission denied"**: Check file permissions and SLURM account access
+
+### Debugging
+
+```bash
+# Generate script without running
+python main.py <eval> --model <model> --dryrun
+
+# Check job logs
+tail -f logs/latest.out
+tail -f logs/latest.err
+
+# View job history
+python watch.py --hist
+```
+
+## Contributing
+
+When adding new evaluations:
+
+1. Add configuration to `evals/evals.py`
+2. Ensure output format compatibility with existing tools
+3. Test with both HF and vLLM backends if applicable
+4. Update this README with new evaluation names
+
+## License
+
+This project is part of the LUMI-OpenGPU ecosystem.

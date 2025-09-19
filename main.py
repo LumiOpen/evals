@@ -94,6 +94,11 @@ def run_eval(eval_name, args):
         return
 
 
+    # Resolve backend auto logic
+    backend = args.backend
+    if backend == 'auto':
+        backend = 'hf'  # Default to HuggingFace for auto mode
+
     env_vars = {
         'MODEL': args.model,
         'TOKENIZER': args.tokenizer,
@@ -103,6 +108,7 @@ def run_eval(eval_name, args):
         'TRUST_REMOTE_CODE': "True" if args.trust_remote_code else "False",
         'APPLY_CHAT_TEMPLATE': args.apply_chat_template,
         'FEWSHOT_AS_MULTITURN': args.fewshot_as_multiturn,
+        'BACKEND': backend,
     }
 
     slurm_config = {
@@ -117,7 +123,7 @@ def run_eval(eval_name, args):
     # eval is a reserved keyword, so we'll use tester instead.
     tester = evals[eval_name]
     harness = tester.harness
-    script = harness.generate_script(slurm_config, env_vars)
+    script = harness.generate_script(slurm_config, env_vars, backend)
 
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp:
         temp.write(script)
@@ -165,6 +171,7 @@ def run_eval(eval_name, args):
         "eval": eval_name,
         "model": args.model,
         "tokenizer": args.tokenizer,
+        "backend": backend,
         "err_log": os.path.join(os.path.abspath(args.log_dir), f"{job_id}.err"),
         "out_log": os.path.join(os.path.abspath(args.log_dir), f"{job_id}.out"),
         "output_file": output_file,
@@ -220,6 +227,7 @@ def main():
             "If provided without an argument, applies the default behaviour. "
         )
     )
+    parser.add_argument('--backend', type=str, choices=['hf', 'vllm', 'auto'], default='hf', help='Backend to use for inference (hf=HuggingFace, vllm=vLLM, auto=HuggingFace)')
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
