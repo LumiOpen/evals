@@ -199,9 +199,21 @@ echo "Saving temporary results to $RANDOM_DIR"
 # Convert host paths to container paths
 # OUTPUT_DIR and OUTPUT_FILE contain host paths, but we need container paths
 CONTAINER_OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
-# If the path starts with host working directory, convert to /workspace
+USER_HOME_DIR="/scratch/project_462000353/$USER"
+# Convert various host path patterns to container paths
 if [[ "$CONTAINER_OUTPUT_FILE" == "$SCR"* ]]; then
+    # Path relative to current working directory
     CONTAINER_OUTPUT_FILE="/workspace${CONTAINER_OUTPUT_FILE#$SCR}"
+elif [[ "$CONTAINER_OUTPUT_FILE" == /pfs/* ]]; then
+    # /pfs paths should be mapped to /workspace if they're under the working directory
+    # Extract the relative path and map to /workspace
+    RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#/pfs/lustrep*/scratch/project_462000353/$USER/}"
+    if [[ "$RELATIVE_PATH" != "$CONTAINER_OUTPUT_FILE" ]]; then
+        CONTAINER_OUTPUT_FILE="/workspace/$RELATIVE_PATH"
+    fi
+elif [[ "$CONTAINER_OUTPUT_FILE" == "$USER_HOME_DIR"/* ]]; then
+    # Direct /scratch paths under user directory
+    CONTAINER_OUTPUT_FILE="/workspace${CONTAINER_OUTPUT_FILE#$USER_HOME_DIR}"
 fi
 
 # Prepare final output directory inside container
