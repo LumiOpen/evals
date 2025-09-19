@@ -183,12 +183,58 @@ export HF_HUB_READ_FROM_CACHE_ONLY=1
 export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
 
 # ------- get LUMI harness (puts it first on sys.path) -------
-if [ ! -d /workspace/lm-eval ]; then
-  git clone --depth 1 https://github.com/LumiOpen/lm-evaluation-harness /workspace/lm-eval
-else
-  git -C /workspace/lm-eval fetch --depth 1 origin
-  git -C /workspace/lm-eval reset --hard FETCH_HEAD
-fi
+# Use file locking to prevent race conditions between parallel jobs
+EVAL_HARNESS_LOCK="/workspace/.lm-eval-setup.lock"
+EVAL_HARNESS_DIR="/workspace/lm-eval"
+
+# Function to setup lm-evaluation-harness with locking
+setup_lm_eval() {
+    # Try to acquire lock for up to 5 minutes
+    local timeout=300
+    local attempts=0
+
+    while ! (set -o noclobber; echo $$ > "$EVAL_HARNESS_LOCK") 2>/dev/null; do
+        if [ $attempts -ge $timeout ]; then
+            echo "Failed to acquire lm-eval setup lock after ${timeout} seconds"
+            return 1
+        fi
+
+        # Check if lock holder is still running (if we can determine the PID)
+        if [ -f "$EVAL_HARNESS_LOCK" ]; then
+            local lock_pid=$(cat "$EVAL_HARNESS_LOCK" 2>/dev/null || echo "")
+            if [ -n "$lock_pid" ] && ! kill -0 "$lock_pid" 2>/dev/null; then
+                # Lock holder is dead, remove stale lock
+                rm -f "$EVAL_HARNESS_LOCK"
+                continue
+            fi
+        fi
+
+        attempts=$((attempts + 1))
+        sleep 1
+    done
+
+    # We have the lock, set up cleanup trap
+    trap 'rm -f "$EVAL_HARNESS_LOCK"' EXIT
+
+    # Now safely setup lm-eval
+    if [ ! -d "$EVAL_HARNESS_DIR" ]; then
+        echo "Cloning lm-evaluation-harness..."
+        git clone --depth 1 https://github.com/LumiOpen/lm-evaluation-harness "$EVAL_HARNESS_DIR"
+    else
+        echo "Updating existing lm-evaluation-harness..."
+        cd "$EVAL_HARNESS_DIR"
+        git fetch --depth 1 origin
+        git reset --hard FETCH_HEAD
+        cd - > /dev/null
+    fi
+
+    # Release lock
+    rm -f "$EVAL_HARNESS_LOCK"
+    trap - EXIT
+}
+
+# Setup lm-evaluation-harness with proper locking
+setup_lm_eval
 export PYTHONPATH="/workspace/lm-eval:$PYTHONPATH"
 
 # Create a temporary directory for lm_eval output (like HF template)
