@@ -249,7 +249,6 @@ if [[ -z "$CONTAINER_OUTPUT_FILE" ]]; then
   echo "ERROR: OUTPUT_FILE is empty. Check main.py env_vars." >&2
   exit 2
 fi
-CONTAINER_OUTPUT_FILE="${CONTAINER_OUTPUT_FILE//\/workspace\/evals\//\/workspace\/}"
 USER_SCRATCH_DIR="/scratch/project_462000353/$USER"
 PFS_USER_PREFIX="/pfs/lustrep2/scratch/project_462000353/$USER/"
 
@@ -268,7 +267,9 @@ if [[ "$CONTAINER_OUTPUT_FILE" == "$SCR"* ]]; then
 elif [[ "$CONTAINER_OUTPUT_FILE" == "$PFS_USER_PREFIX"* ]]; then
     echo "DEBUG: Path matches PFS prefix, converting..."
     # /pfs paths under user directory
-    CONTAINER_OUTPUT_FILE="/workspace/${CONTAINER_OUTPUT_FILE#$PFS_USER_PREFIX}"
+    RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$PFS_USER_PREFIX}"
+    RELATIVE_PATH="${RELATIVE_PATH#evals/}"
+    CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
     echo "DEBUG: Converted to: $CONTAINER_OUTPUT_FILE"
 elif [[ "$CONTAINER_OUTPUT_FILE" == "$USER_SCRATCH_DIR"* ]]; then
     echo "DEBUG: Path matches USER_SCRATCH_DIR prefix, converting..."
@@ -324,7 +325,8 @@ python -m lm_eval \
   --output_path "$RANDOM_DIR" \
   $CHAT_TEMPLATE_FLAG \
   $FEWSHOT_AS_MULTITURN_FLAG \
-  --log_samples
+{% if env_vars.LIMIT %}  --limit {{ env_vars.LIMIT }} \
+{% endif %}  --log_samples
 
 echo "Moving temporary results from $RANDOM_DIR to $CONTAINER_OUTPUT_FILE"
 find "$RANDOM_DIR" -name "results_*.json" -exec mv {} "$CONTAINER_OUTPUT_FILE" \;

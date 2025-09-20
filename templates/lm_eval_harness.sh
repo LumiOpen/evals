@@ -242,7 +242,9 @@ lm_eval \
     --num_fewshot $NUM_FEWSHOT \
     --output_path $RANDOM_DIR \
     $CHAT_TEMPLATE_FLAG \
-    $FEWSHOT_AS_MULTITURN_FLAG
+    $FEWSHOT_AS_MULTITURN_FLAG \
+{% if env_vars.LIMIT %}    --limit {{ env_vars.LIMIT }} \
+{% endif %}
     # --log_samples \
 set +x
 

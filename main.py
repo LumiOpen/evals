@@ -110,10 +110,13 @@ def run_eval(eval_name, args):
         'FEWSHOT_AS_MULTITURN': args.fewshot_as_multiturn,
         'BACKEND': backend,
         'VLLM_ARGS': args.vllm_args,
+        'LIMIT': str(args.limit) if args.limit is not None else '',
     }
 
+    job_name = f"vllm_{eval_name}" if backend == 'vllm' else eval_name
+
     slurm_config = {
-        'name': eval_name,
+        'name': job_name,
         'account': args.project,
         'partition': args.partition,
         'gres': args.gres,
@@ -230,6 +233,7 @@ def main():
     )
     parser.add_argument('--backend', type=str, choices=['hf', 'vllm', 'auto'], default='hf', help='Backend to use for inference (hf=HuggingFace, vllm=vLLM, auto=HuggingFace)')
     parser.add_argument('--vllm_args', type=str, default='', help='Additional vLLM model arguments (e.g., "max_model_len=8192,gpu_memory_utilization=0.95")')
+    parser.add_argument('--limit', type=int, help='Limit the number of examples per task (for testing purposes only)')
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
