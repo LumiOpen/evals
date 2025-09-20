@@ -148,6 +148,7 @@ echo "Acquired lock (Job ID: $SLURM_JOB_ID), executing environment setup code."
 # We have migrated repositories, this following code:
 # 1. Ensures we have a copy of the right repo
 # 2. Checks out the current version of the code from the repo
+
 REPO_DIR="lm-evaluation-harness2"
 REPO_URL="https://github.com/LumiOpen/lm-evaluation-harness"
 BRANCH="main"
@@ -249,7 +250,9 @@ lm_eval \
     --num_fewshot $NUM_FEWSHOT \
     --output_path $RANDOM_DIR \
     $CHAT_TEMPLATE_FLAG \
-    $FEWSHOT_AS_MULTITURN_FLAG
+    $FEWSHOT_AS_MULTITURN_FLAG \
+{% if env_vars.LIMIT %}    --limit {{ env_vars.LIMIT }} \
+{% endif %}
     # --log_samples \
 set +x
 

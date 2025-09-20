@@ -10,6 +10,37 @@ import tempfile
 from evals.evals import evals
 from evals.slurm import identify_scheduled_tasks
 
+def parse_lm_eval(lm_eval_arg):
+    """Parse --lm_eval argument into repo URL, ref, and local path components."""
+    if not lm_eval_arg:
+        # Default to LumiOpen main
+        return {
+            'LM_EVAL_REPO': 'https://github.com/LumiOpen/lm-evaluation-harness',
+            'LM_EVAL_REF': 'main',
+            'LM_EVAL_PATH': ''
+        }
+
+    # Check if it's a local path
+    if os.path.exists(lm_eval_arg) or lm_eval_arg.startswith('/') or lm_eval_arg.startswith('./'):
+        return {
+            'LM_EVAL_REPO': '',
+            'LM_EVAL_REF': '',
+            'LM_EVAL_PATH': os.path.abspath(lm_eval_arg)
+        }
+
+    # Parse URL[@ref] format
+    if '@' in lm_eval_arg:
+        repo_url, ref = lm_eval_arg.rsplit('@', 1)
+    else:
+        repo_url = lm_eval_arg
+        ref = 'main'
+
+    return {
+        'LM_EVAL_REPO': repo_url,
+        'LM_EVAL_REF': ref,
+        'LM_EVAL_PATH': ''
+    }
+
 def parse_model(model):
     # default usually applies to uniquely named finetune tests or failures to parse.
     if model[-1] == '/':
@@ -94,6 +125,13 @@ def run_eval(eval_name, args):
         return
 
 
+    backend = args.backend
+    if backend == 'auto':
+        backend = 'hf'
+
+    # Parse lm-eval configuration
+    lm_eval_config = parse_lm_eval(args.lm_eval)
+
     env_vars = {
         'MODEL': args.model,
         'TOKENIZER': args.tokenizer,
@@ -103,10 +141,18 @@ def run_eval(eval_name, args):
         'TRUST_REMOTE_CODE': "True" if args.trust_remote_code else "False",
         'APPLY_CHAT_TEMPLATE': args.apply_chat_template,
         'FEWSHOT_AS_MULTITURN': args.fewshot_as_multiturn,
+        'BACKEND': backend,
+        'VLLM_ARGS': args.vllm_args,
+        'LIMIT': str(args.limit) if args.limit is not None else '',
+        'LM_EVAL_REPO': lm_eval_config['LM_EVAL_REPO'],
+        'LM_EVAL_REF': lm_eval_config['LM_EVAL_REF'],
+        'LM_EVAL_PATH': lm_eval_config['LM_EVAL_PATH'],
     }
 
+    job_name = f"vllm_{eval_name}" if backend == 'vllm' else eval_name
+
     slurm_config = {
-        'name': eval_name,
+        'name': job_name,
         'account': args.project,
         'partition': args.partition,
         'gres': args.gres,
@@ -117,7 +163,7 @@ def run_eval(eval_name, args):
     # eval is a reserved keyword, so we'll use tester instead.
     tester = evals[eval_name]
     harness = tester.harness
-    script = harness.generate_script(slurm_config, env_vars)
+    script = harness.generate_script(slurm_config, env_vars, backend)
 
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp:
         temp.write(script)
@@ -165,6 +211,7 @@ def run_eval(eval_name, args):
         "eval": eval_name,
         "model": args.model,
         "tokenizer": args.tokenizer,
+        "backend": backend,
         "err_log": os.path.join(os.path.abspath(args.log_dir), f"{job_id}.err"),
         "out_log": os.path.join(os.path.abspath(args.log_dir), f"{job_id}.out"),
         "output_file": output_file,
@@ -220,6 +267,10 @@ def main():
             "If provided without an argument, applies the default behaviour. "
         )
     )
+    parser.add_argument('--backend', type=str, choices=['hf', 'vllm', 'auto'], default='hf', help='Backend to use for inference (hf=HuggingFace, vllm=vLLM, auto=HuggingFace)')
+    parser.add_argument('--vllm_args', type=str, default='', help='Additional vLLM model arguments (e.g., "max_model_len=8192,gpu_memory_utilization=0.95")')
+    parser.add_argument('--limit', type=int, help='Limit the number of examples per task (for testing purposes only)')
+    parser.add_argument('--lm_eval', type=str, help='lm-evaluation-harness source: URL, URL@ref, or local path (default: LumiOpen/main)')
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
