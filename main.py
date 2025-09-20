@@ -10,6 +10,37 @@ import tempfile
 from evals.evals import evals
 from evals.slurm import identify_scheduled_tasks
 
+def parse_repo_source(repo_arg):
+    """Parse repo argument into repo URL, ref, and local path components."""
+    if not repo_arg:
+        # Default to LumiOpen main
+        return {
+            'LM_EVAL_REPO': 'https://github.com/LumiOpen/lm-evaluation-harness',
+            'LM_EVAL_REF': 'main',
+            'LM_EVAL_PATH': ''
+        }
+
+    # Check if it's a local path
+    if os.path.exists(repo_arg) or repo_arg.startswith('/') or repo_arg.startswith('./'):
+        return {
+            'LM_EVAL_REPO': '',
+            'LM_EVAL_REF': '',
+            'LM_EVAL_PATH': os.path.abspath(repo_arg)
+        }
+
+    # Parse URL[@ref] format
+    if '@' in repo_arg:
+        repo_url, ref = repo_arg.rsplit('@', 1)
+    else:
+        repo_url = repo_arg
+        ref = 'main'
+
+    return {
+        'LM_EVAL_REPO': repo_url,
+        'LM_EVAL_REF': ref,
+        'LM_EVAL_PATH': ''
+    }
+
 def parse_model(model):
     # default usually applies to uniquely named finetune tests or failures to parse.
     if model[-1] == '/':
@@ -88,11 +119,31 @@ def run_eval(eval_name, args):
     # generate slurm script
     #
 
-    output_file = os.path.join(os.path.abspath(output_dir), f"{eval_name}.json")
+    backend = args.backend
+
+    # Warn about experimental vLLM backend
+    if backend == 'vllm':
+        print("⚠️  WARNING: vLLM backend is experimental. Performance and correctness have not been confirmed to be comparable with HuggingFace backend.")
+
+    # Create output filename with backend prefix for vLLM
+    output_filename = f"vllm_{eval_name}.json" if backend == 'vllm' else f"{eval_name}.json"
+    output_file = os.path.join(os.path.abspath(output_dir), output_filename)
+
     if os.path.exists(output_file) and not args.force:
         print(f"Output file {output_file} already exists and --force not specified, skipping...")
         return
 
+    # Parse lm-eval configuration
+    lm_eval_config = parse_repo_source(args.lm_eval)
+
+    # Build max_memory dict if specified
+    max_memory_json = ""
+    if args.max_memory_per_gpu:
+        # Extract GPU count from gres (e.g., "gpu:mi250:8" -> 8)
+        gres_match = re.search(r':(\d+)$', args.gres)
+        num_gpus = int(gres_match.group(1)) if gres_match else 4
+        max_memory_dict = {str(i): f"{args.max_memory_per_gpu}GiB" for i in range(num_gpus)}
+        max_memory_json = json.dumps(max_memory_dict)
 
     env_vars = {
         'MODEL': args.model,
@@ -101,12 +152,26 @@ def run_eval(eval_name, args):
         'WORK_DIR': os.path.abspath(args.work_dir),
         'OUTPUT_FILE': output_file,
         'TRUST_REMOTE_CODE': "True" if args.trust_remote_code else "False",
-        'APPLY_CHAT_TEMPLATE': args.apply_chat_template,
-        'FEWSHOT_AS_MULTITURN': args.fewshot_as_multiturn,
+        'APPLY_CHAT_TEMPLATE': "True" if args.apply_chat_template else "False",
+        'FEWSHOT_AS_MULTITURN': "True" if args.fewshot_as_multiturn else "False",
+        'BACKEND': backend,
+        'DTYPE': args.dtype,
+        'VLLM_ARGS': args.vllm_args,
+        'LIMIT': str(args.limit) if args.limit is not None else '',
+        'USE_CACHE': args.use_cache,
+        'EMBEDDING_DEVICE': args.embedding_device,
+        'EVAL_LANGUAGES': args.eval_languages if args.eval_languages else '',
+        'DEVICE_MAP': args.device_map if hasattr(args, 'device_map') else 'auto',
+        'MAX_MEMORY_JSON': max_memory_json,
+        'LM_EVAL_REPO': lm_eval_config['LM_EVAL_REPO'],
+        'LM_EVAL_REF': lm_eval_config['LM_EVAL_REF'],
+        'LM_EVAL_PATH': lm_eval_config['LM_EVAL_PATH'],
     }
 
+    job_name = f"vllm_{eval_name}" if backend == 'vllm' else eval_name
+
     slurm_config = {
-        'name': eval_name,
+        'name': job_name,
         'account': args.project,
         'partition': args.partition,
         'gres': args.gres,
@@ -117,7 +182,7 @@ def run_eval(eval_name, args):
     # eval is a reserved keyword, so we'll use tester instead.
     tester = evals[eval_name]
     harness = tester.harness
-    script = harness.generate_script(slurm_config, env_vars)
+    script = harness.generate_script(slurm_config, env_vars, backend)
 
     with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp:
         temp.write(script)
@@ -165,6 +230,7 @@ def run_eval(eval_name, args):
         "eval": eval_name,
         "model": args.model,
         "tokenizer": args.tokenizer,
+        "backend": backend,
         "err_log": os.path.join(os.path.abspath(args.log_dir), f"{job_id}.err"),
         "out_log": os.path.join(os.path.abspath(args.log_dir), f"{job_id}.out"),
         "output_file": output_file,
@@ -220,6 +286,16 @@ def main():
             "If provided without an argument, applies the default behaviour. "
         )
     )
+    parser.add_argument('--backend', type=str, choices=['hf', 'vllm', 'dummy'], default='hf', help='Backend to use for inference (hf=HuggingFace, vllm=vLLM, dummy=No-op LM)')
+    parser.add_argument('--dtype', type=str, default='float16', choices=['float16', 'bfloat16', 'float32'], help='Model dtype (default: float16)')
+    parser.add_argument('--vllm_args', type=str, default='', help='Additional vLLM model arguments (e.g., "max_model_len=8192,gpu_memory_utilization=0.95")')
+    parser.add_argument('--limit', type=int, help='Limit the number of examples per task (for testing purposes only)')
+    parser.add_argument('--lm_eval', type=str, help='lm-evaluation-harness source: URL, URL@ref, or local path (default: LumiOpen/main)')
+    parser.add_argument('--use_cache', type=str, default='', help='Path for SQLite cache to reuse inference results (enables fast iteration on embeddings/clustering)')
+    parser.add_argument('--eval_languages', type=str, default='', help='Comma-separated list of languages to evaluate (e.g., "english,spanish,german"). If not specified, auto-detects from model card.')
+    parser.add_argument('--embedding_device', type=str, default='cuda', help='Device for embedding model (cuda, cpu, or cuda:0, cuda:1, etc.). Default: cuda')
+    parser.add_argument('--device_map', type=str, default='auto', help='HuggingFace device_map strategy (auto, balanced, sequential, balanced_low_0). Default: auto')
+    parser.add_argument('--max_memory_per_gpu', type=str, default='', help='Max memory per GPU in GiB (e.g., "60" for 60GiB per GPU)')
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
@@ -237,21 +313,22 @@ def main():
         args.tokenizer = args.model
 
     # sanity check model and tokenizer before queueing things up
-    if args.model.count('/') != 1:
-        # not a hugging face model identifier
-        if not os.path.exists(os.path.join(args.model, "config.json")):
-            print(f"Error: model '{args.model}' looks like a directory, but does not contain a config.json")
-            sys.exit(1)
-    if args.tokenizer.count('/') != 1:
-        if not os.path.exists(os.path.join(args.model, "tokenizer.json")):
-            print(f"Error: tokenizer '{args.tokenizer}' looks like a directory, but does not contain a tokenizer.json")
-            sys.exit(1)
+    if args.backend != 'dummy':
+        if args.model.count('/') != 1:
+            # not a hugging face model identifier
+            if not os.path.exists(os.path.join(args.model, "config.json")):
+                print(f"Error: model '{args.model}' looks like a directory, but does not contain a config.json")
+                sys.exit(1)
+        if args.tokenizer.count('/') != 1:
+            if not os.path.exists(os.path.join(args.model, "tokenizer.json")):
+                print(f"Error: tokenizer '{args.tokenizer}' looks like a directory, but does not contain a tokenizer.json")
+                sys.exit(1)
 
     scheduled_tasks = identify_scheduled_tasks()
     for eval_name in args.eval:
-        task = scheduled_tasks.get((args.model, eval_name), None)
+        task = scheduled_tasks.get((args.model, eval_name, args.backend), None)
         if task is not None and not args.force:
-            print(f"Already detected job for {task['eval']} on {task['model']} on slurm job {task['job_id']} and --force not specified, skipping...")
+            print(f"Already detected job for {task['eval']} on {task['model']} with {task['backend']} backend on slurm job {task['job_id']} and --force not specified, skipping...")
             continue
         run_eval(eval_name, args)
 

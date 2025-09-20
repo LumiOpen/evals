@@ -1,0 +1,4 @@
+task: helmet_cite_local
+class: !function local.LocalHelmetCiteTask
+metadata:
+  version: 0

@@ -1,0 +1,3 @@
+{"jsonl": "{\"question\": \"What is the capital of Finland?\", \"answer\": \"Helsinki\"}", "__key__": "sample0"}
+{"jsonl": "{\"question\": \"Name the main language spoken in Finland.\", \"answer\": \"Finnish\"}", "__key__": "sample1"}
+{"jsonl": "{\"question\": \"Provide any notable Finnish invention.\", \"context\": \"The heart rate monitor was popularised in Finland.\", \"answer\": \"\"}", "__key__": "sample2"}

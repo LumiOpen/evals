@@ -14,6 +14,13 @@ can run like
 sh cpt.sh /path/to/somemodel
 ```
 
+For vLLM evaluations, there's also `cpt-vllm.sh`:
+
+```bash
+# run vLLM tests for finnish CPT evals
+sh cpt-vllm.sh org/modelname
+```
+
 You can also invoke the script directly to run individual evals as needed.
 
 ```bash
@@ -22,6 +29,50 @@ python main.py \
     --time 04:00:00
     --model path/to/model_step1234 \
     eval_name1 eval_name2
+```
+
+### Backend selection
+
+The script supports different backends:
+
+```bash
+# HuggingFace backend (default)
+python main.py arc_challenge --model path/to/model
+
+# vLLM backend for faster inference
+python main.py arc_challenge --model path/to/model --backend vllm
+
+# Custom vLLM arguments
+python main.py arc_challenge --model path/to/model --backend vllm \
+    --vllm_args "max_model_len=8192,gpu_memory_utilization=0.95"
+```
+
+Note: The vLLM backend is experimental. Performance and correctness have not been confirmed to be comparable with the HuggingFace backend.
+
+### Custom lm-evaluation-harness source
+
+For vLLM backend, you can specify a custom lm-evaluation-harness source:
+
+```bash
+# Use a different GitHub repository
+python main.py arc_challenge --model path/to/model --backend vllm \
+    --lm_eval https://github.com/user/custom-lm-eval.git
+
+# Use a specific branch or tag
+python main.py arc_challenge --model path/to/model --backend vllm \
+    --lm_eval https://github.com/LumiOpen/lm-evaluation-harness@feature-branch
+
+# Use local development version
+python main.py arc_challenge --model path/to/model --backend vllm \
+    --lm_eval /path/to/local/lm-evaluation-harness
+```
+
+### Testing with limited examples
+
+For testing purposes, you can limit the number of examples per task:
+
+```bash
+python main.py arc_challenge --model path/to/model --limit 50
 ```
 
 The script will try to avoid running nevals for which you already have results
@@ -54,7 +105,7 @@ not specify the `--once` flag it will keep checking job status periodically and
 provide updates as jobs complete.
 
 ```bash
-$ python watch.py --once 
+$ python watch.py --once
 9678732 /scratch/project_462000353/converted-checkpoints/llama31_8B_culturax50B_2e-5/iter_0011920 hellaswag_mt_fi is queued.
 9678731 /scratch/project_462000353/converted-checkpoints/llama31_8B_culturax50B_2e-5/iter_0011920 hellaswag is queued.
 9678730 /scratch/project_462000353/converted-checkpoints/llama31_8B_culturax50B_2e-5/iter_0011920 gsm8k_mt_fi is queued.

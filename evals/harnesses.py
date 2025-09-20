@@ -9,15 +9,18 @@ class LMEvalHarness:
         self.num_fewshot = num_fewshot
         self.harness = self # TODO remove
 
-    def generate_script(self, slurm_config, env_vars):
+    def generate_script(self, slurm_config, env_vars, backend='hf'):
         env_vars = copy.deepcopy(env_vars)
         env_vars["TASK_LIST"] = ",".join(self.task_list)
         env_vars["NUM_FEWSHOT"] = self.num_fewshot
+        env_vars["BACKEND"] = backend
         config = {}
         config["env_vars"] = env_vars
         config["slurm_config"] = slurm_config
 
-        template_str = open('templates/lm_eval_harness.sh', 'r').read()
+        template_file = 'templates/lm_eval_harness.sh'
+
+        template_str = open(template_file, 'r').read()
         template = Template(template_str)
         rendered_script = template.render(**config)
 
@@ -29,7 +32,7 @@ class BigcodeEvaluationHarness:
         self.n_samples = n_samples
         self.harness = self
 
-    def generate_script(self, slurm_config, env_vars):
+    def generate_script(self, slurm_config, env_vars, backend='hf'):
         env_vars = copy.deepcopy(env_vars)
         env_vars["TASK_LIST"] = ",".join(self.task_list)
         env_vars["N_SAMPLES"] = self.n_samples
