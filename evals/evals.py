@@ -32,6 +32,48 @@ class LMEvalConfig(EvalConfig):
         super().__init__(name, result_type, LMEvalHarness([name], num_fewshot=num_fewshot))
         self.num_fewshot = num_fewshot
 
+class MultiMetricLMEvalConfig(EvalConfig):
+    def __init__(self, name, metrics, num_fewshot=0):
+        super().__init__(name, "custom", LMEvalHarness([name], num_fewshot=num_fewshot))
+        self.metrics = metrics
+
+    def get_results_custom(self, json_data):
+        task_results = json_data.get("results", {}).get(self.name)
+        if task_results is None:
+            return None
+
+        parsed_results = {}
+        for metric in self.metrics:
+            metric_key = next(
+                (
+                    key
+                    for key in (f"{metric},none", metric)
+                    if key in task_results
+                ),
+                None,
+            )
+            if metric_key is not None:
+                parsed_results[metric] = task_results[metric_key]
+
+            stderr_key = next(
+                (
+                    key
+                    for key in (
+                        f"{metric}_stderr,none",
+                        f"{metric}_stderr",
+                    )
+                    if key in task_results
+                ),
+                None,
+            )
+            if stderr_key is not None:
+                parsed_results[f"{metric}_stderr"] = task_results[stderr_key]
+
+        if "samples" in task_results:
+            parsed_results["samples"] = task_results["samples"]
+
+        return parsed_results
+
 class FinBenchConfig(EvalConfig):
     def __init__(self, name, result_type, num_fewshot=0):
         super().__init__(name, result_type, LMEvalHarness([name], num_fewshot=num_fewshot))
@@ -320,4 +362,14 @@ evals = {
     "gpqa_diamond_5shot": LMEvalConfig("gpqa_diamond_nshot", "acc,none", num_fewshot=5),
     "gpqa_diamond_cot_zeroshot": LMEvalConfig("gpqa_diamond_cot_zeroshot", "acc,none", num_fewshot=0),
     "gpqa_diamond_cot_5shot": LMEvalConfig("gpqa_diamond_cot_nshot", "acc,none", num_fewshot=5),
+
+    # helmet long-context evaluations
+    "helmet": MultiMetricLMEvalConfig("helmet", ["exact_match", "bleu", "rouge1"]),
+    "helmet_recall": MultiMetricLMEvalConfig("helmet_recall", ["exact_match", "f1"]),
+    "helmet_rag": MultiMetricLMEvalConfig("helmet_rag", ["exact_match", "f1", "bleu"]),
+    "helmet_rerank": MultiMetricLMEvalConfig("helmet_rerank", ["exact_match", "f1"]),
+    "helmet_cite": MultiMetricLMEvalConfig("helmet_cite", ["exact_match", "bleu", "rouge1"]),
+    "helmet_longqa": MultiMetricLMEvalConfig("helmet_longqa", ["exact_match", "f1", "bleu", "rouge1"]),
+    "helmet_summ": MultiMetricLMEvalConfig("helmet_summ", ["bleu", "rouge1", "rouge2", "rougeL", "bertscore"]),
+    "helmet_icl": MultiMetricLMEvalConfig("helmet_icl", ["exact_match", "f1", "acc"]),
 }
