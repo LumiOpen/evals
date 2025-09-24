@@ -74,7 +74,9 @@ def identify_scheduled_tasks():
     for job_id in get_jobs():
         if job_id in log_entries:
             entry = log_entries[job_id]
-            identified_jobs[(entry["model"], entry["eval"])] = entry
+            # Include backend in the key to distinguish between HF and vLLM jobs
+            backend = entry.get("backend", "hf")  # Default to "hf" for old entries
+            identified_jobs[(entry["model"], entry["eval"], backend)] = entry
     return identified_jobs
         
 

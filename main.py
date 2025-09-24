@@ -303,9 +303,9 @@ def main():
 
     scheduled_tasks = identify_scheduled_tasks()
     for eval_name in args.eval:
-        task = scheduled_tasks.get((args.model, eval_name), None)
+        task = scheduled_tasks.get((args.model, eval_name, args.backend), None)
         if task is not None and not args.force:
-            print(f"Already detected job for {task['eval']} on {task['model']} on slurm job {task['job_id']} and --force not specified, skipping...")
+            print(f"Already detected job for {task['eval']} on {task['model']} with {task['backend']} backend on slurm job {task['job_id']} and --force not specified, skipping...")
             continue
         run_eval(eval_name, args)
 
