@@ -219,6 +219,7 @@ python /workspace/tools/stage_aiter.py
 python /workspace/tools/prefetch.py
 
 # Ensure custom Triton kernels are importable when present
+{% raw %}
 echo "Scanning ${MODEL_LOCAL} for Triton kernels"
 TRITON_SRC=$(find "${MODEL_LOCAL}" -maxdepth 6 -type d -name 'triton_kernels' 2>/dev/null | head -n 1 || true)
 if [[ -n "${TRITON_SRC}" ]]; then
@@ -227,6 +228,7 @@ if [[ -n "${TRITON_SRC}" ]]; then
   export PYTHONPATH="${TRITON_PARENT}:${PYTHONPATH-}"
 fi
 
+echo "Searching for wheels under ${MODEL_LOCAL}"
 if [[ -d "${MODEL_LOCAL}" ]]; then
   mapfile -t _TRITON_WHEELS < <(find "${MODEL_LOCAL}" -maxdepth 6 -type f -name '*.whl' 2>/dev/null || true)
   if (( ${#_TRITON_WHEELS[@]} )); then
@@ -234,6 +236,8 @@ if [[ -d "${MODEL_LOCAL}" ]]; then
       echo "Installing wheel ${wheel}"
       python -m pip install --user --no-deps --force-reinstall "${wheel}" || echo "WARNING: Failed to install ${wheel}"
     done
+  else
+    echo "No wheels found under ${MODEL_LOCAL}"
   fi
 fi
 
@@ -252,6 +256,7 @@ except Exception as exc:
     print("WARNING: Failed to import triton_kernels:", exc)
     sys.exit(0)
 PY
+{% endraw %}
 
 # Model is prefetched, but allow datasets to be downloaded as needed
 # Note: Datasets will be cached automatically for subsequent runs
