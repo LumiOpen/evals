@@ -70,6 +70,8 @@ TP="${TP:-4}"
 MODEL_SAFE="${MODEL_ID//\//-}"
 PREFETCH_LOCAL_DIR="/project/hf_cache/models/${MODEL_SAFE}"
 MODEL_LOCAL="${PREFETCH_LOCAL_DIR}"
+export PREFETCH_LOCAL_DIR
+export MODEL_LOCAL
 
 # ---- env & caches (disable xet + telemetry) ----
 export HF_HUB_DISABLE_XET=1
@@ -166,14 +168,37 @@ PY
 
 # ------- write helper: prefetch.py -------
 cat > /workspace/tools/prefetch.py <<PY
+import os
 from huggingface_hub import snapshot_download
-p = snapshot_download(
-  repo_id="${MODEL_ID}",
-  local_dir="${PREFETCH_LOCAL_DIR}",
-  local_dir_use_symlinks=False,
-  allow_patterns=["*.safetensors","*.json","tokenizer.*","*vocab*","*.model"]
+
+repo_id = os.environ.get("MODEL_ID", "${MODEL_ID}")
+local_dir = os.environ.get("PREFETCH_LOCAL_DIR", "${PREFETCH_LOCAL_DIR}")
+
+base_patterns = [
+    "*.safetensors",
+    "*.json",
+    "tokenizer.*",
+    "*vocab*",
+    "*.model",
+]
+
+# gpt-oss releases ship custom Triton kernels that need to be fetched too
+if "gpt-oss" in repo_id.lower():
+    allow_patterns = None
+else:
+    allow_patterns = base_patterns
+
+kwargs = dict(
+    repo_id=repo_id,
+    local_dir=local_dir,
+    local_dir_use_symlinks=False,
 )
-print("prefetch OK ->", p)
+
+if allow_patterns is not None:
+    kwargs["allow_patterns"] = allow_patterns
+
+path = snapshot_download(**kwargs)
+print("prefetch OK ->", path)
 PY
 
 # ------- write helper: sanity.py -------
@@ -193,11 +218,23 @@ python /workspace/tools/sanity.py
 python /workspace/tools/stage_aiter.py
 python /workspace/tools/prefetch.py
 
+# Ensure custom Triton kernels are importable when present
+TRITON_SRC=$(find "${MODEL_LOCAL}" -maxdepth 5 -type d -name 'triton_kernels' 2>/dev/null | head -n 1 || true)
+if [[ -n "${TRITON_SRC}" ]]; then
+  TRITON_PARENT="$(dirname "${TRITON_SRC}")"
+  export PYTHONPATH="${TRITON_PARENT}:${PYTHONPATH-}"
+fi
+TRITON_WHL=$(find "${MODEL_LOCAL}" -maxdepth 5 -type f -name 'triton_kernels*.whl' 2>/dev/null | head -n 1 || true)
+if [[ -n "${TRITON_WHL}" ]]; then
+  echo "Installing triton_kernels wheel from ${TRITON_WHL}"
+  python -m pip install --user --no-deps --force-reinstall "${TRITON_WHL}" || echo "WARNING: Failed to install ${TRITON_WHL}"
+fi
+
 # Model is prefetched, but allow datasets to be downloaded as needed
 # Note: Datasets will be cached automatically for subsequent runs
 
 # ensure staged package is visible
-export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
+export PYTHONPATH="$HOME/.aiter/jit/install:${MODEL_LOCAL}:${PYTHONPATH-}"
 
 # ------- get LUMI harness (puts it first on sys.path) -------
 # Use job-specific directory to avoid git conflicts between parallel jobs
