@@ -119,17 +119,19 @@ def run_eval(eval_name, args):
     # generate slurm script
     #
 
-    output_file = os.path.join(os.path.abspath(output_dir), f"{eval_name}.json")
-    if os.path.exists(output_file) and not args.force:
-        print(f"Output file {output_file} already exists and --force not specified, skipping...")
-        return
-
-
     backend = args.backend
 
     # Warn about experimental vLLM backend
     if backend == 'vllm':
         print("⚠️  WARNING: vLLM backend is experimental. Performance and correctness have not been confirmed to be comparable with HuggingFace backend.")
+
+    # Create output filename with backend prefix for vLLM
+    output_filename = f"vllm_{eval_name}.json" if backend == 'vllm' else f"{eval_name}.json"
+    output_file = os.path.join(os.path.abspath(output_dir), output_filename)
+
+    if os.path.exists(output_file) and not args.force:
+        print(f"Output file {output_file} already exists and --force not specified, skipping...")
+        return
 
     # Parse lm-eval configuration
     lm_eval_config = parse_repo_source(args.lm_eval)
