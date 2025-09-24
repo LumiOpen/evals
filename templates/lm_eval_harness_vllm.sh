@@ -75,7 +75,7 @@ export MODEL_LOCAL
 
 # ---- env & caches (disable xet + telemetry) ----
 export HF_HUB_DISABLE_XET=1
-export HF_HUB_ENABLE_HF_TRANSFER=0
+export HF_HUB_ENABLE_HF_TRANSFER=1
 export HF_HUB_DISABLE_TELEMETRY=1
 
 export PATH="$HOME/.local/bin:/opt/miniconda3/envs/pytorch/bin:/opt/rocm/llvm/bin:/opt/rocm/bin:/usr/bin:/bin"
@@ -115,8 +115,8 @@ else
   export CXX=/opt/rocm/bin/hipcc
 fi
 
-# Make sure ninja is available
-python -m pip -q install --user -U ninja || true
+# Make sure required tools are available
+python -m pip -q install --user -U ninja hf_transfer || true
 
 # ------- write helper: stage_aiter.py (NO stdin execution) -------
 cat > /workspace/tools/stage_aiter.py <<PY
