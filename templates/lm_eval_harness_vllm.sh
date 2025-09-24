@@ -184,12 +184,7 @@ base_patterns = [
 
 # gpt-oss releases ship custom Triton kernels that need to be fetched too
 if "gpt-oss" in repo_id.lower():
-    allow_patterns = base_patterns + [
-        "triton_kernels",
-        "triton_kernels/**",
-        "triton_kernels*",
-        "triton_kernels*.whl",
-    ]
+    allow_patterns = None  # pull the entire repo to grab bundled kernels/wheels
 else:
     allow_patterns = base_patterns
 
@@ -199,7 +194,8 @@ kwargs = dict(
     local_dir_use_symlinks=False,
 )
 
-kwargs["allow_patterns"] = allow_patterns
+if allow_patterns is not None:
+    kwargs["allow_patterns"] = allow_patterns
 
 path = snapshot_download(**kwargs)
 print("prefetch OK ->", path)
@@ -223,16 +219,39 @@ python /workspace/tools/stage_aiter.py
 python /workspace/tools/prefetch.py
 
 # Ensure custom Triton kernels are importable when present
-TRITON_SRC=$(find "${MODEL_LOCAL}" -maxdepth 5 -type d -name 'triton_kernels' 2>/dev/null | head -n 1 || true)
+echo "Scanning ${MODEL_LOCAL} for Triton kernels"
+TRITON_SRC=$(find "${MODEL_LOCAL}" -maxdepth 6 -type d -name 'triton_kernels' 2>/dev/null | head -n 1 || true)
 if [[ -n "${TRITON_SRC}" ]]; then
   TRITON_PARENT="$(dirname "${TRITON_SRC}")"
+  echo "Found triton_kernels directory at ${TRITON_SRC}; adding ${TRITON_PARENT} to PYTHONPATH"
   export PYTHONPATH="${TRITON_PARENT}:${PYTHONPATH-}"
 fi
-TRITON_WHL=$(find "${MODEL_LOCAL}" -maxdepth 5 -type f -name 'triton_kernels*.whl' 2>/dev/null | head -n 1 || true)
-if [[ -n "${TRITON_WHL}" ]]; then
-  echo "Installing triton_kernels wheel from ${TRITON_WHL}"
-  python -m pip install --user --no-deps --force-reinstall "${TRITON_WHL}" || echo "WARNING: Failed to install ${TRITON_WHL}"
+
+if [[ -d "${MODEL_LOCAL}" ]]; then
+  mapfile -t _TRITON_WHEELS < <(find "${MODEL_LOCAL}" -maxdepth 6 -type f -name '*.whl' 2>/dev/null || true)
+  if (( ${#_TRITON_WHEELS[@]} )); then
+    for wheel in "${_TRITON_WHEELS[@]}"; do
+      echo "Installing wheel ${wheel}"
+      python -m pip install --user --no-deps --force-reinstall "${wheel}" || echo "WARNING: Failed to install ${wheel}"
+    done
+  fi
 fi
+
+if [[ -d "${MODEL_LOCAL}/python" ]]; then
+  echo "Adding ${MODEL_LOCAL}/python to PYTHONPATH"
+  export PYTHONPATH="${MODEL_LOCAL}/python:${PYTHONPATH-}"
+fi
+
+python - <<'PY'
+import importlib, os, sys
+print("PYTHONPATH:", os.environ.get("PYTHONPATH"))
+try:
+    mod = importlib.import_module("triton_kernels")
+    print("Located triton_kernels at", getattr(mod, "__file__", "<no file>") or "<package>")
+except Exception as exc:
+    print("WARNING: Failed to import triton_kernels:", exc)
+    sys.exit(0)
+PY
 
 # Model is prefetched, but allow datasets to be downloaded as needed
 # Note: Datasets will be cached automatically for subsequent runs
