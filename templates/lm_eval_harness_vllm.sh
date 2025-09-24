@@ -184,7 +184,12 @@ base_patterns = [
 
 # gpt-oss releases ship custom Triton kernels that need to be fetched too
 if "gpt-oss" in repo_id.lower():
-    allow_patterns = None
+    allow_patterns = base_patterns + [
+        "triton_kernels",
+        "triton_kernels/**",
+        "triton_kernels*",
+        "triton_kernels*.whl",
+    ]
 else:
     allow_patterns = base_patterns
 
@@ -194,8 +199,7 @@ kwargs = dict(
     local_dir_use_symlinks=False,
 )
 
-if allow_patterns is not None:
-    kwargs["allow_patterns"] = allow_patterns
+kwargs["allow_patterns"] = allow_patterns
 
 path = snapshot_download(**kwargs)
 print("prefetch OK ->", path)
