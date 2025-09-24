@@ -320,6 +320,10 @@ echo "Moving temporary results from $RANDOM_DIR to $CONTAINER_OUTPUT_FILE"
 find "$RANDOM_DIR" -name "results_*.json" -exec mv {} "$CONTAINER_OUTPUT_FILE" \;
 rm -rf "$RANDOM_DIR"
 
+# Clean up the temporary lm-eval-harness directory
+echo "Cleaning up temporary lm-eval directory: $EVAL_HARNESS_DIR"
+rm -rf "$EVAL_HARNESS_DIR"
+
 echo "== results saved to $CONTAINER_OUTPUT_FILE =="
 ls -l "$CONTAINER_OUTPUT_FILE" || true
 '
