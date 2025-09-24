@@ -150,8 +150,13 @@ echo "Acquired lock (Job ID: $SLURM_JOB_ID), executing environment setup code."
 # 2. Checks out the current version of the code from the repo
 
 REPO_DIR="lm-evaluation-harness2"
+{% if env_vars.LM_EVAL_REPO %}
+REPO_URL="{{ env_vars.LM_EVAL_REPO }}"
+BRANCH="{{ env_vars.LM_EVAL_REF }}"
+{% else %}
 REPO_URL="https://github.com/LumiOpen/lm-evaluation-harness"
 BRANCH="main"
+{% endif %}
 
 # Check if directory exists
 if [ ! -d "$REPO_DIR" ] ; then

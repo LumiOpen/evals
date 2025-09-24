@@ -47,6 +47,8 @@ python main.py arc_challenge --model path/to/model --backend vllm \
     --vllm_args "max_model_len=8192,gpu_memory_utilization=0.95"
 ```
 
+Note: The vLLM backend is experimental. Performance and correctness have not been confirmed to be comparable with the HuggingFace backend.
+
 ### Custom lm-evaluation-harness source
 
 For vLLM backend, you can specify a custom lm-evaluation-harness source:

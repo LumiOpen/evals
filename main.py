@@ -10,9 +10,9 @@ import tempfile
 from evals.evals import evals
 from evals.slurm import identify_scheduled_tasks
 
-def parse_lm_eval(lm_eval_arg):
-    """Parse --lm_eval argument into repo URL, ref, and local path components."""
-    if not lm_eval_arg:
+def parse_repo_source(repo_arg):
+    """Parse repo argument into repo URL, ref, and local path components."""
+    if not repo_arg:
         # Default to LumiOpen main
         return {
             'LM_EVAL_REPO': 'https://github.com/LumiOpen/lm-evaluation-harness',
@@ -21,18 +21,18 @@ def parse_lm_eval(lm_eval_arg):
         }
 
     # Check if it's a local path
-    if os.path.exists(lm_eval_arg) or lm_eval_arg.startswith('/') or lm_eval_arg.startswith('./'):
+    if os.path.exists(repo_arg) or repo_arg.startswith('/') or repo_arg.startswith('./'):
         return {
             'LM_EVAL_REPO': '',
             'LM_EVAL_REF': '',
-            'LM_EVAL_PATH': os.path.abspath(lm_eval_arg)
+            'LM_EVAL_PATH': os.path.abspath(repo_arg)
         }
 
     # Parse URL[@ref] format
-    if '@' in lm_eval_arg:
-        repo_url, ref = lm_eval_arg.rsplit('@', 1)
+    if '@' in repo_arg:
+        repo_url, ref = repo_arg.rsplit('@', 1)
     else:
-        repo_url = lm_eval_arg
+        repo_url = repo_arg
         ref = 'main'
 
     return {
@@ -126,11 +126,13 @@ def run_eval(eval_name, args):
 
 
     backend = args.backend
-    if backend == 'auto':
-        backend = 'hf'
+
+    # Warn about experimental vLLM backend
+    if backend == 'vllm':
+        print("⚠️  WARNING: vLLM backend is experimental. Performance and correctness have not been confirmed to be comparable with HuggingFace backend.")
 
     # Parse lm-eval configuration
-    lm_eval_config = parse_lm_eval(args.lm_eval)
+    lm_eval_config = parse_repo_source(args.lm_eval)
 
     env_vars = {
         'MODEL': args.model,
@@ -141,7 +143,6 @@ def run_eval(eval_name, args):
         'TRUST_REMOTE_CODE': "True" if args.trust_remote_code else "False",
         'APPLY_CHAT_TEMPLATE': args.apply_chat_template,
         'FEWSHOT_AS_MULTITURN': args.fewshot_as_multiturn,
-        'BACKEND': backend,
         'VLLM_ARGS': args.vllm_args,
         'LIMIT': str(args.limit) if args.limit is not None else '',
         'LM_EVAL_REPO': lm_eval_config['LM_EVAL_REPO'],
@@ -267,7 +268,7 @@ def main():
             "If provided without an argument, applies the default behaviour. "
         )
     )
-    parser.add_argument('--backend', type=str, choices=['hf', 'vllm', 'auto'], default='hf', help='Backend to use for inference (hf=HuggingFace, vllm=vLLM, auto=HuggingFace)')
+    parser.add_argument('--backend', type=str, choices=['hf', 'vllm'], default='hf', help='Backend to use for inference (hf=HuggingFace, vllm=vLLM)')
     parser.add_argument('--vllm_args', type=str, default='', help='Additional vLLM model arguments (e.g., "max_model_len=8192,gpu_memory_utilization=0.95")')
     parser.add_argument('--limit', type=int, help='Limit the number of examples per task (for testing purposes only)')
     parser.add_argument('--lm_eval', type=str, help='lm-evaluation-harness source: URL, URL@ref, or local path (default: LumiOpen/main)')

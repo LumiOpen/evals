@@ -18,9 +18,9 @@ ln -sf {{ slurm_config.log_dir }}/$SLURM_JOB_ID.err {{ slurm_config.log_dir }}/l
 
 set -euo pipefail
 
-export IMG="/scratch/project_462000353/containers/vllm_v10.1.1.sif"
-export PRJ="/scratch/project_462000353"   # will be /project in container
-export SCR="$PWD"                          # will be /workspace in container
+export IMG="/scratch/{{ slurm_config.account }}/containers/vllm_v10.1.1.sif"
+export PRJ="/scratch/{{ slurm_config.account }}"   # will be /project in container
+export SCR="$PWD"                          # SCR = scratch directory, will be /workspace in container
 export ACC="{{ slurm_config.account }}"
 
 # Parse gres for GPU count (e.g., "gpu:mi250:4" -> 4)
