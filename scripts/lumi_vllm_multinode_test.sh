@@ -108,11 +108,32 @@ detect_ip() {
   if [[ -n "$iface" ]] && command -v ip >/dev/null 2>&1; then
     ip=$(ip -o -4 addr show dev "$iface" 2>/dev/null | awk "{print \$4}" | cut -d/ -f1 | head -n1)
   fi
-  if [[ -z "$ip" ]]; then
+  if [[ -z "$ip" ]] && command -v hostname >/dev/null 2>&1; then
     ip=$(hostname -I | tr " " "\n" | grep -m1 -E "^10\\.|^172\\.16|^172\\.3|^192\\.168" || true)
   fi
-  if [[ -z "$ip" ]]; then
+  if [[ -z "$ip" ]] && command -v hostname >/dev/null 2>&1; then
     ip=$(hostname -I | awk "{print \$1}")
+  fi
+  if [[ -z "$ip" ]] && [[ -f /etc/hostname ]] && [[ -f /etc/hosts ]]; then
+    local host_name
+    host_name=$(cat /etc/hostname 2>/dev/null || echo '')
+    if [[ -n "$host_name" ]]; then
+      ip=$(grep -m1 "$host_name" /etc/hosts | awk '{print $1}' || true)
+    fi
+  fi
+  if [[ -z "$ip" ]]; then
+    ip=$(python - <<'PY'
+import socket
+try:
+    host = socket.gethostname()
+    addr = socket.gethostbyname(host)
+    # LUMI hostnames resolve to internal IPs; print only IPv4
+    if addr:
+        print(addr)
+except Exception:
+    pass
+PY
+)
   fi
   printf '%s\n' "$ip"
 }
@@ -142,7 +163,7 @@ PY
 from huggingface_hub import snapshot_download
 import os
 model_id = os.environ["MODEL_ID"]
-local = f"/project/hf-cache/models/{model_id.replace('/', '-') }"
+local = f"/project/hf-cache/models/{model_id.replace("/", "-") }"
 path = snapshot_download(repo_id=model_id,
                          local_dir=local,
                          local_dir_use_symlinks=False,
@@ -217,7 +238,7 @@ import os
 from vllm import LLM, SamplingParams
 
 model_id = os.environ['MODEL_ID']
-model_local = f"/project/hf-cache/models/{model_id.replace('/', '-') }"
+model_local = f"/project/hf-cache/models/{model_id.replace("/", "-") }"
 out_dir = os.environ['OUTDIR']
 
 llm = LLM(
