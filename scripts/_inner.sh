@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 set -euo pipefail
 umask 002
 
@@ -51,8 +52,28 @@ if ! command -v ray >/dev/null 2>&1; then
   exit 3
 fi
 
-sentinel_put() { echo "$1" > "$SENTINEL_DIR/$2"; }
-sentinel_wait() { local file="$SENTINEL_DIR/$1"; while [[ ! -s "$file" ]]; do sleep 2; done; cat "$file"; }
+sentinel_put() {
+  local value="${1:-}"
+  local token="${2:-}"
+  if [[ -z "$token" ]]; then
+    echo "[sentinel] token missing" >&2
+    exit 4
+  fi
+  echo "$value" > "$SENTINEL_DIR/$token"
+}
+
+sentinel_wait() {
+  local token="${1:-}"
+  if [[ -z "$token" ]]; then
+    echo "[sentinel] wait token missing" >&2
+    exit 4
+  fi
+  local file="$SENTINEL_DIR/$token"
+  while [[ ! -s "$file" ]]; do
+    sleep 2
+  done
+  cat "$file"
+}
 
 # Prefer the HSN interface but fall back gracefully
 detect_ip() {
@@ -218,4 +239,3 @@ else
   sentinel_wait inference.done >/dev/null
   ray stop --force || true
 fi
-
