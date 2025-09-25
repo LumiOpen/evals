@@ -31,7 +31,7 @@ fi
 srun -A "$ACC" -p "$PART" -N "$N_NODES" --ntasks="$N_NODES" --ntasks-per-node=1 \
      --cpus-per-task=32 --gpus-per-task="$GPUS_PER_NODE" \
      --time="$JOB_TIME" --gpu-bind=closest \
-  singularity exec --rocm --cleanenv \
+  singularity exec --rocm \
     --bind "$SCR":/workspace \
     --bind "$PRJ":/project \
     --bind /usr/share/libdrm:/usr/share/libdrm \
