@@ -70,6 +70,7 @@ export XDG_CACHE_HOME=/project/hf-cache/xdg
 export TORCH_EXTENSIONS_DIR=/dev/shm/torch_ext
 export TORCHINDUCTOR_CACHE_DIR=/project/hf-cache/torchinductor
 export VLLM_COMPILER_CACHE_DIR=/project/hf-cache/vllm-compile
+export PATH="$HOME/.local/bin:/opt/miniconda3/envs/pytorch/bin:/opt/rocm/llvm/bin:/opt/rocm/bin:/usr/bin:/bin:$PATH"
 export VLLM_TARGET_DEVICE=rocm
 export VLLM_USE_V1=1
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
@@ -92,7 +93,10 @@ else
   export CXX=/opt/rocm/bin/hipcc
 fi
 
-python -m pip -q install --user -U ninja ray || true
+if ! command -v ray >/dev/null 2>&1; then
+  echo "[fatal] ray CLI not found in PATH=$PATH" >&2
+  exit 3
+fi
 
 sentinel_put() { echo "$1" > "$SENTINEL_DIR/$2"; }
 sentinel_wait() { local file="$SENTINEL_DIR/$1"; while [[ ! -s "$file" ]]; do sleep 2; done; cat "$file"; }
