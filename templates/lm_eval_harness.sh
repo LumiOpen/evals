@@ -21,10 +21,6 @@ ln -sf {{ slurm_config.log_dir }}/$SLURM_JOB_ID.err {{ slurm_config.log_dir }}/l
 export {{ key }}={{ value }}
 {% endfor %}
 
-# Disable optional vision/audio imports in transformers since this
-# environment lacks a functional torchvision build.
-export DISABLE_TRANSFORMERS_AV=1
-
 # All used environment variables should be checked here.
 if [ -z "$MODEL" ]; then
     echo "MODEL is not set"
