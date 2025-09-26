@@ -13,14 +13,12 @@ class LMEvalHarness:
         env_vars = copy.deepcopy(env_vars)
         env_vars["TASK_LIST"] = ",".join(self.task_list)
         env_vars["NUM_FEWSHOT"] = self.num_fewshot
+        env_vars["BACKEND"] = backend
         config = {}
         config["env_vars"] = env_vars
         config["slurm_config"] = slurm_config
 
-        if backend == 'vllm':
-            template_file = 'templates/lm_eval_harness_vllm.sh'
-        else:
-            template_file = 'templates/lm_eval_harness.sh'
+        template_file = 'templates/lm_eval_harness.sh'
 
         template_str = open(template_file, 'r').read()
         template = Template(template_str)
