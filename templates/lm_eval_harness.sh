@@ -46,7 +46,7 @@ BIND_LM_EVAL="--bind {{ env_vars.LM_EVAL_PATH }}:/workspace/lm-eval-host"
 BIND_LM_EVAL=""
 {% endif %}
 
-srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_config.time }}" --gpus="$GPUS" --gpu-bind=closest \
+srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_config.time }}" --gpus-per-task="$GPUS" \
   singularity exec --rocm --cleanenv \
     --bind "$SCR":/workspace \
     --bind "$PRJ":/project \
@@ -98,7 +98,7 @@ export VLLM_TARGET_DEVICE=rocm
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export HIP_ARCHITECTURES=gfx90a
 
-# Avoid the 1-GPU trap
+# Avoid the 1-GPU trap - ensure PyTorch uses all allocated GPUs
 unset HIP_VISIBLE_DEVICES
 
 mkdir -p /project/hf_cache/{hub,models,datasets,torchinductor,xdg,vllm-compile} \
