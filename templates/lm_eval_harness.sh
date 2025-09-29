@@ -184,7 +184,6 @@ print("torch", torch.__version__, "HIP", getattr(torch.version, "hip", None))
 print("HF_HUB_DISABLE_XET =", os.getenv("HF_HUB_DISABLE_XET"))
 n = torch.cuda.device_count()
 print("cuda.device_count =", n)
-assert n >= 2, "Expected 2 GPUs visible to PyTorch"
 for i in range(n):
     print("  idx", i, "->", torch.cuda.get_device_name(i))
 PY
