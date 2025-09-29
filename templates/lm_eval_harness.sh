@@ -52,6 +52,7 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --bind "$PRJ":/project \
     --bind /usr/share/libdrm:/usr/share/libdrm \
     $BIND_LM_EVAL \
+    --env SLURM_JOB_ID="$SLURM_JOB_ID" \
     --env MODEL_ID="$MODEL_ID" \
     --env TP="$TP" \
     --env SCR="$SCR" \
