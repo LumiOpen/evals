@@ -108,7 +108,7 @@ cleanup() {
 
 # Try to acquire the lock for up to 1 hour (3600 seconds)
 # Modify timeout as needed for your use case
-TIMEOUT=3600
+TIMEOUT=7200
 ATTEMPTS=0
 echo Acquiring lock for environment update: $LOCKFILE
 
@@ -140,7 +140,7 @@ done
 # Register the cleanup function to run on script exit
 trap cleanup EXIT
 echo "Acquired lock (Job ID: $SLURM_JOB_ID), executing environment setup code."
-
+LOCK_START=$(date +%s)
 ### Begin protected code
 
 # Check out correct lm-evaluation-harness code
@@ -153,6 +153,7 @@ REPO_URL="https://github.com/LumiOpen/lm-evaluation-harness"
 BRANCH="main"
 
 # Check if directory exists
+UPDATED_REPO=0
 if [ ! -d "$REPO_DIR" ] ; then
     # Directory doesn't exist, perform initial clone
     echo "Directory doesn't exist. Cloning $REPO_URL..."
@@ -169,11 +170,19 @@ else
         mv $REPO_DIR ${REPO_DIR}_backup_$(date +%Y%m%d%H%M%S)
         git clone -b $BRANCH $REPO_URL $REPO_DIR
         echo "Previous repository backed up and new one cloned"
+        UPDATED_REPO=1
     else
-        # Same repository, just update
-        echo "Updating existing repository..."
-        git fetch origin
-        git reset --hard origin/$BRANCH
+        REMOTE_HEAD=$(git ls-remote --heads "$REPO_URL" "$BRANCH" | awk '{print $1}')
+        echo "Remote $BRANCH at $REMOTE_HEAD"
+        LOCAL_HEAD=$(git rev-parse HEAD)
+        if [ "$LOCAL_HEAD" != "$REMOTE_HEAD" ]; then
+            echo "Out of date, need to fetch/reset"
+            git fetch --depth 1 origin "$BRANCH"
+            git reset --hard "origin/$BRANCH"
+            UPDATED_REPO=1
+        else
+            echo "Repo already up to date"
+        fi
     fi
 fi
 # Make sure we end up in the repository directory
@@ -188,16 +197,26 @@ export PYTHONUSERBASE=$WORK_DIR/pythonuserbase
 mkdir -p $PYTHONUSERBASE
 echo PYTHONUSERBASE is $PYTHONUSERBASE
 export PATH=$PATH:$PYTHONUSERBASE/bin
-pip install --upgrade setuptools pip
-pip --python=/appl/local/csc/soft/ai/bin/python install --user  -e .[hf_transfer,math,multilingual,sentencepiece,ifeval,ruler]
-pip install --upgrade langdetect immutabledict heliport
-
+#pip install --upgrade setuptools pip
+#pip --python=/appl/local/csc/soft/ai/bin/python install --user  -e .[hf_transfer,math,multilingual,sentencepiece,ifeval,ruler]
+#pip install --upgrade langdetect immutabledict heliport
+pip install --upgrade --no-input --progress-bar off --upgrade-strategy only-if-needed setuptools pip
+if [ "$UPDATED_REPO" -eq 1 ]; then
+    echo "Repo updated, reinstalling lm_eval..."
+    pip --python=/appl/local/csc/soft/ai/bin/python install --user  -e .[hf_transfer,math,multilingual,sentencepiece,ifeval]
+else
+    echo "Repo unchanged, skipping lm_eval install"
+fi
+pip install --upgrade --no-input --progress-bar off --upgrade-strategy only-if-needed langdetect immutabledict heliport
+pip install --no-input --progress-bar off --upgrade-strategy only-if-needed transformers==4.56.1 vllm==0.10.1.1 outlines_core==0.2.10
 # remove cleanup trap and release lock
 trap - EXIT
 cleanup
 echo "Environment setup complete."
 
-
+LOCK_END=$(date +%s)
+LOCK_ELAPSED=$((LOCK_END - LOCK_START))
+echo "Environment setup complete, lock held for ${LOCK_ELAPSED} seconds"
 ### Prepare to run command
 echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"
 
@@ -226,10 +245,11 @@ else
     FEWSHOT_AS_MULTITURN_FLAG=""
 fi
 
-# Task args (optional). Pass arbitrary per-task args through to lm_eval.
 TASK_ARGS_FLAG=""
+RULER_LENGTH=""
 if [ -n "$RULER_SEQ_LENGTH" ]; then
     TASK_ARGS_FLAG="--metadata {\"max_seq_lengths\":[${RULER_SEQ_LENGTH}]}"
+    RULER_LENGTH="max_length=$RULER_SEQ_LENGTH"
 fi
 
 ### Launch command
@@ -237,13 +257,13 @@ fi
 set -x
 lm_eval \
     --model hf \
-    --model_args pretrained=$MODEL,parallelize=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE,max_memory_per_gpu=60GB \
+    --model_args pretrained=$MODEL,parallelize=True,tokenizer=$TOKENIZER,dtype=bfloat16,trust_remote_code=$TRUST_REMOTE_CODE,max_memory_per_gpu=60GB,$RULER_LENGTH \
     --tasks "$TASK_LIST" \
     --num_fewshot $NUM_FEWSHOT \
     --output_path $RANDOM_DIR \
     $CHAT_TEMPLATE_FLAG \
     $FEWSHOT_AS_MULTITURN_FLAG \
-    $TASK_ARGS_FLAG
+    $TASK_ARGS_FLAG \
     # --log_samples \
 set +x
 

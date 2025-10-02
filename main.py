@@ -267,9 +267,7 @@ def main():
     print("Scheduled tasks:", scheduled_tasks,flush=True)
     for eval_name in args.eval:
         output_file=parse_output_file(eval_name, args)
-        print(f"Output file: {output_file}",flush=True)
         task = scheduled_tasks.get((args.model, eval_name, output_file), None)
-        print("Task: ", task,flush=True)
         if task is not None and not args.force:
             print(f"Already detected job for {task['eval']} on {task['model']} and output file {task['output_file']} on slurm job {task['job_id']} and --force not specified, skipping...")
             continue

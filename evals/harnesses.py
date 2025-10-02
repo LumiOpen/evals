@@ -14,7 +14,6 @@ class LMEvalHarness:
         env_vars = copy.deepcopy(env_vars)
         env_vars["TASK_LIST"] = ",".join(self.task_list)
         env_vars["NUM_FEWSHOT"] = self.num_fewshot
-        # Prefer command-line provided TASK_ARGS; otherwise use harness default
         env_vars["TASK_ARGS"] = env_vars.get("TASK_ARGS") or (self.task_args or "")
         config = {}
         config["env_vars"] = env_vars
