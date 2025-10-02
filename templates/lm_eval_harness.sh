@@ -106,7 +106,7 @@ cleanup() {
     fi
 }
 
-# Try to acquire the lock for up to 1 hour (7200 seconds)
+# Try to acquire the lock for up to 2 hour (7200 seconds)
 TIMEOUT=7200
 ATTEMPTS=0
 echo Acquiring lock for environment update: $LOCKFILE
