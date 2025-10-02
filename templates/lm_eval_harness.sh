@@ -106,9 +106,8 @@ cleanup() {
     fi
 }
 
-# Try to acquire the lock for up to 1 hour (3600 seconds)
-# Modify timeout as needed for your use case
-TIMEOUT=3600
+# Try to acquire the lock for up to 2 hour (7200 seconds)
+TIMEOUT=7200
 ATTEMPTS=0
 echo Acquiring lock for environment update: $LOCKFILE
 
@@ -140,6 +139,7 @@ done
 # Register the cleanup function to run on script exit
 trap cleanup EXIT
 echo "Acquired lock (Job ID: $SLURM_JOB_ID), executing environment setup code."
+LOCK_START=$(date +%s)
 
 ### Begin protected code
 
@@ -153,10 +153,12 @@ REPO_URL="https://github.com/LumiOpen/lm-evaluation-harness"
 BRANCH="main"
 
 # Check if directory exists
+UPDATED_REPO=0
 if [ ! -d "$REPO_DIR" ] ; then
     # Directory doesn't exist, perform initial clone
     echo "Directory doesn't exist. Cloning $REPO_URL..."
     git clone -b $BRANCH $REPO_URL $REPO_DIR
+    UPDATED_REPO=1
 else
     # Directory exists, check current remote URL
     cd $REPO_DIR
@@ -169,11 +171,20 @@ else
         mv $REPO_DIR ${REPO_DIR}_backup_$(date +%Y%m%d%H%M%S)
         git clone -b $BRANCH $REPO_URL $REPO_DIR
         echo "Previous repository backed up and new one cloned"
+        UPDATED_REPO=1
     else
         # Same repository, just update
-        echo "Updating existing repository..."
-        git fetch origin
-        git reset --hard origin/$BRANCH
+        REMOTE_HEAD=$(git ls-remote --heads "$REPO_URL" "$BRANCH" | awk '{print $1}')
+        echo "Remote $BRANCH at $REMOTE_HEAD"
+        LOCAL_HEAD=$(git rev-parse HEAD)
+        if [ "$LOCAL_HEAD" != "$REMOTE_HEAD" ]; then
+            echo "Out of date, need to fetch/reset"
+            git fetch --depth 1 origin "$BRANCH"
+            git reset --hard "origin/$BRANCH"
+            UPDATED_REPO=1
+        else
+            echo "Repo already up to date"
+        fi
     fi
 fi
 # Make sure we end up in the repository directory
@@ -188,9 +199,15 @@ export PYTHONUSERBASE=$WORK_DIR/pythonuserbase
 mkdir -p $PYTHONUSERBASE
 echo PYTHONUSERBASE is $PYTHONUSERBASE
 export PATH=$PATH:$PYTHONUSERBASE/bin
-pip install --upgrade setuptools pip
-pip --python=/appl/local/csc/soft/ai/bin/python install --user  -e .[hf_transfer,math,multilingual,sentencepiece,ifeval]
-pip install --upgrade langdetect immutabledict heliport
+
+pip install --upgrade --no-input --progress-bar off --upgrade-strategy only-if-needed setuptools pip
+if [ "$UPDATED_REPO" -eq 1 ]; then
+    echo "Repo updated, reinstalling lm_eval..."
+    pip --python=/appl/local/csc/soft/ai/bin/python install --user  -e .[hf_transfer,math,multilingual,sentencepiece,ifeval]
+else
+    echo "Repo unchanged, skipping lm_eval install"
+fi
+pip install --upgrade --no-input --progress-bar off --upgrade-strategy only-if-needed langdetect immutabledict heliport
 
 # there is an incompatibility with versions of vllm < 0.10.1 and transformers
 # >= 4.54.0.  the following installs a non-functional vllm because it is not
@@ -199,12 +216,14 @@ pip install --upgrade langdetect immutabledict heliport
 # whatever reason.
 # this is a temporary workaround until we convert to running in our own
 # clean singularity container, which is coming Soon.
-pip install transformers==4.56.1 vllm==0.10.1.1 outlines_core==0.2.10
+pip install --no-input --progress-bar off --upgrade-strategy only-if-needed transformers==4.56.1 vllm==0.10.1.1 outlines_core==0.2.10
 
 # remove cleanup trap and release lock
 trap - EXIT
 cleanup
-echo "Environment setup complete."
+LOCK_END=$(date +%s)
+LOCK_ELAPSED=$((LOCK_END - LOCK_START))
+echo "Environment setup complete, lock held for ${LOCK_ELAPSED} seconds"
 
 
 ### Prepare to run command
