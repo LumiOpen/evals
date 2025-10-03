@@ -1,5 +1,5 @@
 QUEUE=standard-g
-PROJECT=project_462000615
+PROJECT=project_462000963
 # we decine shorter time periods to allow evals to get scheduled more quickly
 # via backfill when the cluster is full.
 # times are based on a 70B model
