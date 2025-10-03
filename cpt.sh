@@ -1,5 +1,5 @@
 QUEUE=standard-g
-PROJECT=project_462000353
+PROJECT=project_462000963
 
 # this can go very long in models that are not good at this language, i guess?
 python main.py --time 12:00:00 --project $PROJECT --partition $QUEUE --model $1 flores200_trans_en_fi flores200_trans_fi_en

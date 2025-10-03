@@ -221,7 +221,7 @@ def main():
         )
     )
     # slurm config
-    parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
+    parser.add_argument('--project', type=str, default="project_462000963", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
     parser.add_argument('--gres', type=str, default="gpu:mi250:4", help="gres required for sbatch job")
     parser.add_argument('--time', type=str, default="48:00:00", help="Time limit for sbatch job")
