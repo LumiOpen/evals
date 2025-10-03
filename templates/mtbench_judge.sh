@@ -135,6 +135,9 @@ average_score=${average_score:-0.0}
 # Create JSON output
 cat > "$OUTPUT_FILE" << EOF
 {
+  "config": {
+    "judge_model": "$JUDGE_MODEL"
+  },
   "results": {
     "first_turn_score": $first_turn_score,
     "second_turn_score": $second_turn_score,

@@ -131,6 +131,9 @@ english_avg=${english_avg:-0.00}
 # Create JSON output
 cat > "$OUTPUT_FILE" << EOF
 {
+  "config": {
+    "input_data_csv": "$INPUT_DATA_CSV"
+  },
   "results": {
     "overall_average": $overall_avg,
     "english_average": $english_avg

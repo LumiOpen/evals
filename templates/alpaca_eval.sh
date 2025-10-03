@@ -221,6 +221,9 @@ lc_standard_error=${lc_standard_error:-0.0}
 # Create JSON output with all available metrics
 cat > "$OUTPUT_FILE" << EOF
 {
+  "config": {
+    "annotator_config": "$ANNOTATOR_CONFIG"
+  },
   "results": {
     "win_rate": $win_rate,
     "standard_error": $standard_error,
