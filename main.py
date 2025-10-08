@@ -160,6 +160,7 @@ def run_eval(eval_name, args):
         'LIMIT': str(args.limit) if args.limit is not None else '',
         'USE_CACHE': args.use_cache,
         'EMBEDDING_DEVICE': args.embedding_device,
+        'EMBEDDING_MODEL': args.embedding_model if args.embedding_model else '',
         'EVAL_LANGUAGES': args.eval_languages if args.eval_languages else '',
         'DEVICE_MAP': args.device_map if hasattr(args, 'device_map') else 'auto',
         'MAX_MEMORY_JSON': max_memory_json,
@@ -294,6 +295,7 @@ def main():
     parser.add_argument('--use_cache', type=str, default='', help='Path for SQLite cache to reuse inference results (enables fast iteration on embeddings/clustering)')
     parser.add_argument('--eval_languages', type=str, default='', help='Comma-separated list of languages to evaluate (e.g., "english,spanish,german"). If not specified, auto-detects from model card.')
     parser.add_argument('--embedding_device', type=str, default='cuda', help='Device for embedding model (cuda, cpu, or cuda:0, cuda:1, etc.). Default: cuda')
+    parser.add_argument('--embedding_model', type=str, default='', help='Embedding model for cultural robustness (e.g., intfloat/multilingual-e5-large). Default: uses task default')
     parser.add_argument('--device_map', type=str, default='auto', help='HuggingFace device_map strategy (auto, balanced, sequential, balanced_low_0). Default: auto')
     parser.add_argument('--max_memory_per_gpu', type=str, default='', help='Max memory per GPU in GiB (e.g., "60" for 60GiB per GPU)')
     # slurm config

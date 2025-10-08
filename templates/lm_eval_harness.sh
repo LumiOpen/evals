@@ -71,14 +71,15 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env CULTURAL_ROBUSTNESS_CACHE_DIR=/workspace/cultural_robustness_cache \
     --env MODEL_NAME="${MODEL_ID//\//-}" \
     --env EMBEDDING_DEVICE="{{ env_vars.EMBEDDING_DEVICE }}" \
-    {% if env_vars.EVAL_LANGUAGES %}--env EVAL_LANGUAGES="{{ env_vars.EVAL_LANGUAGES }}" \
+    {% if env_vars.EMBEDDING_MODEL %}--env EMBEDDING_MODEL="{{ env_vars.EMBEDDING_MODEL }}" \
+    {% endif %}{% if env_vars.EVAL_LANGUAGES %}--env EVAL_LANGUAGES="{{ env_vars.EVAL_LANGUAGES }}" \
     {% endif %}"$IMG" bash -c '
 set -euo pipefail
 umask 002
 
 # ---- model/topology (now variables) ----
 MODEL_ID="${MODEL_ID:?MODEL_ID not set}"
-TP="${TP:-4}"
+TP="${TP:-32}"
 MODEL_SAFE="${MODEL_ID//\//-}"
 PREFETCH_LOCAL_DIR="/project/hf_cache/models/${MODEL_SAFE}"
 MODEL_LOCAL="${PREFETCH_LOCAL_DIR}"
@@ -395,7 +396,19 @@ echo "MODEL_ARGS: $MODEL_ARGS"
 {% endif %}
 
 # ------- run the eval (point to local model dir) -------
-python -m lm_eval \
+# Use accelerate for multi-GPU data parallelism
+NUM_GPUS=$(python3 -c "import torch; print(torch.cuda.device_count())")
+if [ "$NUM_GPUS" -gt 1 ]; then
+  echo "Using accelerate with $NUM_GPUS processes for data parallelism"
+  # Remove device_map from MODEL_ARGS when using accelerate (it handles device placement)
+  MODEL_ARGS=$(echo "$MODEL_ARGS" | sed 's/,device_map=[^,]*//g')
+  LAUNCHER="accelerate launch --num_processes $NUM_GPUS --multi_gpu -m"
+else
+  echo "Using single GPU"
+  LAUNCHER="python -m"
+fi
+
+$LAUNCHER lm_eval \
   --model "$MODEL_BACKEND" \
   --model_args "$MODEL_ARGS" \
   --tasks "{{ env_vars.TASK_LIST }}" \
