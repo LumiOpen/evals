@@ -329,7 +329,9 @@ python -m lm_eval \
   $CHAT_TEMPLATE_FLAG \
   $FEWSHOT_AS_MULTITURN_FLAG \
 {% if env_vars.LIMIT %}  --limit {{ env_vars.LIMIT }} \
-{% endif %}  --log_samples
+{% endif %}  --log_samples \
+{% if env_vars.LM_EVAL_ARGS %}  {{ env_vars.LM_EVAL_ARGS }}
+{% endif %}
 
 echo "Moving temporary results from $RANDOM_DIR to $CONTAINER_OUTPUT_FILE"
 find "$RANDOM_DIR" -name "results_*.json" -exec mv {} "$CONTAINER_OUTPUT_FILE" \;

@@ -146,6 +146,7 @@ def run_eval(eval_name, args):
         'APPLY_CHAT_TEMPLATE': args.apply_chat_template,
         'FEWSHOT_AS_MULTITURN': args.fewshot_as_multiturn,
         'MODEL_ARGS': args.model_args,
+        'LM_EVAL_ARGS': args.lm_eval_args,
         'LIMIT': str(args.limit) if args.limit is not None else '',
         'LM_EVAL_REPO': lm_eval_config['LM_EVAL_REPO'],
         'LM_EVAL_REF': lm_eval_config['LM_EVAL_REF'],
@@ -272,6 +273,7 @@ def main():
     )
     parser.add_argument('--backend', type=str, choices=['hf', 'vllm'], default='hf', help='Backend to use for inference (hf=HuggingFace, vllm=vLLM)')
     parser.add_argument('--model_args', type=str, default='', help='Additional model arguments passed to backend (e.g., "dtype=float16,max_model_len=8192")')
+    parser.add_argument('--lm_eval_args', type=str, default='', help='Additional arguments passed to lm_eval command (e.g., "--use_cache /path/cache.db --log_samples")')
     parser.add_argument('--limit', type=int, help='Limit the number of examples per task (for testing purposes only)')
     parser.add_argument('--lm_eval', type=str, help='lm-evaluation-harness source: URL, URL@ref, or local path (default: LumiOpen/main)')
     # slurm config
