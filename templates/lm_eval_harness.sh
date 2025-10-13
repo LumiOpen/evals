@@ -191,10 +191,12 @@ PY
 # ------- run the helpers from files (no <stdin>) -------
 python /workspace/tools/sanity.py
 python /workspace/tools/stage_aiter.py
+{% if env_vars.BACKEND != "dummy" %}
 python /workspace/tools/prefetch.py
 
 # Model is prefetched, but allow datasets to be downloaded as needed
 # Note: Datasets will be cached automatically for subsequent runs
+{% endif %}
 
 # ensure staged package is visible
 export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
@@ -303,6 +305,11 @@ MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS}"
 
 MODEL_BACKEND="vllm"
 echo "Using vLLM backend with args: $MODEL_ARGS"
+{% elif env_vars.BACKEND == "dummy" %}
+# Dummy backend configuration (cache-only, no model loading)
+MODEL_BACKEND="dummy"
+MODEL_ARGS="pretrained={{ env_vars.MODEL }}"
+echo "Using dummy backend (cache-only, no model weights loaded)"
 {% else %}
 # HuggingFace backend configuration
 BASE_ARGS="pretrained=${MODEL_LOCAL},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"

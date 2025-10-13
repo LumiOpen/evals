@@ -271,7 +271,7 @@ def main():
             "If provided without an argument, applies the default behaviour. "
         )
     )
-    parser.add_argument('--backend', type=str, choices=['hf', 'vllm'], default='hf', help='Backend to use for inference (hf=HuggingFace, vllm=vLLM)')
+    parser.add_argument('--backend', type=str, choices=['hf', 'vllm', 'dummy'], default='hf', help='Backend to use for inference (hf=HuggingFace, vllm=vLLM, dummy=cache-only no-op)')
     parser.add_argument('--model_args', type=str, default='', help='Additional model arguments passed to backend (e.g., "dtype=float16,max_model_len=8192")')
     parser.add_argument('--lm_eval_args', type=str, default='', help='Additional arguments passed to lm_eval command (e.g., "--use_cache /path/cache.db --log_samples")')
     parser.add_argument('--limit', type=int, help='Limit the number of examples per task (for testing purposes only)')
@@ -292,16 +292,17 @@ def main():
     if args.tokenizer == "":
         args.tokenizer = args.model
 
-    # sanity check model and tokenizer before queueing things up
-    if args.model.count('/') != 1:
-        # not a hugging face model identifier
-        if not os.path.exists(os.path.join(args.model, "config.json")):
-            print(f"Error: model '{args.model}' looks like a directory, but does not contain a config.json")
-            sys.exit(1)
-    if args.tokenizer.count('/') != 1:
-        if not os.path.exists(os.path.join(args.model, "tokenizer.json")):
-            print(f"Error: tokenizer '{args.tokenizer}' looks like a directory, but does not contain a tokenizer.json")
-            sys.exit(1)
+    # sanity check model and tokenizer before queueing things up (skip for dummy backend)
+    if args.backend != 'dummy':
+        if args.model.count('/') != 1:
+            # not a hugging face model identifier
+            if not os.path.exists(os.path.join(args.model, "config.json")):
+                print(f"Error: model '{args.model}' looks like a directory, but does not contain a config.json")
+                sys.exit(1)
+        if args.tokenizer.count('/') != 1:
+            if not os.path.exists(os.path.join(args.model, "tokenizer.json")):
+                print(f"Error: tokenizer '{args.tokenizer}' looks like a directory, but does not contain a tokenizer.json")
+                sys.exit(1)
 
     scheduled_tasks = identify_scheduled_tasks()
     for eval_name in args.eval:
