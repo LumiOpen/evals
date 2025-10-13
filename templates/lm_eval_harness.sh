@@ -291,22 +291,29 @@ FEWSHOT_AS_MULTITURN_FLAG=""
 # Backend-specific model configuration
 {% if env_vars.BACKEND == "vllm" %}
 # vLLM backend configuration
-BASE_VLLM_ARGS="pretrained=${MODEL_LOCAL},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP}"
-DEFAULT_VLLM_ARGS="max_model_len=4096,gpu_memory_utilization=0.90"
+BASE_ARGS="pretrained=${MODEL_LOCAL},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP}"
+DEFAULT_ARGS="max_model_len=4096,gpu_memory_utilization=0.90"
 
-# Add custom vLLM arguments if provided
-{% if env_vars.VLLM_ARGS %}
-CUSTOM_VLLM_ARGS="{{ env_vars.VLLM_ARGS }}"
-MODEL_ARGS="${BASE_VLLM_ARGS},${DEFAULT_VLLM_ARGS},${CUSTOM_VLLM_ARGS}"
+# Add custom model arguments if provided
+{% if env_vars.MODEL_ARGS %}
+MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS},{{ env_vars.MODEL_ARGS }}"
 {% else %}
-MODEL_ARGS="${BASE_VLLM_ARGS},${DEFAULT_VLLM_ARGS}"
+MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS}"
 {% endif %}
 
 MODEL_BACKEND="vllm"
 echo "Using vLLM backend with args: $MODEL_ARGS"
 {% else %}
 # HuggingFace backend configuration
-MODEL_ARGS="pretrained=${MODEL_LOCAL},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
+BASE_ARGS="pretrained=${MODEL_LOCAL},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
+
+# Add custom model arguments if provided
+{% if env_vars.MODEL_ARGS %}
+MODEL_ARGS="${BASE_ARGS},{{ env_vars.MODEL_ARGS }}"
+{% else %}
+MODEL_ARGS="${BASE_ARGS}"
+{% endif %}
+
 MODEL_BACKEND="hf-auto"
 echo "Using HuggingFace backend with args: $MODEL_ARGS"
 {% endif %}

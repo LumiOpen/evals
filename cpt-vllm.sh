@@ -13,9 +13,9 @@ BACKEND="vllm"
 # Optional env knobs
 # Set CPT_GRES to pass a specific gres, else do not pass --gres
 CPT_GRES="${CPT_GRES:-}"
-# Extra vLLM model args, for example:
-# VLLM_ARGS="max_model_len=6144,gpu_memory_utilization=0.93,max_num_batched_tokens=12288"
-VLLM_ARGS="${VLLM_ARGS:-}"
+# Extra model args, for example:
+# MODEL_ARGS="max_model_len=6144,gpu_memory_utilization=0.93,max_num_batched_tokens=12288"
+MODEL_ARGS="${MODEL_ARGS:-}"
 # Chat flags
 APPLY_CHAT_TEMPLATE="${APPLY_CHAT_TEMPLATE:-}"
 FEWSHOT_AS_MULTITURN="${FEWSHOT_AS_MULTITURN:-}"
@@ -32,8 +32,8 @@ run() {
     args+=( --gres "$CPT_GRES" )
   fi
 
-  if [[ -n "$VLLM_ARGS" ]]; then
-    args+=( --vllm_args "$VLLM_ARGS" )
+  if [[ -n "$MODEL_ARGS" ]]; then
+    args+=( --model_args "$MODEL_ARGS" )
   fi
   if [[ -n "$APPLY_CHAT_TEMPLATE" ]]; then
     args+=( --apply_chat_template "$APPLY_CHAT_TEMPLATE" )
