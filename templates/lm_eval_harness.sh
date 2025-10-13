@@ -165,6 +165,7 @@ import aiter; from aiter.ops import enum as _e
 print("[stage] aiter import OK")
 PY
 
+{% if env_vars.BACKEND != "dummy" %}
 # ------- write helper: prefetch.py -------
 cat > /workspace/tools/prefetch.py <<PY
 from huggingface_hub import snapshot_download
@@ -176,6 +177,7 @@ p = snapshot_download(
 )
 print("prefetch OK ->", p)
 PY
+{% endif %}
 
 # ------- write helper: sanity.py -------
 cat > /workspace/tools/sanity.py <<PY
