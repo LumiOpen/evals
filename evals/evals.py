@@ -320,4 +320,8 @@ evals = {
     "gpqa_diamond_5shot": LMEvalConfig("gpqa_diamond_nshot", "acc,none", num_fewshot=5),
     "gpqa_diamond_cot_zeroshot": LMEvalConfig("gpqa_diamond_cot_zeroshot", "acc,none", num_fewshot=0),
     "gpqa_diamond_cot_5shot": LMEvalConfig("gpqa_diamond_cot_nshot", "acc,none", num_fewshot=5),
+
+    # cultural robustness
+    "cultural_robustness_unspecific": LMEvalConfig("cultural_robustness_unspecific", "cultural_diversity", num_fewshot=0),
+    "cultural_robustness": LMEvalConfig("cultural_robustness", "cultural_diversity", num_fewshot=0),
 }
