@@ -276,13 +276,13 @@ mkdir -p "$(dirname "$CONTAINER_OUTPUT_FILE")"
 echo "Final results will be saved to: $CONTAINER_OUTPUT_FILE"
 
 # Set up chat template flags
-{% if env_vars.APPLY_CHAT_TEMPLATE == "True" %}
+{% if env_vars.APPLY_CHAT_TEMPLATE %}
 CHAT_TEMPLATE_FLAG="--apply_chat_template"
 {% else %}
 CHAT_TEMPLATE_FLAG=""
 {% endif %}
 
-{% if env_vars.FEWSHOT_AS_MULTITURN == "True" %}
+{% if env_vars.FEWSHOT_AS_MULTITURN %}
 FEWSHOT_AS_MULTITURN_FLAG="--fewshot_as_multiturn"
 {% else %}
 FEWSHOT_AS_MULTITURN_FLAG=""
