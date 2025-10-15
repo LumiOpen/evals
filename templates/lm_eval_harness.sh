@@ -61,7 +61,6 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env TRANSFORMERS_CACHE=/project/hf_cache/models \
     --env HF_DATASETS_CACHE=/project/hf_cache/datasets \
     --env XDG_CACHE_HOME=/project/hf_cache/xdg \
-    --env OUTPUT_DIR="{{ env_vars.OUTPUT_DIR }}" \
     "$IMG" bash -lc '
 set -euo pipefail
 umask 002
@@ -279,6 +278,9 @@ fi
 # Prepare final output directory inside container
 mkdir -p "$(dirname "$CONTAINER_OUTPUT_FILE")"
 echo "Final results will be saved to: $CONTAINER_OUTPUT_FILE"
+
+# Set OUTPUT_DIR for cultural_robustness task to save clustering files
+export OUTPUT_DIR="$(dirname "$CONTAINER_OUTPUT_FILE")"
 
 # Set up chat template flags
 {% if env_vars.APPLY_CHAT_TEMPLATE %}
