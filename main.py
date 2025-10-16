@@ -148,6 +148,7 @@ def run_eval(eval_name, args):
         'MODEL_ARGS': args.model_args,
         'LM_EVAL_ARGS': args.lm_eval_args,
         'LIMIT': str(args.limit) if args.limit is not None else '',
+        'EMBEDDING_MODEL': args.embedding_model if args.embedding_model else '',
         'LM_EVAL_REPO': lm_eval_config['LM_EVAL_REPO'],
         'LM_EVAL_REF': lm_eval_config['LM_EVAL_REF'],
         'LM_EVAL_PATH': lm_eval_config['LM_EVAL_PATH'],
@@ -276,6 +277,7 @@ def main():
     parser.add_argument('--lm_eval_args', type=str, default='', help='Additional arguments passed to lm_eval command (e.g., "--use_cache /path/cache.db --log_samples")')
     parser.add_argument('--limit', type=int, help='Limit the number of examples per task (for testing purposes only)')
     parser.add_argument('--lm_eval', type=str, help='lm-evaluation-harness source: URL, URL@ref, or local path (default: LumiOpen/main)')
+    parser.add_argument('--embedding_model', type=str, default='', help='Embedding model for cultural_robustness (e.g., intfloat/multilingual-e5-large). Default: Qwen/Qwen3-Embedding-8B')
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")

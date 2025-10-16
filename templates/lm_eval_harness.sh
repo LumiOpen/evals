@@ -61,7 +61,8 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env TRANSFORMERS_CACHE=/project/hf_cache/models \
     --env HF_DATASETS_CACHE=/project/hf_cache/datasets \
     --env XDG_CACHE_HOME=/project/hf_cache/xdg \
-    "$IMG" bash -lc '
+    {% if env_vars.EMBEDDING_MODEL %}--env EMBEDDING_MODEL="{{ env_vars.EMBEDDING_MODEL }}" \
+    {% endif %}"$IMG" bash -lc '
 set -euo pipefail
 umask 002
 
