@@ -71,6 +71,10 @@ class MTBenchJudgeHarness:
         self.harness = self
 
     def generate_script(self, slurm_config, env_vars):
+        # Check if OPENAI_API_KEY is set since this harness uses GPT judge models
+        if "OPENAI_API_KEY" not in env_vars or not env_vars["OPENAI_API_KEY"]:
+            raise ValueError("MTBenchJudgeHarness requires OPENAI_API_KEY environment variable to be set for GPT judge model")
+        
         env_vars = copy.deepcopy(env_vars)
         env_vars["LANGUAGE"] = self.language
         env_vars["JUDGE_MODEL"] = self.judge_model
@@ -91,6 +95,13 @@ class AlpacaEvalHarness:
         self.harness = self
 
     def generate_script(self, slurm_config, env_vars):
+        # Check if OPENAI env vars are set since this harness uses GPT annotator models
+        if "OPENAI_API_KEY" not in env_vars or not env_vars["OPENAI_API_KEY"]:
+            raise ValueError("AlpacaEvalHarness requires OPENAI_API_KEY environment variable to be set for GPT annotator model")
+        
+        if "OPENAI_ORG_ID" not in env_vars or not env_vars["OPENAI_ORG_ID"]:
+            raise ValueError("AlpacaEvalHarness requires OPENAI_ORG_ID environment variable to be set for GPT annotator model")
+                
         env_vars = copy.deepcopy(env_vars)
         env_vars["LANGUAGE"] = self.language
         env_vars["ANNOTATOR_CONFIG"] = self.annotator_config

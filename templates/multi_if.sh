@@ -72,6 +72,60 @@ echo TMPDIR is $TMPDIR
 module use /appl/local/csc/modulefiles
 module load pytorch/2.5
 
+### install correct packages
+# Due to parallel execution it's possible for race conditions / collisions here
+# So we lock this section
+LOCKFILE="${WORK_DIR}/.setup_lock_file"
+CLEANUP_LOCK="${LOCKFILE}.cleanup"
+
+# function to cleanup locks on exit
+cleanup() {
+    # Only remove the lock file if we own it
+    if [ -f "$LOCKFILE" ] && [ "$(cat "$LOCKFILE")" = "$SLURM_JOB_ID" ]; then
+        rm -f "$LOCKFILE"
+    fi
+    if [ -f "$CLEANUP_LOCK" ] && [ "$(cat "$CLEANUP_LOCK")" = "$SLURM_JOB_ID" ]; then
+        rm -f "$CLEANUP_LOCK"
+    fi
+}
+
+# Try to acquire the lock for up to 1 hour (3600 seconds)
+# Modify timeout as needed for your use case
+TIMEOUT=3600
+ATTEMPTS=0
+echo Acquiring lock for environment update: $LOCKFILE
+
+until (set -o noclobber; echo "$SLURM_JOB_ID" > "$LOCKFILE") 2>/dev/null; do
+    if [ $ATTEMPTS -ge $TIMEOUT ]; then
+        echo "Failed to acquire lock after ${TIMEOUT} seconds. Exiting."
+        exit 1
+    fi
+    
+    # Check if the lock holder is still running
+    if [ -f "$LOCKFILE" ]; then
+        LOCK_JOBID=$(cat "$LOCKFILE")
+        if ! squeue -j "$LOCK_JOBID" &>/dev/null; then
+            # Lock holder is no longer running, attempt to acquire cleanup lock.
+            # this it to avoid a race during cleanup when multiple jobs are waiting.
+            if (set -o noclobber; echo "$SLURM_JOB_ID" > "$CLEANUP_LOCK") 2>/dev/null ; then
+                rm -f "$LOCKFILE"
+                rm -f "$CLEANUP_LOCK"
+            fi
+            # if we didn't get the lock, another process will clean it up.
+        fi
+    fi
+        
+    ATTEMPTS=$((ATTEMPTS + 1))
+    sleep 1
+done
+
+### Lock acquired
+# Register the cleanup function to run on script exit
+trap cleanup EXIT
+echo "Acquired lock (Job ID: $SLURM_JOB_ID), executing environment setup code."
+
+### Begin protected code
+
 # Setup user environment
 export PYTHONUSERBASE=$WORK_DIR/pythonuserbase
 mkdir -p $PYTHONUSERBASE
@@ -92,6 +146,11 @@ fi
 cd Multi-IF
 pip install --upgrade --user setuptools pip
 pip install --user -r requirements.txt
+
+# remove cleanup trap and release lock
+trap - EXIT
+cleanup
+echo "Environment setup complete."
 
 ### Prepare to run command
 echo Cuda Available: "$(python -c 'import torch; print(torch.cuda.is_available())')"

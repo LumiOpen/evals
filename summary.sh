@@ -648,13 +648,13 @@ if [ -f $DIR/multi_if.json ] ; then
 fi
 
 if [ -f $DIR/mtbench_judge_en.json ] ; then
-    echo -n "     mtbench_judge_en first_turn_score: "
-    cat $DIR/mtbench_judge_en.json | jq '.results.first_turn_score'
+    echo -n "     mtbench_judge_en average_score: "
+    cat $DIR/mtbench_judge_en.json | jq '.results.average_score'
 fi
 
 if [ -f $DIR/mtbench_judge_fi.json ] ; then
-    echo -n "     mtbench_judge_fi first_turn_score: "
-    cat $DIR/mtbench_judge_fi.json | jq '.results.first_turn_score'
+    echo -n "     mtbench_judge_fi average_score: "
+    cat $DIR/mtbench_judge_fi.json | jq '.results.average_score'
 fi
 
 if [ -f $DIR/alpaca_eval_en.json ] ; then

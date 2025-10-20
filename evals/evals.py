@@ -120,7 +120,7 @@ class AlpacaEvalConfig(EvalConfig):
     def get_results_custom(self, json_data):
         # Extract win rate from AlpacaEval results
         if "results" in json_data and "length_controlled_winrate" in json_data["results"]:
-            return json_dat["results"]["length_controlled_winrate"]
+            return json_data["results"]["length_controlled_winrate"]
         return 0.0
 
 class MultiIFConfig(EvalConfig):
