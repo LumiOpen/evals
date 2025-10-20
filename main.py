@@ -112,6 +112,7 @@ def run_eval(eval_name, args):
         'gres': args.gres,
         'time': args.time,
         'log_dir': os.path.abspath(args.log_dir),
+        'dependency': args.dependency,
     }
 
     # eval is a reserved keyword, so we'll use tester instead.
@@ -226,6 +227,7 @@ def main():
     parser.add_argument('--gres', type=str, default="gpu:mi250:4", help="gres required for sbatch job")
     parser.add_argument('--time', type=str, default="48:00:00", help="Time limit for sbatch job")
     parser.add_argument('--log_dir', type=str, default="./logs", help="Dir for slurm logs")
+    parser.add_argument('--dependency', type=str, default=None, help="SLURM job dependency (e.g., afterok:12345)")
 
     # other options
     parser.add_argument('--comment', type=str, default=None, help="Comment to add to the command history")

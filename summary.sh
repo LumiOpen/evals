@@ -642,4 +642,39 @@ if [ -f $DIR/ifeval_fi.json ] ; then
     cat $DIR/ifeval_fi.json | jq '.results.ifeval_fi["prompt_level_loose_acc,none"]' | awk '{print $1 * 100}'
 fi
 
+if [ -f $DIR/multi_if.json ] ; then
+    echo -n "     multi_if english_average: "
+    cat $DIR/multi_if.json | jq '.results.english_average'
+fi
+
+if [ -f $DIR/mtbench_judge_en.json ] ; then
+    echo -n "     mtbench_judge_en first_turn_score: "
+    cat $DIR/mtbench_judge_en.json | jq '.results.first_turn_score'
+fi
+
+if [ -f $DIR/mtbench_judge_fi.json ] ; then
+    echo -n "     mtbench_judge_fi first_turn_score: "
+    cat $DIR/mtbench_judge_fi.json | jq '.results.first_turn_score'
+fi
+
+if [ -f $DIR/mtbench_judge_en.json ] ; then
+    echo -n "     mtbench_judge_en average_score: "
+    cat $DIR/mtbench_judge_en.json | jq '.results.average_score'
+fi
+
+if [ -f $DIR/mtbench_judge_fi.json ] ; then
+    echo -n "     mtbench_judge_fi average_score: "
+    cat $DIR/mtbench_judge_fi.json | jq '.results.average_score'
+fi
+
+if [ -f $DIR/alpaca_eval_en.json ] ; then
+    echo -n "     alpaca_eval_en length_controlled_winrate: "
+    cat $DIR/alpaca_eval_en.json | jq '.results.length_controlled_winrate'
+fi
+
+if [ -f $DIR/alpaca_eval_fi.json ] ; then
+    echo -n "     alpaca_eval_fi length_controlled_winrate: "
+    cat $DIR/alpaca_eval_fi.json | jq '.results.length_controlled_winrate'
+fi
+
 echo

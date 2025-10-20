@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from .harnesses import LMEvalHarness, BigcodeEvaluationHarness
+from .harnesses import LMEvalHarness, BigcodeEvaluationHarness, MTBenchInferenceHarness, MTBenchJudgeHarness, AlpacaEvalHarness, MultiIFHarness
 import json
 
 
@@ -89,6 +89,57 @@ class BigcodeConfig(EvalConfig):
 
     def get_results_custom(self, json_data):
         return json_data[self.name]["pass@{}".format(self.n_samples)]
+
+class MTBenchInferenceConfig(EvalConfig):
+    def __init__(self, language="en"):
+        super().__init__("mtbench_inference", "custom", MTBenchInferenceHarness(language=language))
+        self.language = language
+
+    def get_results_custom(self, json_data):
+        # MTBench inference doesn't produce final results, just generates answers
+        return None
+
+class MTBenchJudgeConfig(EvalConfig):
+    def __init__(self, language="en", judge_model="gpt-4o-2024-08-06"):
+        super().__init__("mtbench_judge", "custom", MTBenchJudgeHarness(language=language, judge_model=judge_model))
+        self.language = language
+        self.judge_model = judge_model
+
+    def get_results_custom(self, json_data):
+        # Extract the average score from MTBench results
+        if "results" in json_data and "first_turn_score" in json_data["results"]:
+            return json_data["results"]["first_turn_score"]
+        return 0.0
+
+class AlpacaEvalConfig(EvalConfig):
+    def __init__(self, language="en", annotator_config="weighted_alpaca_eval_gpt-4o-2024-08-06"):
+        super().__init__("alpaca_eval", "custom", AlpacaEvalHarness(language=language, annotator_config=annotator_config))
+        self.language = language
+        self.annotator_config = annotator_config
+
+    def get_results_custom(self, json_data):
+        # Extract win rate from AlpacaEval results
+        if "results" in json_data and "length_controlled_winrate" in json_data["results"]:
+            return json_data["results"]["length_controlled_winrate"]
+        return 0.0
+
+class MultiIFConfig(EvalConfig):
+    def __init__(self, batch_size=64, tensor_parallel_size=8, input_data_csv="data/multiIF_20241018_english.csv"):
+        super().__init__("multi_if", "custom", MultiIFHarness(
+            batch_size=batch_size, 
+            tensor_parallel_size=tensor_parallel_size,
+            input_data_csv=input_data_csv)
+        )
+        self.batch_size = batch_size
+        self.tensor_parallel_size = tensor_parallel_size
+        self.input_data_csv = input_data_csv
+
+    def get_results_custom(self, json_data):
+        # Extract overall score from Multi-IF results
+        if "results" in json_data and "english_average" in json_data["results"]:
+            return json_data["results"]["english_average"]
+        return 0.0
+
 
 
 evals = {
@@ -320,4 +371,13 @@ evals = {
     "gpqa_diamond_5shot": LMEvalConfig("gpqa_diamond_nshot", "acc,none", num_fewshot=5),
     "gpqa_diamond_cot_zeroshot": LMEvalConfig("gpqa_diamond_cot_zeroshot", "acc,none", num_fewshot=0),
     "gpqa_diamond_cot_5shot": LMEvalConfig("gpqa_diamond_cot_nshot", "acc,none", num_fewshot=5),
+
+    # post-training evaluations
+    "mtbench_inference_en": MTBenchInferenceConfig(language="en"),
+    "mtbench_inference_fi": MTBenchInferenceConfig(language="fi"),
+    "mtbench_judge_en": MTBenchJudgeConfig(language="en"),
+    "mtbench_judge_fi": MTBenchJudgeConfig(language="fi"),
+    "alpaca_eval_en": AlpacaEvalConfig(language="en"),
+    "alpaca_eval_fi": AlpacaEvalConfig(language="fi"),
+    "multi_if": MultiIFConfig(),
 }
