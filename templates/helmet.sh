@@ -203,14 +203,14 @@ else
 fi
 
 # Prepare final output directory inside container
-HELMET_OUTPUT_DIR="$(dirname "$CONTAINER_OUTPUT_FILE")"
+export HELMET_OUTPUT_DIR="$(dirname "$CONTAINER_OUTPUT_FILE")"
 mkdir -p "$HELMET_OUTPUT_DIR"
 echo "HELMET results will be saved to: $HELMET_OUTPUT_DIR"
 
 # Set up backend-specific arguments
 {% if env_vars.BACKEND == "vllm" %}
 # VLLM backend - use HELMET's --use_vllm flag
-BACKEND_ARGS="--use_vllm"
+export BACKEND_ARGS="--use_vllm"
 echo "Using VLLM backend"
 {% elif env_vars.BACKEND == "dummy" %}
 # Dummy backend - skip evaluation
@@ -218,21 +218,28 @@ echo "Dummy backend selected - skipping actual evaluation"
 exit 0
 {% else %}
 # HuggingFace backend configuration (default)
-BACKEND_ARGS=""
+export BACKEND_ARGS=""
 echo "Using HuggingFace backend"
 {% endif %}
 
 # Set up chat template flags
 {% if env_vars.APPLY_CHAT_TEMPLATE %}
-CHAT_TEMPLATE_FLAG="--use_chat_template"
+export CHAT_TEMPLATE_FLAG="--use_chat_template"
 {% else %}
-CHAT_TEMPLATE_FLAG=""
+export CHAT_TEMPLATE_FLAG=""
 {% endif %}
 
 # ------- Run HELMET evaluation -------
 echo "Running HELMET evaluation with config: {{ env_vars.CONFIG_NAME }}"
-echo "DEBUG: Using model: $MODEL_ID"
-echo "DEBUG: Output dir: $HELMET_OUTPUT_DIR"
+
+# Ensure all variables are set
+export HELMET_OUTPUT_DIR="${HELMET_OUTPUT_DIR}"
+export BACKEND_ARGS="${BACKEND_ARGS}"
+export CHAT_TEMPLATE_FLAG="${CHAT_TEMPLATE_FLAG}"
+
+echo "DEBUG: MODEL_ID=$MODEL_ID"
+echo "DEBUG: HELMET_OUTPUT_DIR=$HELMET_OUTPUT_DIR"
+echo "DEBUG: BACKEND_ARGS=$BACKEND_ARGS"
 
 python eval.py \
   --config configs/{{ env_vars.CONFIG_NAME }}.yaml \
