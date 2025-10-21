@@ -146,18 +146,10 @@ echo "Setting up HELMET in $HELMET_DIR"
 cp -r /workspace/helmet "$HELMET_DIR"
 cd "$HELMET_DIR"
 
-# Install HELMET dependencies
-echo "Installing HELMET dependencies..."
-# Set pip cache to a writable location
-export PIP_CACHE_DIR=/project/hf_cache/pip
-mkdir -p "$PIP_CACHE_DIR"
-
-# Install dependencies with --no-build-isolation to avoid /pfs write issues
-python -m pip install --user --no-build-isolation -q wheel ninja packaging
-python -m pip install --user -q datasets transformers accelerate sentencepiece rouge_score openai
-# pytrec_eval needs special handling due to legacy setup
-python -m pip install --user --no-build-isolation -q pytrec_eval || \
-    python -m pip install --user -q pytrec_eval
+# Install HELMET-specific dependencies (container already has torch, transformers, datasets, etc.)
+echo "Installing HELMET-specific dependencies..."
+# Only install packages not in the base container
+python -m pip -q install --user pytrec_eval rouge_score openai || true
 
 # Convert host paths to container paths for output file
 CONTAINER_OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
