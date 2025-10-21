@@ -167,43 +167,11 @@ python -m pip install --target "$PIP_INSTALL_DIR" pytrec_eval rouge_score openai
 # Add to Python path
 export PYTHONPATH="$PIP_INSTALL_DIR:${PYTHONPATH:-}"
 
-# Convert host paths to container paths for output file
-CONTAINER_OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
-if [[ -z "$CONTAINER_OUTPUT_FILE" ]]; then
-  echo "ERROR: OUTPUT_FILE is empty. Check main.py env_vars." >&2
-  exit 2
-fi
-USER_SCRATCH_DIR="/scratch/project_462000353/$USER"
-PFS_USER_PREFIX="/pfs/lustrep2/scratch/project_462000353/$USER/"
-
-echo "DEBUG: Original OUTPUT_FILE: $CONTAINER_OUTPUT_FILE"
-echo "DEBUG: SCR inside container: $SCR"
-
-# Convert various host path patterns to container paths
-if [[ "$CONTAINER_OUTPUT_FILE" == "$SCR"* ]]; then
-    echo "DEBUG: Path matches SCR prefix, converting..."
-    RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$SCR}"
-    RELATIVE_PATH="${RELATIVE_PATH#/}"
-    CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
-    echo "DEBUG: Converted to: $CONTAINER_OUTPUT_FILE"
-elif [[ "$CONTAINER_OUTPUT_FILE" == "$PFS_USER_PREFIX"* ]]; then
-    echo "DEBUG: Path matches PFS prefix, converting..."
-    RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$PFS_USER_PREFIX}"
-    RELATIVE_PATH="${RELATIVE_PATH#evals/}"
-    CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
-    echo "DEBUG: Converted to: $CONTAINER_OUTPUT_FILE"
-elif [[ "$CONTAINER_OUTPUT_FILE" == "$USER_SCRATCH_DIR"* ]]; then
-    echo "DEBUG: Path matches USER_SCRATCH_DIR prefix, converting..."
-    RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$USER_SCRATCH_DIR}"
-    RELATIVE_PATH="${RELATIVE_PATH#/}"
-    CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
-    echo "DEBUG: Converted to: $CONTAINER_OUTPUT_FILE"
-else
-    echo "DEBUG: No path conversion matched - keeping original path"
-fi
-
-# Prepare final output directory inside container
-export HELMET_OUTPUT_DIR="$(dirname "$CONTAINER_OUTPUT_FILE")"
+# Hardcode output paths - /workspace is bound to the evals repo dir
+# Output goes to /workspace/output/v2/model_org/model_name/
+MODEL_ORG=$(echo "$MODEL_ID" | cut -d/ -f1)
+MODEL_NAME=$(echo "$MODEL_ID" | cut -d/ -f2)
+HELMET_OUTPUT_DIR="/workspace/output/v2/${MODEL_ORG}/${MODEL_NAME}"
 mkdir -p "$HELMET_OUTPUT_DIR"
 echo "HELMET results will be saved to: $HELMET_OUTPUT_DIR"
 
@@ -244,29 +212,9 @@ python eval.py \
   $CHAT_TEMPLATE_FLAG \
   --overwrite
 
-# Move results to final output file
-echo "Moving HELMET results to $CONTAINER_OUTPUT_FILE"
-# HELMET creates multiple output files, we need to collect them
-find "$HELMET_OUTPUT_DIR" -name "*.json" -o -name "*.json.score" | while read -r result_file; do
-    basename=$(basename "$result_file")
-    if [[ ! -f "${HELMET_OUTPUT_DIR}/${basename}" ]]; then
-        cp "$result_file" "${HELMET_OUTPUT_DIR}/"
-    fi
-done
-
-# Create a summary file at the expected output location
-cat > "$CONTAINER_OUTPUT_FILE" <<EOF
-{
-  "helmet_config": "{{ env_vars.CONFIG_NAME }}",
-  "model": "${MODEL_ID}",
-  "output_dir": "$HELMET_OUTPUT_DIR",
-  "results": "See individual result files in output directory"
-}
-EOF
-
 echo "== HELMET evaluation complete =="
 echo "Results saved to: $HELMET_OUTPUT_DIR"
-ls -lh "$HELMET_OUTPUT_DIR"
+ls -lh "$HELMET_OUTPUT_DIR" || true
 
 # Clean up the temporary HELMET directory
 echo "Cleaning up temporary HELMET directory: $HELMET_DIR"
