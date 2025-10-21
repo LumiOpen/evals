@@ -206,13 +206,9 @@ echo "HELMET results will be saved to: $HELMET_OUTPUT_DIR"
 
 # Set up backend-specific arguments
 {% if env_vars.BACKEND == "vllm" %}
-# VLLM backend configuration
-BACKEND_ARGS="--vllm_gpu_memory_utilization 0.90 --vllm_tensor_parallel_size ${TP}"
-{% if env_vars.MODEL_ARGS %}
-# Add custom model arguments if provided
-BACKEND_ARGS="${BACKEND_ARGS} --model_args {{ env_vars.MODEL_ARGS }}"
-{% endif %}
-echo "Using VLLM backend with args: $BACKEND_ARGS"
+# VLLM backend - use HELMET's --use_vllm flag
+BACKEND_ARGS="--use_vllm"
+echo "Using VLLM backend"
 {% elif env_vars.BACKEND == "dummy" %}
 # Dummy backend - skip evaluation
 echo "Dummy backend selected - skipping actual evaluation"
@@ -220,10 +216,7 @@ exit 0
 {% else %}
 # HuggingFace backend configuration (default)
 BACKEND_ARGS=""
-{% if env_vars.MODEL_ARGS %}
-BACKEND_ARGS="--model_args {{ env_vars.MODEL_ARGS }}"
-{% endif %}
-echo "Using HuggingFace backend with args: $BACKEND_ARGS"
+echo "Using HuggingFace backend"
 {% endif %}
 
 # Set up chat template flags
