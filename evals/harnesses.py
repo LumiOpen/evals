@@ -45,3 +45,22 @@ class BigcodeEvaluationHarness:
         rendered_script = template.render(**config)
 
         return rendered_script
+
+class HELMETHarness:
+    def __init__(self, config_name):
+        self.config_name = config_name
+        self.harness = self
+
+    def generate_script(self, slurm_config, env_vars, backend='hf'):
+        env_vars = copy.deepcopy(env_vars)
+        env_vars["CONFIG_NAME"] = self.config_name
+        env_vars["BACKEND"] = backend
+        config = {}
+        config["env_vars"] = env_vars
+        config["slurm_config"] = slurm_config
+
+        template_str = open('templates/helmet.sh', 'r').read()
+        template = Template(template_str)
+        rendered_script = template.render(**config)
+
+        return rendered_script

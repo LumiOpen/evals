@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from .harnesses import LMEvalHarness, BigcodeEvaluationHarness
+from .harnesses import LMEvalHarness, BigcodeEvaluationHarness, HELMETHarness
 import json
 
 
@@ -131,6 +131,16 @@ class BigcodeConfig(EvalConfig):
 
     def get_results_custom(self, json_data):
         return json_data[self.name]["pass@{}".format(self.n_samples)]
+
+class HELMETConfig(EvalConfig):
+    def __init__(self, name, config_name):
+        super().__init__(name, "custom", HELMETHarness(config_name))
+        self.config_name = config_name
+
+    def get_results_custom(self, json_data):
+        # HELMET saves results to a directory with multiple files
+        # The main summary is in the json_data we load
+        return json_data
 
 
 evals = {
@@ -363,13 +373,43 @@ evals = {
     "gpqa_diamond_cot_zeroshot": LMEvalConfig("gpqa_diamond_cot_zeroshot", "acc,none", num_fewshot=0),
     "gpqa_diamond_cot_5shot": LMEvalConfig("gpqa_diamond_cot_nshot", "acc,none", num_fewshot=5),
 
-    # helmet long-context evaluations
-    "helmet": MultiMetricLMEvalConfig("helmet", ["exact_match", "bleu", "rouge1"]),
-    "helmet_recall": MultiMetricLMEvalConfig("helmet_recall", ["exact_match", "f1"]),
-    "helmet_rag": MultiMetricLMEvalConfig("helmet_rag", ["exact_match", "f1", "bleu"]),
-    "helmet_rerank": MultiMetricLMEvalConfig("helmet_rerank", ["exact_match", "f1"]),
-    "helmet_cite": MultiMetricLMEvalConfig("helmet_cite", ["exact_match", "bleu", "rouge1"]),
-    "helmet_longqa": MultiMetricLMEvalConfig("helmet_longqa", ["exact_match", "f1", "bleu", "rouge1"]),
-    "helmet_summ": MultiMetricLMEvalConfig("helmet_summ", ["bleu", "rouge1", "rouge2", "rougeL", "bertscore"]),
-    "helmet_icl": MultiMetricLMEvalConfig("helmet_icl", ["exact_match", "f1", "acc"]),
+    # HELMET long-context evaluations (standalone framework)
+    # Recall tasks
+    "helmet_recall": HELMETConfig("helmet_recall", "recall"),
+    "helmet_recall_short": HELMETConfig("helmet_recall_short", "recall_short"),
+    "helmet_recall_vllm": HELMETConfig("helmet_recall_vllm", "recall_vllm"),
+    "helmet_niah": HELMETConfig("helmet_niah", "niah"),
+    "helmet_niah_long": HELMETConfig("helmet_niah_long", "niah_long"),
+    "helmet_ruler": HELMETConfig("helmet_ruler", "ruler"),
+    "helmet_ruler_short": HELMETConfig("helmet_ruler_short", "ruler_short"),
+
+    # RAG tasks
+    "helmet_rag": HELMETConfig("helmet_rag", "rag"),
+    "helmet_rag_short": HELMETConfig("helmet_rag_short", "rag_short"),
+    "helmet_rag_vllm": HELMETConfig("helmet_rag_vllm", "rag_vllm"),
+
+    # Reranking tasks
+    "helmet_rerank": HELMETConfig("helmet_rerank", "rerank"),
+    "helmet_rerank_short": HELMETConfig("helmet_rerank_short", "rerank_short"),
+
+    # Citation tasks
+    "helmet_cite": HELMETConfig("helmet_cite", "cite"),
+    "helmet_cite_short": HELMETConfig("helmet_cite_short", "cite_short"),
+    "helmet_alce_nocite": HELMETConfig("helmet_alce_nocite", "alce_nocite"),
+    "helmet_alce_nocite_short": HELMETConfig("helmet_alce_nocite_short", "alce_nocite_short"),
+
+    # Long QA tasks
+    "helmet_longqa": HELMETConfig("helmet_longqa", "longqa"),
+    "helmet_longqa_short": HELMETConfig("helmet_longqa_short", "longqa_short"),
+
+    # Summarization tasks
+    "helmet_summ": HELMETConfig("helmet_summ", "summ"),
+    "helmet_summ_short": HELMETConfig("helmet_summ_short", "summ_short"),
+
+    # In-context learning tasks
+    "helmet_icl": HELMETConfig("helmet_icl", "icl"),
+    "helmet_icl_short": HELMETConfig("helmet_icl_short", "icl_short"),
+
+    # Demo config for testing
+    "helmet_recall_demo": HELMETConfig("helmet_recall_demo", "recall_demo"),
 }

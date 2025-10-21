@@ -49,6 +49,26 @@ python main.py arc_challenge --model path/to/model --backend vllm \
 
 Note: The vLLM backend is experimental. Performance and correctness have not been confirmed to be comparable with the HuggingFace backend.
 
+### HELMET Long-Context Evaluations
+
+For evaluating long-context capabilities, use the HELMET benchmark suite:
+
+```bash
+# Run all HELMET evaluations
+sh helmet.sh /path/to/model
+
+# Run with vLLM backend
+sh helmet.sh /path/to/model --backend vllm
+
+# Quick testing with short configs
+sh helmet-quick.sh /path/to/model
+
+# Run specific HELMET tasks
+python main.py helmet_recall helmet_rag --model /path/to/model
+```
+
+See [HELMET_README.md](HELMET_README.md) for detailed documentation on HELMET evaluations.
+
 ### Custom lm-evaluation-harness source
 
 For vLLM backend, you can specify a custom lm-evaluation-harness source:

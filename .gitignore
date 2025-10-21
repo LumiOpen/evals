@@ -7,3 +7,9 @@ command_history.jsonl
 __pycache__
 output
 .local
+
+# HELMET data and temporary files
+helmet/data/
+helmet/*.batch
+helmet/*.json.score
+*.pyc
