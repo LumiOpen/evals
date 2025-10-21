@@ -62,7 +62,7 @@ MODEL_ID="${MODEL_ID:?MODEL_ID not set}"
 TP="${TP:-4}"
 MODEL_SAFE="${MODEL_ID//\//-}"
 PREFETCH_LOCAL_DIR="/project/hf_cache/models/${MODEL_SAFE}"
-MODEL_LOCAL="${PREFETCH_LOCAL_DIR}"
+export MODEL_LOCAL="${PREFETCH_LOCAL_DIR}"
 
 # ---- env & caches (disable xet + telemetry) ----
 export HF_HUB_DISABLE_XET=1
