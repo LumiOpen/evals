@@ -231,15 +231,10 @@ export CHAT_TEMPLATE_FLAG=""
 
 # ------- Run HELMET evaluation -------
 echo "Running HELMET evaluation with config: {{ env_vars.CONFIG_NAME }}"
-
-# Ensure all variables are set
-export HELMET_OUTPUT_DIR="${HELMET_OUTPUT_DIR}"
-export BACKEND_ARGS="${BACKEND_ARGS}"
-export CHAT_TEMPLATE_FLAG="${CHAT_TEMPLATE_FLAG}"
-
 echo "DEBUG: MODEL_ID=$MODEL_ID"
 echo "DEBUG: HELMET_OUTPUT_DIR=$HELMET_OUTPUT_DIR"
 echo "DEBUG: BACKEND_ARGS=$BACKEND_ARGS"
+echo "DEBUG: CHAT_TEMPLATE_FLAG=$CHAT_TEMPLATE_FLAG"
 
 python eval.py \
   --config configs/{{ env_vars.CONFIG_NAME }}.yaml \
