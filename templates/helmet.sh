@@ -148,13 +148,21 @@ cd "$HELMET_DIR"
 
 # Install HELMET-specific dependencies (container already has torch, transformers, datasets, etc.)
 echo "Installing HELMET-specific dependencies..."
-# Set TMPDIR to writable location for pip builds
-export TMPDIR=/tmp/pip_build_$$
-mkdir -p "$TMPDIR"
-# Only install packages not in the base container
-# pytrec_eval requires compilation, rouge_score and openai are pure Python
-python -m pip -q install --user pytrec_eval rouge_score openai
-rm -rf "$TMPDIR"
+# Create a temporary writable location for pip
+PIP_TMP_DIR="/tmp/pip_install_${SLURM_JOB_ID:-$$}"
+mkdir -p "$PIP_TMP_DIR"
+export TMPDIR="$PIP_TMP_DIR/tmp"
+export PIP_CACHE_DIR="$PIP_TMP_DIR/cache"
+mkdir -p "$TMPDIR" "$PIP_CACHE_DIR"
+
+# Install to a writable location (not --user which tries to write to /pfs)
+# Use --target to install to a specific directory
+PIP_INSTALL_DIR="$PIP_TMP_DIR/packages"
+mkdir -p "$PIP_INSTALL_DIR"
+python -m pip install --target "$PIP_INSTALL_DIR" pytrec_eval rouge_score openai
+
+# Add to Python path
+export PYTHONPATH="$PIP_INSTALL_DIR:${PYTHONPATH:-}"
 
 # Convert host paths to container paths for output file
 CONTAINER_OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
