@@ -169,9 +169,9 @@ export PYTHONPATH="$PIP_INSTALL_DIR:${PYTHONPATH:-}"
 
 # Hardcode output paths - /workspace is bound to the evals repo dir
 # Output goes to /workspace/output/v2/model_org/model_name/
-MODEL_ORG=$(echo "$MODEL_ID" | cut -d/ -f1)
-MODEL_NAME=$(echo "$MODEL_ID" | cut -d/ -f2)
-HELMET_OUTPUT_DIR="/workspace/output/v2/${MODEL_ORG}/${MODEL_NAME}"
+export MODEL_ORG=$(echo "$MODEL_ID" | cut -d/ -f1)
+export MODEL_NAME=$(echo "$MODEL_ID" | cut -d/ -f2)
+export HELMET_OUTPUT_DIR="/workspace/output/v2/${MODEL_ORG}/${MODEL_NAME}"
 mkdir -p "$HELMET_OUTPUT_DIR"
 echo "HELMET results will be saved to: $HELMET_OUTPUT_DIR"
 
