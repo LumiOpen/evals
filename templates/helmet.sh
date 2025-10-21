@@ -148,8 +148,13 @@ cd "$HELMET_DIR"
 
 # Install HELMET-specific dependencies (container already has torch, transformers, datasets, etc.)
 echo "Installing HELMET-specific dependencies..."
+# Set TMPDIR to writable location for pip builds
+export TMPDIR=/tmp/pip_build_$$
+mkdir -p "$TMPDIR"
 # Only install packages not in the base container
-python -m pip -q install --user pytrec_eval rouge_score openai || true
+# pytrec_eval requires compilation, rouge_score and openai are pure Python
+python -m pip -q install --user pytrec_eval rouge_score openai
+rm -rf "$TMPDIR"
 
 # Convert host paths to container paths for output file
 CONTAINER_OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
