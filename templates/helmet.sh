@@ -231,11 +231,13 @@ CHAT_TEMPLATE_FLAG=""
 
 # ------- Run HELMET evaluation -------
 echo "Running HELMET evaluation with config: {{ env_vars.CONFIG_NAME }}"
-echo "DEBUG: MODEL_LOCAL=${MODEL_LOCAL}"
-echo "DEBUG: HELMET_OUTPUT_DIR=${HELMET_OUTPUT_DIR}"
+echo "DEBUG: MODEL_LOCAL=$MODEL_LOCAL"
+echo "DEBUG: HELMET_OUTPUT_DIR=$HELMET_OUTPUT_DIR"
+echo "DEBUG: pwd=$(pwd)"
+echo "DEBUG: PYTHONPATH=$PYTHONPATH"
 python eval.py \
   --config configs/{{ env_vars.CONFIG_NAME }}.yaml \
-  --model_name_or_path "${MODEL_LOCAL}" \
+  --model_name_or_path "$MODEL_LOCAL" \
   --output_dir "$HELMET_OUTPUT_DIR" \
   $BACKEND_ARGS \
   $CHAT_TEMPLATE_FLAG \
