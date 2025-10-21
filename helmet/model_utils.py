@@ -1296,7 +1296,7 @@ def load_LLM(args):
         generation_max_length=args.generation_max_length,
         generation_min_length=args.generation_min_length,
         do_sample=args.do_sample,
-        stop_newline=args.stop_new_line,
+        stop_new_line=args.stop_new_line,
         use_chat_template=args.use_chat_template,
         system_message=args.system_message,
         **kwargs,
