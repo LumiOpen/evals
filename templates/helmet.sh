@@ -232,8 +232,7 @@ python eval.py \
   --config configs/{{ env_vars.CONFIG_NAME }}.yaml \
   --model_name_or_path "${MODEL_LOCAL}" \
   --output_dir "$HELMET_OUTPUT_DIR" \
-{% if env_vars.TRUST_REMOTE_CODE == "True" %}  --trust_remote_code \
-{% endif %}  $BACKEND_ARGS \
+  $BACKEND_ARGS \
   $CHAT_TEMPLATE_FLAG \
   --overwrite
 
