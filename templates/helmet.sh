@@ -58,11 +58,12 @@ set -euo pipefail
 umask 002
 
 # ---- model/topology (now variables) ----
-MODEL_ID="${MODEL_ID:?MODEL_ID not set}"
-TP="${TP:-4}"
-MODEL_SAFE="${MODEL_ID//\//-}"
-PREFETCH_LOCAL_DIR="/project/hf_cache/models/${MODEL_SAFE}"
+export MODEL_ID="${MODEL_ID:?MODEL_ID not set}"
+export TP="${TP:-4}"
+export MODEL_SAFE="${MODEL_ID//\//-}"
+export PREFETCH_LOCAL_DIR="/project/hf_cache/models/${MODEL_SAFE}"
 export MODEL_LOCAL="${PREFETCH_LOCAL_DIR}"
+echo "DEBUG: Set MODEL_LOCAL=$MODEL_LOCAL"
 
 # ---- env & caches (disable xet + telemetry) ----
 export HF_HUB_DISABLE_XET=1
@@ -139,12 +140,14 @@ python /workspace/tools/prefetch.py
 {% endif %}
 
 # ------- Setup HELMET -------
-HELMET_DIR="/workspace/helmet-${SLURM_JOB_ID:-$}"
+export HELMET_DIR="/workspace/helmet-${SLURM_JOB_ID:-$}"
 echo "Setting up HELMET in $HELMET_DIR"
+echo "DEBUG: Before cd, MODEL_LOCAL=$MODEL_LOCAL"
 
 # Copy HELMET from workspace
 cp -r /workspace/helmet "$HELMET_DIR"
 cd "$HELMET_DIR"
+echo "DEBUG: After cd to HELMET_DIR, MODEL_LOCAL=$MODEL_LOCAL"
 
 # Install HELMET-specific dependencies (container already has torch, transformers, datasets, etc.)
 echo "Installing HELMET-specific dependencies..."
