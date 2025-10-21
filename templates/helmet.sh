@@ -200,9 +200,11 @@ export CHAT_TEMPLATE_FLAG=""
 # ------- Run HELMET evaluation -------
 echo "Running HELMET evaluation with config: {{ env_vars.CONFIG_NAME }}"
 echo "DEBUG: MODEL_ID=$MODEL_ID"
-echo "DEBUG: HELMET_OUTPUT_DIR=$HELMET_OUTPUT_DIR"
-echo "DEBUG: BACKEND_ARGS=$BACKEND_ARGS"
-echo "DEBUG: CHAT_TEMPLATE_FLAG=$CHAT_TEMPLATE_FLAG"
+echo "DEBUG: About to check HELMET_OUTPUT_DIR..."
+set | grep HELMET_OUTPUT_DIR || echo "HELMET_OUTPUT_DIR not in environment!"
+echo "DEBUG: HELMET_OUTPUT_DIR=${HELMET_OUTPUT_DIR}"
+echo "DEBUG: BACKEND_ARGS=${BACKEND_ARGS}"
+echo "DEBUG: CHAT_TEMPLATE_FLAG=${CHAT_TEMPLATE_FLAG}"
 
 python eval.py \
   --config configs/{{ env_vars.CONFIG_NAME }}.yaml \
