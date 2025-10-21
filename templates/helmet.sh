@@ -148,7 +148,16 @@ cd "$HELMET_DIR"
 
 # Install HELMET dependencies
 echo "Installing HELMET dependencies..."
-python -m pip install --user -q wheel ninja packaging datasets transformers accelerate sentencepiece pytrec_eval rouge_score openai
+# Set pip cache to a writable location
+export PIP_CACHE_DIR=/project/hf_cache/pip
+mkdir -p "$PIP_CACHE_DIR"
+
+# Install dependencies with --no-build-isolation to avoid /pfs write issues
+python -m pip install --user --no-build-isolation -q wheel ninja packaging
+python -m pip install --user -q datasets transformers accelerate sentencepiece rouge_score openai
+# pytrec_eval needs special handling due to legacy setup
+python -m pip install --user --no-build-isolation -q pytrec_eval || \
+    python -m pip install --user -q pytrec_eval
 
 # Convert host paths to container paths for output file
 CONTAINER_OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
