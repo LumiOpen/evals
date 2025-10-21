@@ -177,7 +177,7 @@ echo "HELMET results will be saved to: $HELMET_OUTPUT_DIR"
 
 # Set up backend-specific arguments
 {% if env_vars.BACKEND == "vllm" %}
-# VLLM backend - use HELMET's --use_vllm flag
+# VLLM backend - use HELMET --use_vllm flag
 export BACKEND_ARGS="--use_vllm"
 echo "Using VLLM backend"
 {% elif env_vars.BACKEND == "dummy" %}
