@@ -123,6 +123,56 @@ PY
 
 python /workspace/tools/sanity.py
 
+# ------- write helper: stage_aiter.py -------
+cat > /workspace/tools/stage_aiter.py <<PY
+import os, glob, shutil, importlib, pathlib, subprocess, sys
+
+home = os.path.expanduser("~")
+jit_root   = os.path.join(home, ".aiter", "jit")
+build_root = os.path.join(jit_root, "build")
+inst_root  = os.path.join(jit_root, "install")
+pkg_root   = os.path.join(inst_root, "private_aiter")
+pkg_jit    = os.path.join(pkg_root, "jit")
+
+os.makedirs(pkg_jit, exist_ok=True)
+pathlib.Path(os.path.join(pkg_root, "__init__.py")).write_text("")
+pathlib.Path(os.path.join(pkg_jit, "__init__.py")).write_text("")
+
+# trigger a build once (ok if it raises)
+try:
+    import aiter
+    from aiter.ops import enum  # will build module_aiter_enum
+except Exception as e:
+    print("[aiter] prewarm raised:", repr(e))
+
+hits = glob.glob(os.path.join(build_root, "**", "module_aiter_enum*.so"), recursive=True)
+if not hits:
+    raise SystemExit("[stage] no compiled module_aiter_enum*.so found under " + build_root)
+
+so_src = max(hits, key=os.path.getmtime)
+dst = os.path.join(pkg_jit, "module_aiter_enum.so")
+if os.path.islink(dst) or os.path.exists(dst):
+    os.remove(dst)
+try:
+    os.symlink(so_src, dst)
+    print("[stage] symlinked", dst, "->", so_src)
+except OSError:
+    shutil.copy2(so_src, dst)
+    print("[stage] copied", so_src, "->", dst)
+
+print("[ldd]")
+print(subprocess.check_output(["ldd", dst], text=True))
+
+sys.path.insert(0, inst_root)
+m = importlib.import_module("private_aiter.jit.module_aiter_enum")
+print("[stage] import OK:", m.__spec__.origin)
+
+import aiter; from aiter.ops import enum as _e
+print("[stage] aiter import OK")
+PY
+
+python /workspace/tools/stage_aiter.py
+
 {% if env_vars.BACKEND != "dummy" %}
 # ------- write helper: prefetch.py -------
 cat > /workspace/tools/prefetch.py <<PY
@@ -164,8 +214,8 @@ PIP_INSTALL_DIR="$PIP_TMP_DIR/packages"
 mkdir -p "$PIP_INSTALL_DIR"
 python -m pip install --target "$PIP_INSTALL_DIR" pytrec_eval rouge_score openai
 
-# Add to Python path
-export PYTHONPATH="$PIP_INSTALL_DIR:${PYTHONPATH:-}"
+# Add to Python path (including aiter install location)
+export PYTHONPATH="$HOME/.aiter/jit/install:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
 
 # Hardcode output paths - /workspace is bound to the evals repo dir
 # Output goes to /workspace/output/v2/model_org/model_name/
