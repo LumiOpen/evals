@@ -196,6 +196,17 @@ echo "Using HELMET from $HELMET_DIR"
 cd "$HELMET_DIR"
 echo "DEBUG: After cd to HELMET_DIR, MODEL_LOCAL=$MODEL_LOCAL"
 
+# Download HELMET data if not already present
+if [ ! -d "data" ]; then
+    echo "Downloading HELMET benchmark data..."
+    wget -q -c https://huggingface.co/datasets/princeton-nlp/HELMET/resolve/main/data.tar.gz
+    tar -xzf data.tar.gz
+    rm data.tar.gz
+    echo "HELMET data downloaded and extracted"
+else
+    echo "HELMET data already present, skipping download"
+fi
+
 # Install HELMET-specific dependencies (container already has torch, transformers, datasets, etc.)
 echo "Installing HELMET-specific dependencies..."
 # Create a temporary writable location for pip
