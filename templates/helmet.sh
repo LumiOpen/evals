@@ -210,9 +210,12 @@ mkdir -p "$TMPDIR" "$PIP_CACHE_DIR"
 
 # Install to a writable location (not --user which tries to write to /pfs)
 # Use --target to install to a specific directory
+# Use --no-deps to avoid installing incompatible numpy 2.3 (container has compatible versions)
 PIP_INSTALL_DIR="$PIP_TMP_DIR/packages"
 mkdir -p "$PIP_INSTALL_DIR"
-python -m pip install --target "$PIP_INSTALL_DIR" pytrec_eval rouge_score openai
+python -m pip install --target "$PIP_INSTALL_DIR" --no-deps pytrec_eval rouge_score openai
+# Install only the openai dependencies not already in container
+python -m pip install --target "$PIP_INSTALL_DIR" --no-deps anyio distro httpx jiter pydantic sniffio tqdm typing-extensions certifi httpcore h11 idna annotated-types pydantic-core typing-inspection
 
 # Add to Python path (including aiter install location)
 export PYTHONPATH="$HOME/.aiter/jit/install:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
