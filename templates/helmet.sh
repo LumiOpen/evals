@@ -90,6 +90,7 @@ export VLLM_USE_V1=1
 export VLLM_TARGET_DEVICE=rocm
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export HIP_ARCHITECTURES=gfx90a
+export VLLM_ALLOW_LONG_MAX_MODEL_LEN=1
 
 # Avoid the 1-GPU trap - ensure PyTorch uses all allocated GPUs
 unset HIP_VISIBLE_DEVICES
