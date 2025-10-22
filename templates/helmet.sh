@@ -190,12 +190,9 @@ python /workspace/tools/prefetch.py
 {% endif %}
 
 # ------- Setup HELMET -------
-export HELMET_DIR="/workspace/helmet-${SLURM_JOB_ID:-$}"
-echo "Setting up HELMET in $HELMET_DIR"
-echo "DEBUG: Before cd, MODEL_LOCAL=$MODEL_LOCAL"
-
-# Copy HELMET from workspace
-cp -r /workspace/helmet "$HELMET_DIR"
+# Use HELMET directly from /workspace to allow data caching
+export HELMET_DIR="/workspace/helmet"
+echo "Using HELMET from $HELMET_DIR"
 cd "$HELMET_DIR"
 echo "DEBUG: After cd to HELMET_DIR, MODEL_LOCAL=$MODEL_LOCAL"
 
@@ -270,9 +267,4 @@ python eval.py \
 echo "== HELMET evaluation complete =="
 echo "Results saved to: $HELMET_OUTPUT_DIR"
 ls -lh "$HELMET_OUTPUT_DIR" || true
-
-# Clean up the temporary HELMET directory
-echo "Cleaning up temporary HELMET directory: $HELMET_DIR"
-cd /workspace
-rm -rf "$HELMET_DIR"
 '
