@@ -17,23 +17,23 @@ case $BATCH in
 
     python main.py --model LumiOpen/Llama-Poro-2-8B-base --backend vllm \
       --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
-      helmet_rag_short
+      helmet_rag_poro2
 
     python main.py --model LumiOpen/Llama-Poro-2-8B-base --backend vllm \
       --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
-      helmet_rerank_short
+      helmet_rerank_poro2
 
     python main.py --model LumiOpen/Llama-Poro-2-8B-base --backend vllm \
       --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
-      helmet_longqa_short
+      helmet_longqa_poro2
 
     python main.py --model LumiOpen/Llama-Poro-2-8B-base --backend vllm \
       --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
-      helmet_summ_short
+      helmet_summ_poro2
 
     python main.py --model LumiOpen/Llama-Poro-2-8B-base --backend vllm \
       --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
-      helmet_icl_short
+      helmet_icl_poro2
     ;;
 
   2)
@@ -45,27 +45,27 @@ case $BATCH in
     python main.py --model LumiOpen/Llama-Poro-2-8B-instruct --backend vllm \
       --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
       --apply_chat_template \
-      helmet_rag_short
+      helmet_rag_poro2
 
     python main.py --model LumiOpen/Llama-Poro-2-8B-instruct --backend vllm \
       --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
       --apply_chat_template \
-      helmet_rerank_short
+      helmet_rerank_poro2
 
     python main.py --model LumiOpen/Llama-Poro-2-8B-instruct --backend vllm \
       --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
       --apply_chat_template \
-      helmet_longqa_short
+      helmet_longqa_poro2
 
     python main.py --model LumiOpen/Llama-Poro-2-8B-instruct --backend vllm \
       --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
       --apply_chat_template \
-      helmet_summ_short
+      helmet_summ_poro2
 
     python main.py --model LumiOpen/Llama-Poro-2-8B-instruct --backend vllm \
       --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
       --apply_chat_template \
-      helmet_icl_short
+      helmet_icl_poro2
     ;;
 
   3)

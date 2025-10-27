@@ -392,11 +392,13 @@ evals = {
     # RAG tasks
     "helmet_rag": HELMETConfig("helmet_rag", "rag"),
     "helmet_rag_short": HELMETConfig("helmet_rag_short", "rag_short"),
+    "helmet_rag_poro2": HELMETConfig("helmet_rag_poro2", "rag_poro2"),
     "helmet_rag_vllm": HELMETConfig("helmet_rag_vllm", "rag_vllm"),
 
     # Reranking tasks
     "helmet_rerank": HELMETConfig("helmet_rerank", "rerank"),
     "helmet_rerank_short": HELMETConfig("helmet_rerank_short", "rerank_short"),
+    "helmet_rerank_poro2": HELMETConfig("helmet_rerank_poro2", "rerank_poro2"),
 
     # Citation tasks
     "helmet_cite": HELMETConfig("helmet_cite", "cite"),
@@ -407,14 +409,17 @@ evals = {
     # Long QA tasks
     "helmet_longqa": HELMETConfig("helmet_longqa", "longqa"),
     "helmet_longqa_short": HELMETConfig("helmet_longqa_short", "longqa_short"),
+    "helmet_longqa_poro2": HELMETConfig("helmet_longqa_poro2", "longqa_poro2"),
 
     # Summarization tasks
     "helmet_summ": HELMETConfig("helmet_summ", "summ"),
     "helmet_summ_short": HELMETConfig("helmet_summ_short", "summ_short"),
+    "helmet_summ_poro2": HELMETConfig("helmet_summ_poro2", "summ_poro2"),
 
     # In-context learning tasks
     "helmet_icl": HELMETConfig("helmet_icl", "icl"),
     "helmet_icl_short": HELMETConfig("helmet_icl_short", "icl_short"),
+    "helmet_icl_poro2": HELMETConfig("helmet_icl_poro2", "icl_poro2"),
 
     # Demo config for testing
     "helmet_recall_demo": HELMETConfig("helmet_recall_demo", "recall_demo"),
