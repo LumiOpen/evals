@@ -2,9 +2,9 @@
 # Run all HELMET tests for Poro2 and Llama 3.1 (base + instruct)
 # Total: 24 jobs (4 models × 6 test types)
 
-PROJECT=project_462000963
-PARTITION=dev-g
-GRES=gpu:mi250:2
+PROJECT=project_462000353
+PARTITION=standard-g
+GRES=gpu:mi250:4
 
 echo "Queuing all HELMET tests for 4 models..."
 echo "Total: 24 jobs"
@@ -24,7 +24,7 @@ python main.py --model LumiOpen/Llama-Poro-2-8B-base --backend vllm \
   helmet_rag_short
 
 python main.py --model LumiOpen/Llama-Poro-2-8B-base --backend vllm \
-  --project $PROJECT --partition $PARTITION --gres $GRES --time 08:00:00 \
+  --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
   helmet_rerank_short
 
 python main.py --model LumiOpen/Llama-Poro-2-8B-base --backend vllm \
@@ -36,7 +36,7 @@ python main.py --model LumiOpen/Llama-Poro-2-8B-base --backend vllm \
   helmet_summ_short
 
 python main.py --model LumiOpen/Llama-Poro-2-8B-base --backend vllm \
-  --project $PROJECT --partition $PARTITION --gres $GRES --time 08:00:00 \
+  --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
   helmet_icl_short
 
 # ============================================================================
@@ -54,7 +54,7 @@ python main.py --model LumiOpen/Llama-Poro-2-8B-instruct --backend vllm \
   helmet_rag_short
 
 python main.py --model LumiOpen/Llama-Poro-2-8B-instruct --backend vllm \
-  --project $PROJECT --partition $PARTITION --gres $GRES --time 08:00:00 \
+  --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
   helmet_rerank_short
 
 python main.py --model LumiOpen/Llama-Poro-2-8B-instruct --backend vllm \
@@ -66,7 +66,7 @@ python main.py --model LumiOpen/Llama-Poro-2-8B-instruct --backend vllm \
   helmet_summ_short
 
 python main.py --model LumiOpen/Llama-Poro-2-8B-instruct --backend vllm \
-  --project $PROJECT --partition $PARTITION --gres $GRES --time 08:00:00 \
+  --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
   helmet_icl_short
 
 # ============================================================================
@@ -76,7 +76,7 @@ echo ""
 echo "=== Llama 3.1 Base ==="
 
 python main.py --model meta-llama/Llama-3.1-8B --backend vllm \
-  --project $PROJECT --partition $PARTITION --gres $GRES --time 16:00:00 \
+  --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
   helmet_recall_llama31_8b_base
 
 python main.py --model meta-llama/Llama-3.1-8B --backend vllm \
@@ -84,7 +84,7 @@ python main.py --model meta-llama/Llama-3.1-8B --backend vllm \
   helmet_rag_short
 
 python main.py --model meta-llama/Llama-3.1-8B --backend vllm \
-  --project $PROJECT --partition $PARTITION --gres $GRES --time 08:00:00 \
+  --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
   helmet_rerank_short
 
 python main.py --model meta-llama/Llama-3.1-8B --backend vllm \
@@ -96,7 +96,7 @@ python main.py --model meta-llama/Llama-3.1-8B --backend vllm \
   helmet_summ_short
 
 python main.py --model meta-llama/Llama-3.1-8B --backend vllm \
-  --project $PROJECT --partition $PARTITION --gres $GRES --time 08:00:00 \
+  --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
   helmet_icl_short
 
 # ============================================================================
@@ -106,7 +106,7 @@ echo ""
 echo "=== Llama 3.1 Instruct ==="
 
 python main.py --model meta-llama/Llama-3.1-8B-Instruct --backend vllm \
-  --project $PROJECT --partition $PARTITION --gres $GRES --time 16:00:00 \
+  --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
   helmet_recall_llama31_8b_instruct
 
 python main.py --model meta-llama/Llama-3.1-8B-Instruct --backend vllm \
@@ -114,7 +114,7 @@ python main.py --model meta-llama/Llama-3.1-8B-Instruct --backend vllm \
   helmet_rag_short
 
 python main.py --model meta-llama/Llama-3.1-8B-Instruct --backend vllm \
-  --project $PROJECT --partition $PARTITION --gres $GRES --time 08:00:00 \
+  --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
   helmet_rerank_short
 
 python main.py --model meta-llama/Llama-3.1-8B-Instruct --backend vllm \
@@ -126,7 +126,7 @@ python main.py --model meta-llama/Llama-3.1-8B-Instruct --backend vllm \
   helmet_summ_short
 
 python main.py --model meta-llama/Llama-3.1-8B-Instruct --backend vllm \
-  --project $PROJECT --partition $PARTITION --gres $GRES --time 08:00:00 \
+  --project $PROJECT --partition $PARTITION --gres $GRES --time 12:00:00 \
   helmet_icl_short
 
 echo ""
