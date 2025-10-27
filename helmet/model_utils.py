@@ -1023,6 +1023,8 @@ class VLLMModel(LLM):
         use_chat_template=False,
         system_message=None,
         seed=42,
+        rope_scaling_factor=None,
+        rope_scaling_type="linear",
     ):
         super().__init__(
             model_name,
@@ -1040,6 +1042,16 @@ class VLLMModel(LLM):
         from vllm import LLM
         # at the time of testing: note that the max model length is derived from the config file, and if max_length is larger than that length, there will be an error. it appears that vllm does not support positional extrapolation
         # there are some work arounds to this, but it may give unexpected results.
+
+        # Build rope_scaling config if factor is provided
+        vllm_kwargs = {}
+        if rope_scaling_factor is not None:
+            vllm_kwargs["rope_scaling"] = {
+                "type": rope_scaling_type,
+                "factor": rope_scaling_factor,
+            }
+            logger.info(f"Using RoPE scaling: type={rope_scaling_type}, factor={rope_scaling_factor}")
+
         self.model = LLM(
             model_name,
             tensor_parallel_size=torch.cuda.device_count(),
@@ -1049,6 +1061,7 @@ class VLLMModel(LLM):
             seed=seed,
             #max_seq_len_to_capture=max_length, # we cannot set unless we are using a constant max length for the run
             max_model_len=max_length,
+            **vllm_kwargs,
         )
         self.tokenizer = self.model.get_tokenizer()
 
@@ -1269,6 +1282,9 @@ def load_LLM(args):
     elif args.use_vllm:
         model_cls = VLLMModel
         kwargs['seed'] = args.seed
+        if args.rope_scaling_factor is not None:
+            kwargs['rope_scaling_factor'] = args.rope_scaling_factor
+            kwargs['rope_scaling_type'] = args.rope_scaling_type
     elif args.use_tgi_serving or args.use_vllm_serving:
         model_cls = TgiVllmModel
         kwargs['seed'] = args.seed
