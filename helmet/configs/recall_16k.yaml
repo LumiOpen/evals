@@ -1,0 +1,18 @@
+# Quick 16k recall tests for models trained on 8k context
+# Uses RoPE scaling factor 2.0 to extend from 8k to 16k
+
+input_max_length: 16384,16384,16384,16384
+datasets: ruler_niah_mk_2,ruler_niah_mk_3,ruler_niah_mv,json_kv
+generation_max_length: 50,100,50,100
+test_files: data/ruler/niah_multikey_2/validation_16384.jsonl,data/ruler/niah_multikey_3/validation_16384.jsonl,data/ruler/niah_multivalue/validation_16384.jsonl,data/json_kv/test_k220_dep6.jsonl
+demo_files: ',,,'
+use_chat_template: false
+max_test_samples: 100
+shots: 2
+stop_new_line: false
+
+# RoPE scaling for 8k->16k extension
+rope_scaling_factor: 2.0
+rope_scaling_type: dynamic
+
+model_name_or_path: LumiOpen/Poro-34B

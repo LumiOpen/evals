@@ -377,7 +377,9 @@ evals = {
     # Recall tasks
     "helmet_recall": HELMETConfig("helmet_recall", "recall"),
     "helmet_recall_short": HELMETConfig("helmet_recall_short", "recall_short"),
+    "helmet_recall_16k": HELMETConfig("helmet_recall_16k", "recall_16k"),
     "helmet_recall_vllm": HELMETConfig("helmet_recall_vllm", "recall_vllm"),
+    "helmet_recall_poro2_rope": HELMETConfig("helmet_recall_poro2_rope", "recall_poro2_rope"),
     "helmet_niah": HELMETConfig("helmet_niah", "niah"),
     "helmet_niah_long": HELMETConfig("helmet_niah_long", "niah_long"),
     "helmet_ruler": HELMETConfig("helmet_ruler", "ruler"),
