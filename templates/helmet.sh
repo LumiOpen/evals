@@ -255,7 +255,7 @@ echo "Using HuggingFace backend"
 
 # Set up chat template flags
 {% if env_vars.APPLY_CHAT_TEMPLATE %}
-export CHAT_TEMPLATE_FLAG="--use_chat_template"
+export CHAT_TEMPLATE_FLAG="--use_chat_template True"
 {% else %}
 export CHAT_TEMPLATE_FLAG=""
 {% endif %}
