@@ -2,7 +2,7 @@
 # Run all HELMET tests for Poro2 and Llama 3.1 (base + instruct)
 # Total: 24 jobs (4 models × 6 test types)
 
-PROJECT=project_462000353
+PROJECT=project_462000963
 PARTITION=standard-g
 GRES=gpu:mi250:4
 
