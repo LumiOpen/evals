@@ -7,4 +7,4 @@ use_chat_template: false
 max_test_samples: 100
 shots: 2
 stop_new_line: true
-model_name_or_path: meta-llama/Llama-3.1-8B-Instruct
+# model_name_or_path: passed via CLI --model flag

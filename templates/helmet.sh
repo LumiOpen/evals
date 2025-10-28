@@ -257,7 +257,7 @@ echo "Using HuggingFace backend"
 {% if env_vars.APPLY_CHAT_TEMPLATE %}
 export CHAT_TEMPLATE_FLAG="--use_chat_template True"
 {% else %}
-export CHAT_TEMPLATE_FLAG=""
+export CHAT_TEMPLATE_FLAG="--use_chat_template False"
 {% endif %}
 
 # ------- Run HELMET evaluation -------
