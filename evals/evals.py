@@ -403,8 +403,14 @@ evals = {
     # Citation tasks
     "helmet_cite": HELMETConfig("helmet_cite", "cite"),
     "helmet_cite_short": HELMETConfig("helmet_cite_short", "cite_short"),
+    "helmet_cite_full_8k": HELMETConfig("helmet_cite_full_8k", "cite_full_8k"),
+    "helmet_cite_full_16k": HELMETConfig("helmet_cite_full_16k", "cite_full_16k"),
+    "helmet_cite_full_32k": HELMETConfig("helmet_cite_full_32k", "cite_full_32k"),
     "helmet_alce_nocite": HELMETConfig("helmet_alce_nocite", "alce_nocite"),
     "helmet_alce_nocite_short": HELMETConfig("helmet_alce_nocite_short", "alce_nocite_short"),
+    "helmet_alce_nocite_full_8k": HELMETConfig("helmet_alce_nocite_full_8k", "alce_nocite_full_8k"),
+    "helmet_alce_nocite_full_16k": HELMETConfig("helmet_alce_nocite_full_16k", "alce_nocite_full_16k"),
+    "helmet_alce_nocite_full_32k": HELMETConfig("helmet_alce_nocite_full_32k", "alce_nocite_full_32k"),
 
     # Long QA tasks
     "helmet_longqa": HELMETConfig("helmet_longqa", "longqa"),

@@ -1,0 +1,10 @@
+input_max_length: 16384
+datasets: alce_asqa_nocite_75
+generation_max_length: 600
+test_files: data/alce/asqa_eval_gtr_top2000.json
+demo_files: prompts/asqa_nocite.json
+use_chat_template: false
+shots: 0
+stop_new_line: false
+# model_name_or_path: passed via CLI --model flag
+# RoPE scaling required for Poro2 models via CLI: --rope_scaling_factor 2.0 --rope_scaling_type dynamic

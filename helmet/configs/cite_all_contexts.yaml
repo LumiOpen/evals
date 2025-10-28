@@ -4,8 +4,9 @@ generation_max_length: 300,300,300,300,300,300,300,300
 test_files: data/alce/asqa_eval_gtr_top2000.json,data/alce/asqa_eval_gtr_top2000.json,data/alce/asqa_eval_gtr_top2000.json,data/alce/asqa_eval_gtr_top2000.json,data/alce/qampari_eval_gtr_top2000.json,data/alce/qampari_eval_gtr_top2000.json,data/alce/qampari_eval_gtr_top2000.json,data/alce/qampari_eval_gtr_top2000.json
 demo_files: prompts/asqa_revised.json,prompts/asqa_revised.json,prompts/asqa_revised.json,prompts/asqa_revised.json,prompts/qampari_revised.json,prompts/qampari_revised.json,prompts/qampari_revised.json,prompts/qampari_revised.json
 use_chat_template: false
-max_test_samples: 100
 shots: 2
 stop_new_line: false
 # model_name_or_path: passed via CLI --model flag
-# rope_scaling_factor and rope_scaling_type: passed via CLI --rope_scaling_factor and --rope_scaling_type flags
+# WARNING: This runs ALL context lengths with the SAME RoPE setting
+# For Poro2: This will hurt 8k performance if you enable RoPE, or hurt 16k+ if you don't
+# Better to use separate 8k/16k/32k/64k configs for proper RoPE control

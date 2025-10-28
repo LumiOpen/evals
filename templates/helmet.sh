@@ -223,9 +223,12 @@ mkdir -p "$TMPDIR" "$PIP_CACHE_DIR"
 # Use --no-deps to avoid installing incompatible numpy 2.3 (container has compatible versions)
 PIP_INSTALL_DIR="$PIP_TMP_DIR/packages"
 mkdir -p "$PIP_INSTALL_DIR"
-python -m pip install --target "$PIP_INSTALL_DIR" --no-deps pytrec_eval rouge_score openai
+python -m pip install --target "$PIP_INSTALL_DIR" --no-deps pytrec_eval rouge_score openai safetensors
 # Install only the openai dependencies not already in container
 python -m pip install --target "$PIP_INSTALL_DIR" --no-deps anyio distro httpx jiter pydantic sniffio tqdm typing-extensions certifi httpcore h11 idna annotated-types pydantic-core typing-inspection
+
+# Download NLTK data for ALCE citation scoring
+/opt/miniconda3/envs/pytorch/bin/python -m nltk.downloader punkt_tab -d /users/danizaut/nltk_data || echo "Warning: Could not download punkt_tab"
 
 # Add to Python path (including aiter install location)
 export PYTHONPATH="$HOME/.aiter/jit/install:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
@@ -260,6 +263,14 @@ export CHAT_TEMPLATE_FLAG="--use_chat_template True"
 export CHAT_TEMPLATE_FLAG="--use_chat_template False"
 {% endif %}
 
+# Set up RoPE scaling flags
+{% if env_vars.ROPE_SCALING_FACTOR and env_vars.ROPE_SCALING_TYPE %}
+export ROPE_FLAGS="--rope_scaling_factor {{ env_vars.ROPE_SCALING_FACTOR }} --rope_scaling_type {{ env_vars.ROPE_SCALING_TYPE }}"
+echo "Using RoPE scaling: factor={{ env_vars.ROPE_SCALING_FACTOR }}, type={{ env_vars.ROPE_SCALING_TYPE }}"
+{% else %}
+export ROPE_FLAGS=""
+{% endif %}
+
 # ------- Run HELMET evaluation -------
 echo "Running HELMET evaluation with config: {{ env_vars.CONFIG_NAME }}"
 echo "DEBUG: MODEL_ID=$MODEL_ID"
@@ -275,6 +286,7 @@ python eval.py \
   --output_dir "$HELMET_OUTPUT_DIR" \
   $BACKEND_ARGS \
   $CHAT_TEMPLATE_FLAG \
+  $ROPE_FLAGS \
   --overwrite
 
 echo "== HELMET evaluation complete =="
