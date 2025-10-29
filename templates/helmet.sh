@@ -39,6 +39,13 @@ export N_NODES=1
 export TP="$GPUS"
 export MODEL_ID="{{ env_vars.MODEL }}"
 
+# If MODEL_ID starts with /scratch, resolve it to the real /pfs path for container access
+if [[ "$MODEL_ID" == /scratch/* ]]; then
+  RESOLVED_MODEL_ID=$(readlink -f "$MODEL_ID")
+  echo "Resolved /scratch path: $MODEL_ID -> $RESOLVED_MODEL_ID"
+  export MODEL_ID="$RESOLVED_MODEL_ID"
+fi
+
 srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_config.time }}" --gpus-per-task="$GPUS" \
   singularity exec --rocm --cleanenv \
     --bind "$SCR":/workspace \
