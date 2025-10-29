@@ -1,0 +1,8 @@
+input_max_length: 65536,65536,65536,65536,65536
+datasets: icl_trec_coarse_3200shot_balance,icl_trec_fine_3200shot_balance,icl_banking77_2900shot_balance,icl_clinic150_3500shot_balance,icl_nlu_4080shot_balance
+generation_max_length: 20,20,20,20,20
+test_files: ',,,,'
+demo_files: ',,,,'
+use_chat_template: false
+shots: 0
+stop_new_line: true

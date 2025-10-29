@@ -310,9 +310,36 @@ def niah_configs():
         yaml.dump(config, f, sort_keys=False)
     
 
+def individual_configs_per_length():
+    """Generate individual config files for each task and each context length"""
+    task_configs = {
+        "recall": (["ruler_niah_mk_2", "ruler_niah_mk_3", "ruler_niah_mv", "json_kv"],
+                   {"use_chat_template": False, "max_test_samples": 100, "shots": 2, "stop_new_line": False}),
+        "rag": (['kilt_nq', 'kilt_triviaqa', 'kilt_hotpotqa', 'kilt_popqa'],
+                {"use_chat_template": False, "max_test_samples": 100, "shots": 2, "stop_new_line": True}),
+        "longqa": (['narrativeqa', 'infbench_qa_eng', 'infbench_choice_eng'],
+                   {"use_chat_template": True, "max_test_samples": 100, "shots": 2, "stop_new_line": False}),
+        "summ": (['infbench_sum_eng', 'multi_lexsum'],
+                 {"use_chat_template": True, "max_test_samples": 100, "shots": 2, "stop_new_line": False}),
+        "icl": (['icl_trec_coarse', 'icl_trec_fine', 'icl_banking77', 'icl_clinic150', 'icl_nlu'],
+                {"use_chat_template": False, "max_test_samples": 500, "shots": 0, "stop_new_line": True}),
+        "rerank": (["msmarco_rerank_psg"],
+                   {"use_chat_template": False, "max_test_samples": 100, "shots": 2, "stop_new_line": True}),
+    }
+
+    for length in ["8k", "16k", "32k"]:
+        for task_name, (datasets, kwargs) in task_configs.items():
+            process_configs(
+                f"configs/{task_name}_{length}.yaml",
+                datasets,
+                [length],
+                **kwargs
+            )
+
 if __name__ == "__main__":
     helmet_configs()
     helmet_configs(input_lengths=["8k", "16k", "32k", "64k"], fname_postfix="_short")
     niah_configs()
-    separate_configs()
-    separate_configs(input_lengths=["8k", "16k", "32k", "64k"], fname_postfix="_short")
+    # separate_configs()  # Commented out - creates subdirectories
+    # separate_configs(input_lengths=["8k", "16k", "32k", "64k"], fname_postfix="_short")
+    individual_configs_per_length()
