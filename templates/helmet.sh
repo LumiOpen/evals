@@ -244,10 +244,9 @@ export PYTHONPATH="$HOME/.aiter/jit/install:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
 # Output goes to /workspace/output/v2/model_org/model_name/
 # Handle both HuggingFace repo IDs and local paths
 if [[ "${MODEL_ID}" == /* ]]; then
-  # Local path - extract meaningful name from the path
-  # E.g., /scratch/.../poro2-ropescaling128k/checkpoint_0001000 -> poro2-ropescaling128k/checkpoint_0001000
-  MODEL_PATH_SUFFIX=$(echo "$MODEL_ID" | awk -F'/' '{print $(NF-1)"/"$NF}')
-  export HELMET_OUTPUT_DIR="/workspace/output/v2/local/${MODEL_PATH_SUFFIX}"
+  # Local path - just use basename for now
+  MODEL_BASENAME=$(basename "$MODEL_ID")
+  export HELMET_OUTPUT_DIR="/workspace/output/v2/local/${MODEL_BASENAME}"
 else
   # HuggingFace repo ID - use org/name structure
   export MODEL_ORG=$(echo "$MODEL_ID" | cut -d/ -f1)
