@@ -177,7 +177,13 @@ python /workspace/tools/stage_aiter.py
 
 {% if env_vars.BACKEND != "dummy" %}
 # ------- write helper: prefetch.py -------
-cat > /workspace/tools/prefetch.py <<PY
+# Only prefetch if MODEL_ID is not a local path
+if [[ "${MODEL_ID}" == /* ]]; then
+  echo "Model is a local path, skipping prefetch"
+  # For local paths, use the path directly
+  export MODEL_LOCAL="${MODEL_ID}"
+else
+  cat > /workspace/tools/prefetch.py <<PY
 from huggingface_hub import snapshot_download
 p = snapshot_download(
   repo_id="${MODEL_ID}",
@@ -188,7 +194,8 @@ p = snapshot_download(
 print("prefetch OK ->", p)
 PY
 
-python /workspace/tools/prefetch.py
+  python /workspace/tools/prefetch.py
+fi
 {% endif %}
 
 # ------- Setup HELMET -------
