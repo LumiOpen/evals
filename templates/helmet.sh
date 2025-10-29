@@ -242,9 +242,18 @@ export PYTHONPATH="$HOME/.aiter/jit/install:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
 
 # Hardcode output paths - /workspace is bound to the evals repo dir
 # Output goes to /workspace/output/v2/model_org/model_name/
-export MODEL_ORG=$(echo "$MODEL_ID" | cut -d/ -f1)
-export MODEL_NAME=$(echo "$MODEL_ID" | cut -d/ -f2)
-export HELMET_OUTPUT_DIR="/workspace/output/v2/${MODEL_ORG}/${MODEL_NAME}"
+# Handle both HuggingFace repo IDs and local paths
+if [[ "${MODEL_ID}" == /* ]]; then
+  # Local path - extract meaningful name from the path
+  # E.g., /scratch/.../poro2-ropescaling128k/checkpoint_0001000 -> poro2-ropescaling128k/checkpoint_0001000
+  MODEL_PATH_SUFFIX=$(echo "$MODEL_ID" | awk -F'/' '{print $(NF-1)"/"$NF}')
+  export HELMET_OUTPUT_DIR="/workspace/output/v2/local/${MODEL_PATH_SUFFIX}"
+else
+  # HuggingFace repo ID - use org/name structure
+  export MODEL_ORG=$(echo "$MODEL_ID" | cut -d/ -f1)
+  export MODEL_NAME=$(echo "$MODEL_ID" | cut -d/ -f2)
+  export HELMET_OUTPUT_DIR="/workspace/output/v2/${MODEL_ORG}/${MODEL_NAME}"
+fi
 mkdir -p "$HELMET_OUTPUT_DIR"
 echo "HELMET results will be saved to: $HELMET_OUTPUT_DIR"
 
