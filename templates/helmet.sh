@@ -19,9 +19,20 @@ ln -sf {{ slurm_config.log_dir }}/$SLURM_JOB_ID.err {{ slurm_config.log_dir }}/l
 set -euo pipefail
 
 export IMG="/scratch/{{ slurm_config.account }}/containers/vllm_v10.1.1.sif"
-export PRJ="/scratch/{{ slurm_config.account }}"   # will be /project in container
 export SCR="$PWD"                          # SCR = scratch directory, will be /workspace in container
 export ACC="{{ slurm_config.account }}"
+
+# Determine which project's scratch to mount as /project
+# If MODEL starts with /scratch/project_X, use that project; otherwise use current project
+MODEL_PATH="{{ env_vars.MODEL }}"
+if [[ "$MODEL_PATH" =~ ^/scratch/(project_[0-9]+)/ ]]; then
+  MODEL_PROJECT="${BASH_REMATCH[1]}"
+  export PRJ="/scratch/$MODEL_PROJECT"
+  echo "Detected model in $MODEL_PROJECT, binding /scratch/$MODEL_PROJECT to /project"
+else
+  export PRJ="/scratch/{{ slurm_config.account }}"
+  echo "Model not in different project scratch, using current project"
+fi
 
 # Parse gres for GPU count (e.g., "gpu:mi250:4" -> 4)
 GRES="{{ slurm_config.gres }}"
@@ -39,18 +50,17 @@ export N_NODES=1
 export TP="$GPUS"
 export MODEL_ID="{{ env_vars.MODEL }}"
 
-# If MODEL_ID starts with /scratch, resolve it to the real /pfs path for container access
-if [[ "$MODEL_ID" == /scratch/* ]]; then
-  RESOLVED_MODEL_ID=$(readlink -f "$MODEL_ID")
-  echo "Resolved /scratch path: $MODEL_ID -> $RESOLVED_MODEL_ID"
-  export MODEL_ID="$RESOLVED_MODEL_ID"
+# Rewrite model path for container: /scratch/project_X/... -> /project/...
+if [[ "$MODEL_ID" =~ ^/scratch/project_[0-9]+/(.*)$ ]]; then
+  MODEL_ID_CONTAINER="/project/${BASH_REMATCH[1]}"
+  echo "Rewriting model path for container: $MODEL_ID -> $MODEL_ID_CONTAINER"
+  export MODEL_ID="$MODEL_ID_CONTAINER"
 fi
 
 srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_config.time }}" --gpus-per-task="$GPUS" \
   singularity exec --rocm --cleanenv \
     --bind "$SCR":/workspace \
     --bind "$PRJ":/project \
-    --bind /pfs:/pfs \
     --bind /usr/share/libdrm:/usr/share/libdrm \
     --env SLURM_JOB_ID="$SLURM_JOB_ID" \
     --env MODEL_ID="$MODEL_ID" \
