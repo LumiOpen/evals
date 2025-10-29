@@ -39,10 +39,22 @@ export N_NODES=1
 export TP="$GPUS"
 export MODEL_ID="{{ env_vars.MODEL }}"
 
+# If MODEL_ID is a local path in a different project, bind that project too
+MODEL_BIND_ARGS=""
+if [[ "${MODEL_ID}" == /scratch/project_* ]]; then
+  # Extract project number from path (e.g., /scratch/project_462000963/... -> project_462000963)
+  MODEL_PROJECT=$(echo "$MODEL_ID" | grep -oP '/scratch/\Kproject_\d+')
+  if [[ "$MODEL_PROJECT" != "$ACC" ]] && [[ -n "$MODEL_PROJECT" ]]; then
+    echo "Model is in different project ($MODEL_PROJECT), adding bind mount"
+    MODEL_BIND_ARGS="--bind /scratch/$MODEL_PROJECT:/scratch/$MODEL_PROJECT"
+  fi
+fi
+
 srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_config.time }}" --gpus-per-task="$GPUS" \
   singularity exec --rocm --cleanenv \
     --bind "$SCR":/workspace \
     --bind "$PRJ":/project \
+    $MODEL_BIND_ARGS \
     --bind /usr/share/libdrm:/usr/share/libdrm \
     --env SLURM_JOB_ID="$SLURM_JOB_ID" \
     --env MODEL_ID="$MODEL_ID" \
