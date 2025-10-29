@@ -43,7 +43,7 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
   singularity exec --rocm --cleanenv \
     --bind "$SCR":/workspace \
     --bind "$PRJ":/project \
-    --bind /pfs/lustrep2/scratch:/scratch \
+    --bind /pfs:/pfs \
     --bind /usr/share/libdrm:/usr/share/libdrm \
     --env SLURM_JOB_ID="$SLURM_JOB_ID" \
     --env MODEL_ID="$MODEL_ID" \
