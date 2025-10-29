@@ -380,12 +380,14 @@ evals = {
     "helmet_recall_8k": HELMETConfig("helmet_recall_8k", "recall_8k"),
     "helmet_recall_16k": HELMETConfig("helmet_recall_16k", "recall_16k"),
     "helmet_recall_32k": HELMETConfig("helmet_recall_32k", "recall_32k"),
+    "helmet_recall_64k": HELMETConfig("helmet_recall_64k", "recall_64k"),
+    "helmet_recall_128k": HELMETConfig("helmet_recall_128k", "recall_128k"),
     "helmet_recall_vllm": HELMETConfig("helmet_recall_vllm", "recall_vllm"),
     "helmet_recall_poro2_rope": HELMETConfig("helmet_recall_poro2_rope", "recall_poro2_rope"),
     "helmet_recall_poro2_base": HELMETConfig("helmet_recall_poro2_base", "recall_poro2_base"),
     "helmet_recall_poro2_instruct": HELMETConfig("helmet_recall_poro2_instruct", "recall_poro2_instruct"),
     "helmet_recall_llama31_8b_base": HELMETConfig("helmet_recall_llama31_8b_base", "recall_llama31_8b_base"),
-    "helmet_recall_llama31_8b_instruct": HELMETConfig("helmet_recall_llama31_8b_instruct", "recall_llama31_8b_instruct"),
+    "helmet_recall_llama31_8b_instruct": HELMETConfig("helmet_recall_llama31_8b_instruct", "helmet_recall_llama31_8b_instruct"),
     "helmet_niah": HELMETConfig("helmet_niah", "niah"),
     "helmet_niah_long": HELMETConfig("helmet_niah_long", "niah_long"),
     "helmet_ruler": HELMETConfig("helmet_ruler", "ruler"),
@@ -397,6 +399,8 @@ evals = {
     "helmet_rag_8k": HELMETConfig("helmet_rag_8k", "rag_8k"),
     "helmet_rag_16k": HELMETConfig("helmet_rag_16k", "rag_16k"),
     "helmet_rag_32k": HELMETConfig("helmet_rag_32k", "rag_32k"),
+    "helmet_rag_64k": HELMETConfig("helmet_rag_64k", "rag_64k"),
+    "helmet_rag_128k": HELMETConfig("helmet_rag_128k", "rag_128k"),
     "helmet_rag_poro2": HELMETConfig("helmet_rag_poro2", "rag_poro2"),
     "helmet_rag_vllm": HELMETConfig("helmet_rag_vllm", "rag_vllm"),
 
@@ -406,6 +410,8 @@ evals = {
     "helmet_rerank_8k": HELMETConfig("helmet_rerank_8k", "rerank_8k"),
     "helmet_rerank_16k": HELMETConfig("helmet_rerank_16k", "rerank_16k"),
     "helmet_rerank_32k": HELMETConfig("helmet_rerank_32k", "rerank_32k"),
+    "helmet_rerank_64k": HELMETConfig("helmet_rerank_64k", "rerank_64k"),
+    "helmet_rerank_128k": HELMETConfig("helmet_rerank_128k", "rerank_128k"),
     "helmet_rerank_poro2": HELMETConfig("helmet_rerank_poro2", "rerank_poro2"),
 
     # Citation tasks
@@ -414,6 +420,8 @@ evals = {
     "helmet_cite_8k": HELMETConfig("helmet_cite_8k", "cite_8k"),
     "helmet_cite_16k": HELMETConfig("helmet_cite_16k", "cite_16k"),
     "helmet_cite_32k": HELMETConfig("helmet_cite_32k", "cite_32k"),
+    "helmet_cite_64k": HELMETConfig("helmet_cite_64k", "cite_64k"),
+    "helmet_cite_128k": HELMETConfig("helmet_cite_128k", "cite_128k"),
     "helmet_cite_full_8k": HELMETConfig("helmet_cite_full_8k", "cite_full_8k"),
     "helmet_cite_full_16k": HELMETConfig("helmet_cite_full_16k", "cite_full_16k"),
     "helmet_cite_full_32k": HELMETConfig("helmet_cite_full_32k", "cite_full_32k"),
@@ -422,6 +430,8 @@ evals = {
     "helmet_alce_nocite_8k": HELMETConfig("helmet_alce_nocite_8k", "alce_nocite_8k"),
     "helmet_alce_nocite_16k": HELMETConfig("helmet_alce_nocite_16k", "alce_nocite_16k"),
     "helmet_alce_nocite_32k": HELMETConfig("helmet_alce_nocite_32k", "alce_nocite_32k"),
+    "helmet_alce_nocite_64k": HELMETConfig("helmet_alce_nocite_64k", "alce_nocite_64k"),
+    "helmet_alce_nocite_128k": HELMETConfig("helmet_alce_nocite_128k", "alce_nocite_128k"),
     "helmet_alce_nocite_full_8k": HELMETConfig("helmet_alce_nocite_full_8k", "alce_nocite_full_8k"),
     "helmet_alce_nocite_full_16k": HELMETConfig("helmet_alce_nocite_full_16k", "alce_nocite_full_16k"),
     "helmet_alce_nocite_full_32k": HELMETConfig("helmet_alce_nocite_full_32k", "alce_nocite_full_32k"),
@@ -432,6 +442,8 @@ evals = {
     "helmet_longqa_8k": HELMETConfig("helmet_longqa_8k", "longqa_8k"),
     "helmet_longqa_16k": HELMETConfig("helmet_longqa_16k", "longqa_16k"),
     "helmet_longqa_32k": HELMETConfig("helmet_longqa_32k", "longqa_32k"),
+    "helmet_longqa_64k": HELMETConfig("helmet_longqa_64k", "longqa_64k"),
+    "helmet_longqa_128k": HELMETConfig("helmet_longqa_128k", "longqa_128k"),
     "helmet_longqa_poro2": HELMETConfig("helmet_longqa_poro2", "longqa_poro2"),
 
     # Summarization tasks
@@ -440,6 +452,8 @@ evals = {
     "helmet_summ_8k": HELMETConfig("helmet_summ_8k", "summ_8k"),
     "helmet_summ_16k": HELMETConfig("helmet_summ_16k", "summ_16k"),
     "helmet_summ_32k": HELMETConfig("helmet_summ_32k", "summ_32k"),
+    "helmet_summ_64k": HELMETConfig("helmet_summ_64k", "summ_64k"),
+    "helmet_summ_128k": HELMETConfig("helmet_summ_128k", "summ_128k"),
     "helmet_summ_poro2": HELMETConfig("helmet_summ_poro2", "summ_poro2"),
 
     # In-context learning tasks
@@ -448,6 +462,8 @@ evals = {
     "helmet_icl_8k": HELMETConfig("helmet_icl_8k", "icl_8k"),
     "helmet_icl_16k": HELMETConfig("helmet_icl_16k", "icl_16k"),
     "helmet_icl_32k": HELMETConfig("helmet_icl_32k", "icl_32k"),
+    "helmet_icl_64k": HELMETConfig("helmet_icl_64k", "icl_64k"),
+    "helmet_icl_128k": HELMETConfig("helmet_icl_128k", "icl_128k"),
     "helmet_icl_poro2": HELMETConfig("helmet_icl_poro2", "icl_poro2"),
 
     # Demo config for testing
