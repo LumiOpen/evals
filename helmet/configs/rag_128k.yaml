@@ -6,3 +6,4 @@ demo_files: data/kilt/nq-train-multikilt_1000_k3_dep6.jsonl,data/kilt/triviaqa-t
 use_chat_template: false
 shots: 2
 stop_new_line: true
+max_test_samples: 2000
