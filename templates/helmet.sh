@@ -313,16 +313,40 @@ echo "DEBUG: HELMET_OUTPUT_DIR=${HELMET_OUTPUT_DIR}"
 echo "DEBUG: BACKEND_ARGS=${BACKEND_ARGS}"
 echo "DEBUG: CHAT_TEMPLATE_FLAG=${CHAT_TEMPLATE_FLAG}"
 
-python eval.py \
-  --config configs/{{ env_vars.CONFIG_NAME }}.yaml \
-  --model_name_or_path "$MODEL_ID" \
-  --output_dir "$HELMET_OUTPUT_DIR" \
-  $BACKEND_ARGS \
-  $CHAT_TEMPLATE_FLAG \
-  $ROPE_FLAGS \
-  --overwrite
+# Retry logic for aiter-related failures
+MAX_RETRIES=3
+RETRY_DELAY=30
+for attempt in $(seq 1 $MAX_RETRIES); do
+  echo "Attempt $attempt/$MAX_RETRIES..."
 
-echo "== HELMET evaluation complete =="
+  if python eval.py \
+    --config configs/{{ env_vars.CONFIG_NAME }}.yaml \
+    --model_name_or_path "$MODEL_ID" \
+    --output_dir "$HELMET_OUTPUT_DIR" \
+    $BACKEND_ARGS \
+    $CHAT_TEMPLATE_FLAG \
+    $ROPE_FLAGS \
+    --overwrite; then
+    echo "== HELMET evaluation complete (attempt $attempt) =="
+    break
+  else
+    EXIT_CODE=$?
+    echo "Attempt $attempt failed with exit code $EXIT_CODE"
+
+    if [ $attempt -lt $MAX_RETRIES ]; then
+      echo "Retrying in ${RETRY_DELAY}s..."
+      sleep $RETRY_DELAY
+
+      # Re-stage aiter to fix potential module issues
+      echo "Re-staging aiter before retry..."
+      python /workspace/tools/stage_aiter.py || echo "Warning: aiter re-staging failed"
+    else
+      echo "All $MAX_RETRIES attempts failed"
+      exit $EXIT_CODE
+    fi
+  fi
+done
+
 echo "Results saved to: $HELMET_OUTPUT_DIR"
 ls -lh "$HELMET_OUTPUT_DIR" || true
 '
