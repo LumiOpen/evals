@@ -1,0 +1,9 @@
+input_max_length: 65536
+datasets: alce_asqa_345
+generation_max_length: 300
+test_files: data/alce/asqa_eval_gtr_top2000.json
+demo_files: prompts/asqa_nocite.json
+use_chat_template: false
+shots: 2
+stop_new_line: false
+max_test_samples: 2000

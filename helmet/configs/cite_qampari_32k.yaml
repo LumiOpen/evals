@@ -1,0 +1,9 @@
+input_max_length: 32768
+datasets: alce_qampari_165
+generation_max_length: 300
+test_files: data/alce/qampari_eval_gtr_top2000.json
+demo_files: prompts/qampari_revised.json
+use_chat_template: false
+shots: 2
+stop_new_line: false
+max_test_samples: 2000

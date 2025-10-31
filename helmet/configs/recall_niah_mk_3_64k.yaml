@@ -1,0 +1,8 @@
+input_max_length: 65536
+datasets: ruler_niah_mk_3
+generation_max_length: 20
+test_files: data/ruler/niah_multikey_3/validation_65536.jsonl
+demo_files: ''
+use_chat_template: false
+shots: 0
+stop_new_line: false

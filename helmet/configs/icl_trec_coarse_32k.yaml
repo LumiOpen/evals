@@ -1,0 +1,8 @@
+input_max_length: 32768
+datasets: icl_trec_coarse_400shot_balance
+generation_max_length: 10
+test_files: ''
+demo_files: ''
+use_chat_template: false
+shots: -1
+stop_new_line: false

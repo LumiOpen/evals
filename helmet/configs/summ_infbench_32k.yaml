@@ -1,0 +1,9 @@
+input_max_length: 32768
+datasets: infbench_sum_eng_27768
+generation_max_length: 1000
+test_files: ''
+demo_files: ''
+use_chat_template: false
+shots: 0
+stop_new_line: false
+max_test_samples: 100
