@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# helmet_cpt.sh - Run all HELMET evaluations on a checkpoint with vllm backend
+# helmet_cpt.sh - Run all HELMET evaluations on a model with vllm backend
+# Supports both HuggingFace model IDs (e.g., meta-llama/Meta-Llama-3.1-8B) and local checkpoint paths
 set -euo pipefail
 
 # Config from env, with sane defaults
 PROJECT="${PROJECT:-project_462000963}"
 QUEUE="${QUEUE:-standard-g}"
-MODEL="${1:?usage: $0 <model_checkpoint_path>}"
+MODEL="${1:?usage: $0 <model_id_or_checkpoint_path>}"
 
-# Backend is fixed to vllm for checkpoint evaluation
+# Backend is fixed to vllm for evaluation
 BACKEND="vllm"
 
 # Optional env knobs
@@ -41,7 +42,7 @@ run() {
 }
 
 echo "========================================"
-echo "Running HELMET evaluations on checkpoint:"
+echo "Running HELMET evaluations on model:"
 echo "  Model: $MODEL"
 echo "  Backend: $BACKEND"
 echo "  Project: $PROJECT"
@@ -49,31 +50,119 @@ echo "  Queue: $QUEUE"
 echo "========================================"
 echo ""
 
-# 8k context tasks (2 GPUs, 4 hours, max_model_len=8192)
+# ==============================================================================
+# 8k CONTEXT TASKS (max_model_len=8192)
+# ==============================================================================
 echo "=== Launching 8k context tasks ==="
-run 4:00:00 "gpu:mi250:2" 8192 helmet_recall_8k helmet_rag_8k helmet_rerank_8k helmet_cite_8k helmet_alce_nocite_8k helmet_longqa_8k helmet_summ_8k helmet_icl_8k
 
-# 16k context tasks (2 GPUs, 6 hours, max_model_len=16384)
+# RAG tasks (4 datasets, per-dataset with optimized timing)
+echo "--- RAG 8k (per-dataset) ---"
+run 2:00:00 "gpu:mi250:2" 8192 helmet_rag_nq_8k helmet_rag_triviaqa_8k
+run 1:30:00 "gpu:mi250:2" 8192 helmet_rag_hotpotqa_8k
+run 0:30:00 "gpu:mi250:2" 8192 helmet_rag_popqa_8k
+
+# Longqa tasks (3 datasets, per-dataset with optimized timing)
+echo "--- Longqa 8k (per-dataset) ---"
+run 1:00:00 "gpu:mi250:2" 8192 helmet_longqa_narrativeqa_8k
+run 0:30:00 "gpu:mi250:2" 8192 helmet_longqa_infbench_qa_8k helmet_longqa_infbench_choice_8k
+
+# Other tasks (bundled, unchanged)
+echo "--- Other 8k tasks ---"
+run 4:00:00 "gpu:mi250:2" 8192 helmet_recall_8k helmet_rerank_8k helmet_cite_8k helmet_alce_nocite_8k helmet_summ_8k helmet_icl_8k
+
+# ==============================================================================
+# 16k CONTEXT TASKS (max_model_len=16384)
+# ==============================================================================
+echo ""
 echo "=== Launching 16k context tasks ==="
-run 6:00:00 "gpu:mi250:2" 16384 helmet_recall_16k helmet_rag_16k helmet_rerank_16k helmet_cite_16k helmet_alce_nocite_16k helmet_longqa_16k helmet_summ_16k helmet_icl_16k
 
-# 32k context tasks (4 GPUs, 8 hours, max_model_len=32768)
+# RAG tasks (4 datasets, per-dataset with optimized timing)
+echo "--- RAG 16k (per-dataset) ---"
+run 3:00:00 "gpu:mi250:4" 16384 helmet_rag_nq_16k helmet_rag_triviaqa_16k
+run 2:30:00 "gpu:mi250:4" 16384 helmet_rag_hotpotqa_16k
+run 0:30:00 "gpu:mi250:4" 16384 helmet_rag_popqa_16k
+
+# Longqa tasks (3 datasets, per-dataset with optimized timing)
+echo "--- Longqa 16k (per-dataset) ---"
+run 2:30:00 "gpu:mi250:4" 16384 helmet_longqa_narrativeqa_16k
+run 0:30:00 "gpu:mi250:4" 16384 helmet_longqa_infbench_qa_16k helmet_longqa_infbench_choice_16k
+
+# Other tasks (bundled, unchanged)
+echo "--- Other 16k tasks ---"
+run 12:00:00 "gpu:mi250:4" 16384 helmet_recall_16k helmet_rerank_16k helmet_cite_16k helmet_alce_nocite_16k helmet_summ_16k helmet_icl_16k
+
+# ==============================================================================
+# 32k CONTEXT TASKS (max_model_len=32768)
+# ==============================================================================
+echo ""
 echo "=== Launching 32k context tasks ==="
-run 8:00:00 "gpu:mi250:4" 32768 helmet_recall_32k helmet_rag_32k helmet_rerank_32k helmet_cite_32k helmet_alce_nocite_32k helmet_longqa_32k helmet_summ_32k helmet_icl_32k
 
-# 64k context tasks (4 GPUs, 12 hours, max_model_len=65536)
+# RAG tasks (4 datasets, per-dataset with optimized timing)
+echo "--- RAG 32k (per-dataset) ---"
+run 4:00:00 "gpu:mi250:8" 32768 helmet_rag_nq_32k helmet_rag_triviaqa_32k
+run 3:00:00 "gpu:mi250:8" 32768 helmet_rag_hotpotqa_32k
+run 1:00:00 "gpu:mi250:8" 32768 helmet_rag_popqa_32k
+
+# Longqa tasks (3 datasets, per-dataset with optimized timing)
+echo "--- Longqa 32k (per-dataset) ---"
+run 6:00:00 "gpu:mi250:8" 32768 helmet_longqa_narrativeqa_32k
+run 1:00:00 "gpu:mi250:8" 32768 helmet_longqa_infbench_qa_32k helmet_longqa_infbench_choice_32k
+
+# Other tasks (bundled, unchanged)
+echo "--- Other 32k tasks ---"
+run 12:00:00 "gpu:mi250:8" 32768 helmet_recall_32k helmet_rerank_32k helmet_cite_32k helmet_alce_nocite_32k helmet_summ_32k helmet_icl_32k
+
+# ==============================================================================
+# 64k CONTEXT TASKS (max_model_len=65536)
+# ==============================================================================
+echo ""
 echo "=== Launching 64k context tasks ==="
-run 12:00:00 "gpu:mi250:4" 65536 helmet_recall_64k helmet_rag_64k helmet_rerank_64k helmet_cite_64k helmet_alce_nocite_64k helmet_longqa_64k helmet_summ_64k helmet_icl_64k
 
-# 128k context tasks (8 GPUs, 24 hours, max_model_len=131072)
+# RAG tasks (4 datasets, per-dataset with optimized timing)
+echo "--- RAG 64k (per-dataset) ---"
+run 6:00:00 "gpu:mi250:8" 65536 helmet_rag_nq_64k helmet_rag_triviaqa_64k
+run 5:00:00 "gpu:mi250:8" 65536 helmet_rag_hotpotqa_64k
+run 1:30:00 "gpu:mi250:8" 65536 helmet_rag_popqa_64k
+
+# Longqa tasks (3 datasets, per-dataset with optimized timing)
+echo "--- Longqa 64k (per-dataset) ---"
+run 13:00:00 "gpu:mi250:8" 65536 helmet_longqa_narrativeqa_64k
+run 1:00:00 "gpu:mi250:8" 65536 helmet_longqa_infbench_qa_64k helmet_longqa_infbench_choice_64k
+
+# Other tasks (bundled, unchanged)
+echo "--- Other 64k tasks ---"
+run 18:00:00 "gpu:mi250:8" 65536 helmet_recall_64k helmet_rerank_64k helmet_cite_64k helmet_alce_nocite_64k helmet_summ_64k helmet_icl_64k
+
+# ==============================================================================
+# 128k CONTEXT TASKS (max_model_len=131072)
+# ==============================================================================
+echo ""
 echo "=== Launching 128k context tasks ==="
-run 24:00:00 "gpu:mi250:8" 131072 helmet_recall_128k helmet_rag_128k helmet_rerank_128k helmet_cite_128k helmet_alce_nocite_128k helmet_longqa_128k helmet_summ_128k helmet_icl_128k
+
+# RAG tasks (4 datasets, per-dataset with optimized timing)
+echo "--- RAG 128k (per-dataset) ---"
+run 10:00:00 "gpu:mi250:8" 131072 helmet_rag_nq_128k helmet_rag_triviaqa_128k
+run 8:00:00 "gpu:mi250:8" 131072 helmet_rag_hotpotqa_128k
+run 2:00:00 "gpu:mi250:8" 131072 helmet_rag_popqa_128k
+
+# Longqa tasks (3 datasets, per-dataset with optimized timing)
+echo "--- Longqa 128k (per-dataset) ---"
+run 22:00:00 "gpu:mi250:8" 131072 helmet_longqa_narrativeqa_128k
+run 2:00:00 "gpu:mi250:8" 131072 helmet_longqa_infbench_qa_128k helmet_longqa_infbench_choice_128k
+
+# Other tasks (bundled, unchanged)
+echo "--- Other 128k tasks ---"
+run 24:00:00 "gpu:mi250:8" 131072 helmet_recall_128k helmet_rerank_128k helmet_cite_128k helmet_alce_nocite_128k helmet_summ_128k helmet_icl_128k
 
 echo ""
 echo "========================================"
-echo "All 40 HELMET evaluation tasks queued!"
-echo "  - 8 tasks × 5 context lengths"
-echo "  - 8k, 16k, 32k, 64k, 128k"
-echo "  - recall, rag, rerank, cite, alce_nocite, longqa, summ, icl"
+echo "All HELMET evaluation tasks queued!"
+echo "  Per-dataset tasks:"
+echo "    - RAG: 20 tasks (4 datasets × 5 contexts)"
+echo "    - Longqa: 15 tasks (3 datasets × 5 contexts)"
+echo "  Bundled tasks:"
+echo "    - 6 other task types × 5 contexts = 30 tasks"
+echo "  Total: 65 tasks"
+echo "  Context lengths: 8k, 16k, 32k, 64k, 128k"
 echo "========================================"
 echo "Monitor progress with: python watch.py"
