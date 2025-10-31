@@ -121,7 +121,7 @@ echo "=== Launching 64k context tasks ==="
 # RAG tasks (4 datasets, per-dataset with optimized timing)
 echo "--- RAG 64k (per-dataset) ---"
 run 6:00:00 "gpu:mi250:8" 65536 helmet_rag_nq_64k helmet_rag_triviaqa_64k
-run 15:00:00 "gpu:mi250:8" 65536 helmet_rag_hotpotqa_64k
+run 20:00:00 "gpu:mi250:8" 65536 helmet_rag_hotpotqa_64k
 run 4:30:00 "gpu:mi250:8" 65536 helmet_rag_popqa_64k
 
 # Longqa tasks (3 datasets, per-dataset with optimized timing)
