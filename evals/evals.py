@@ -404,6 +404,28 @@ evals = {
     "helmet_rag_poro2": HELMETConfig("helmet_rag_poro2", "rag_poro2"),
     "helmet_rag_vllm": HELMETConfig("helmet_rag_vllm", "rag_vllm"),
 
+    # RAG per-dataset tasks
+    "helmet_rag_nq_8k": HELMETConfig("helmet_rag_nq_8k", "rag_nq_8k"),
+    "helmet_rag_nq_16k": HELMETConfig("helmet_rag_nq_16k", "rag_nq_16k"),
+    "helmet_rag_nq_32k": HELMETConfig("helmet_rag_nq_32k", "rag_nq_32k"),
+    "helmet_rag_nq_64k": HELMETConfig("helmet_rag_nq_64k", "rag_nq_64k"),
+    "helmet_rag_nq_128k": HELMETConfig("helmet_rag_nq_128k", "rag_nq_128k"),
+    "helmet_rag_triviaqa_8k": HELMETConfig("helmet_rag_triviaqa_8k", "rag_triviaqa_8k"),
+    "helmet_rag_triviaqa_16k": HELMETConfig("helmet_rag_triviaqa_16k", "rag_triviaqa_16k"),
+    "helmet_rag_triviaqa_32k": HELMETConfig("helmet_rag_triviaqa_32k", "rag_triviaqa_32k"),
+    "helmet_rag_triviaqa_64k": HELMETConfig("helmet_rag_triviaqa_64k", "rag_triviaqa_64k"),
+    "helmet_rag_triviaqa_128k": HELMETConfig("helmet_rag_triviaqa_128k", "rag_triviaqa_128k"),
+    "helmet_rag_hotpotqa_8k": HELMETConfig("helmet_rag_hotpotqa_8k", "rag_hotpotqa_8k"),
+    "helmet_rag_hotpotqa_16k": HELMETConfig("helmet_rag_hotpotqa_16k", "rag_hotpotqa_16k"),
+    "helmet_rag_hotpotqa_32k": HELMETConfig("helmet_rag_hotpotqa_32k", "rag_hotpotqa_32k"),
+    "helmet_rag_hotpotqa_64k": HELMETConfig("helmet_rag_hotpotqa_64k", "rag_hotpotqa_64k"),
+    "helmet_rag_hotpotqa_128k": HELMETConfig("helmet_rag_hotpotqa_128k", "rag_hotpotqa_128k"),
+    "helmet_rag_popqa_8k": HELMETConfig("helmet_rag_popqa_8k", "rag_popqa_8k"),
+    "helmet_rag_popqa_16k": HELMETConfig("helmet_rag_popqa_16k", "rag_popqa_16k"),
+    "helmet_rag_popqa_32k": HELMETConfig("helmet_rag_popqa_32k", "rag_popqa_32k"),
+    "helmet_rag_popqa_64k": HELMETConfig("helmet_rag_popqa_64k", "rag_popqa_64k"),
+    "helmet_rag_popqa_128k": HELMETConfig("helmet_rag_popqa_128k", "rag_popqa_128k"),
+
     # Reranking tasks
     "helmet_rerank": HELMETConfig("helmet_rerank", "rerank"),
     "helmet_rerank_short": HELMETConfig("helmet_rerank_short", "rerank_short"),
@@ -445,6 +467,23 @@ evals = {
     "helmet_longqa_64k": HELMETConfig("helmet_longqa_64k", "longqa_64k"),
     "helmet_longqa_128k": HELMETConfig("helmet_longqa_128k", "longqa_128k"),
     "helmet_longqa_poro2": HELMETConfig("helmet_longqa_poro2", "longqa_poro2"),
+
+    # Longqa per-dataset tasks
+    "helmet_longqa_narrativeqa_8k": HELMETConfig("helmet_longqa_narrativeqa_8k", "longqa_narrativeqa_8k"),
+    "helmet_longqa_narrativeqa_16k": HELMETConfig("helmet_longqa_narrativeqa_16k", "longqa_narrativeqa_16k"),
+    "helmet_longqa_narrativeqa_32k": HELMETConfig("helmet_longqa_narrativeqa_32k", "longqa_narrativeqa_32k"),
+    "helmet_longqa_narrativeqa_64k": HELMETConfig("helmet_longqa_narrativeqa_64k", "longqa_narrativeqa_64k"),
+    "helmet_longqa_narrativeqa_128k": HELMETConfig("helmet_longqa_narrativeqa_128k", "longqa_narrativeqa_128k"),
+    "helmet_longqa_infbench_qa_8k": HELMETConfig("helmet_longqa_infbench_qa_8k", "longqa_infbench_qa_8k"),
+    "helmet_longqa_infbench_qa_16k": HELMETConfig("helmet_longqa_infbench_qa_16k", "longqa_infbench_qa_16k"),
+    "helmet_longqa_infbench_qa_32k": HELMETConfig("helmet_longqa_infbench_qa_32k", "longqa_infbench_qa_32k"),
+    "helmet_longqa_infbench_qa_64k": HELMETConfig("helmet_longqa_infbench_qa_64k", "longqa_infbench_qa_64k"),
+    "helmet_longqa_infbench_qa_128k": HELMETConfig("helmet_longqa_infbench_qa_128k", "longqa_infbench_qa_128k"),
+    "helmet_longqa_infbench_choice_8k": HELMETConfig("helmet_longqa_infbench_choice_8k", "longqa_infbench_choice_8k"),
+    "helmet_longqa_infbench_choice_16k": HELMETConfig("helmet_longqa_infbench_choice_16k", "longqa_infbench_choice_16k"),
+    "helmet_longqa_infbench_choice_32k": HELMETConfig("helmet_longqa_infbench_choice_32k", "longqa_infbench_choice_32k"),
+    "helmet_longqa_infbench_choice_64k": HELMETConfig("helmet_longqa_infbench_choice_64k", "longqa_infbench_choice_64k"),
+    "helmet_longqa_infbench_choice_128k": HELMETConfig("helmet_longqa_infbench_choice_128k", "longqa_infbench_choice_128k"),
 
     # Summarization tasks
     "helmet_summ": HELMETConfig("helmet_summ", "summ"),
