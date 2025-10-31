@@ -1,0 +1,9 @@
+input_max_length: 8192
+datasets: kilt_popqa_3
+generation_max_length: 20
+test_files: data/kilt/popqa_test_1000_k50_dep6.jsonl
+demo_files: data/kilt/popqa_test_1000_k3_dep6.jsonl
+use_chat_template: false
+shots: 2
+stop_new_line: true
+max_test_samples: 2000

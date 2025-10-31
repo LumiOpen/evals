@@ -1,0 +1,8 @@
+input_max_length: 131072
+datasets: narrativeqa_130604
+generation_max_length: 100
+test_files: ','
+demo_files: ','
+use_chat_template: true
+shots: 2
+stop_new_line: false

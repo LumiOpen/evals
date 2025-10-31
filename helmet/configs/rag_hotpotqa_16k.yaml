@@ -1,0 +1,9 @@
+input_max_length: 16384
+datasets: kilt_hotpotqa
+generation_max_length: 20
+test_files: data/kilt/hotpotqa-dev-multikilt_1000_k105_dep3.jsonl
+demo_files: data/kilt/hotpotqa-train-multikilt_1000_k3_dep3.jsonl
+use_chat_template: false
+shots: 2
+stop_new_line: true
+max_test_samples: 2000
