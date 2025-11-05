@@ -49,20 +49,24 @@ def read_command_log():
 
 def get_jobs():
     command = ['squeue', '--me', '-o', '%i %T %j']
-    process = subprocess.Popen(command, stdout=subprocess.PIPE)
-    output, error = process.communicate()
-    if error:
-        print(f"Error: {error}")
-        return None
+    try:
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        output, error = process.communicate()
+        if error:
+            print(f"Error: {error}")
+            return []
 
-    running_jobs = []
-    output_lines = output.decode('utf-8').split('\n')[1:]  # Skip the header line
-    for line in output_lines:
-        if line:  # Skip empty lines
-            job_id, status, job_name = line.split()
-            if status in STATUS_RUNNING:
-                running_jobs.append(job_id)
-    return running_jobs
+        running_jobs = []
+        output_lines = output.decode('utf-8').split('\n')[1:]  # Skip the header line
+        for line in output_lines:
+            if line:  # Skip empty lines
+                job_id, status, job_name = line.split()
+                if status in STATUS_RUNNING:
+                    running_jobs.append(job_id)
+        return running_jobs
+    except FileNotFoundError:
+        # squeue not available (not on SLURM system)
+        return []
 
 def identify_scheduled_tasks():
     log_entries = read_command_log()
@@ -70,7 +74,9 @@ def identify_scheduled_tasks():
     for job_id in get_jobs():
         if job_id in log_entries:
             entry = log_entries[job_id]
-            identified_jobs[(entry["model"], entry["eval"])] = entry
+            # Include backend in the key to distinguish between HF and vLLM jobs
+            backend = entry.get("backend", "hf")  # Default to "hf" for old entries
+            identified_jobs[(entry["model"], entry["eval"], backend)] = entry
     return identified_jobs
         
 
