@@ -596,7 +596,7 @@ class GeminiModel(LLM):
             generation_max_length=generation_max_length,
             generation_min_length=generation_min_length,
             do_sample=do_sample,
-            stop_newline=stop_new_line,
+            stop_new_line=stop_new_line,
             use_chat_template=use_chat_template,
             system_message=system_message,
         )
@@ -702,7 +702,7 @@ class TogetherModel(LLM):
             generation_max_length=generation_max_length,
             generation_min_length=generation_min_length,
             do_sample=do_sample,
-            stop_newline=stop_new_line,
+            stop_new_line=stop_new_line,
             use_chat_template=use_chat_template,
             system_message=system_message,
         )
@@ -869,7 +869,7 @@ class HFModel(LLM):
             generation_max_length=generation_max_length,
             generation_min_length=generation_min_length,
             do_sample=do_sample,
-            stop_newline=stop_new_line,
+            stop_new_line=stop_new_line,
             use_chat_template=use_chat_template,
             system_message=system_message,
         )
