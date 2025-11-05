@@ -251,6 +251,8 @@ mkdir -p "$TMPDIR" "$PIP_CACHE_DIR"
 # Use --no-deps to avoid installing incompatible numpy 2.3 (container has compatible versions)
 PIP_INSTALL_DIR="$PIP_TMP_DIR/packages"
 mkdir -p "$PIP_INSTALL_DIR"
+# Downgrade datasets to <4.0.0 to restore trust_remote_code support for ICL tasks
+python -m pip install --target "$PIP_INSTALL_DIR" "datasets<4.0.0"
 python -m pip install --target "$PIP_INSTALL_DIR" --no-deps pytrec_eval rouge_score openai safetensors
 # Install only the openai dependencies not already in container
 python -m pip install --target "$PIP_INSTALL_DIR" --no-deps anyio distro httpx jiter pydantic sniffio tqdm typing-extensions certifi httpcore h11 idna annotated-types pydantic-core typing-inspection
