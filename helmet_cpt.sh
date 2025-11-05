@@ -76,11 +76,11 @@ run 4:00:00 "gpu:mi250:2" 8192 helmet_recall_8k helmet_rerank_8k helmet_cite_8k 
 echo ""
 echo "=== Launching 16k context tasks ==="
 
-# RAG tasks (4 datasets, per-dataset with optimized timing)
+# RAG tasks (4 datasets, per-dataset with increased time limits and 8 GPUs)
 echo "--- RAG 16k (per-dataset) ---"
-run 3:00:00 "gpu:mi250:4" 16384 helmet_rag_nq_16k helmet_rag_triviaqa_16k
-run 8:00:00 "gpu:mi250:4" 16384 helmet_rag_hotpotqa_16k
-run 2:00:00 "gpu:mi250:4" 16384 helmet_rag_popqa_16k
+run 3:00:00 "gpu:mi250:8" 16384 helmet_rag_nq_16k helmet_rag_triviaqa_16k
+run 24:00:00 "gpu:mi250:8" 16384 helmet_rag_hotpotqa_16k
+run 2:00:00 "gpu:mi250:8" 16384 helmet_rag_popqa_16k
 
 # Longqa tasks (3 datasets, per-dataset with optimized timing)
 echo "--- Longqa 16k (per-dataset) ---"
@@ -118,11 +118,11 @@ run 12:00:00 "gpu:mi250:8" 32768 helmet_recall_32k helmet_rerank_32k helmet_cite
 echo ""
 echo "=== Launching 64k context tasks ==="
 
-# RAG tasks (4 datasets, per-dataset with optimized timing)
+# RAG tasks (4 datasets, per-dataset with 24h time limit for double-tokenization overhead)
 echo "--- RAG 64k (per-dataset) ---"
-run 6:00:00 "gpu:mi250:8" 65536 helmet_rag_nq_64k helmet_rag_triviaqa_64k
-run 20:00:00 "gpu:mi250:8" 65536 helmet_rag_hotpotqa_64k
-run 4:30:00 "gpu:mi250:8" 65536 helmet_rag_popqa_64k
+run 24:00:00 "gpu:mi250:8" 65536 helmet_rag_nq_64k helmet_rag_triviaqa_64k
+run 24:00:00 "gpu:mi250:8" 65536 helmet_rag_hotpotqa_64k
+run 24:00:00 "gpu:mi250:8" 65536 helmet_rag_popqa_64k
 
 # Longqa tasks (3 datasets, per-dataset with optimized timing)
 echo "--- Longqa 64k (per-dataset) ---"
@@ -139,11 +139,11 @@ run 18:00:00 "gpu:mi250:8" 65536 helmet_recall_64k helmet_rerank_64k helmet_cite
 echo ""
 echo "=== Launching 128k context tasks ==="
 
-# RAG tasks (4 datasets, per-dataset with optimized timing)
+# RAG tasks (4 datasets, per-dataset with 24h time limit for double-tokenization overhead)
 echo "--- RAG 128k (per-dataset) ---"
-run 10:00:00 "gpu:mi250:8" 131072 helmet_rag_nq_128k helmet_rag_triviaqa_128k
-run 8:00:00 "gpu:mi250:8" 131072 helmet_rag_hotpotqa_128k
-run 6:00:00 "gpu:mi250:8" 131072 helmet_rag_popqa_128k
+run 24:00:00 "gpu:mi250:8" 131072 helmet_rag_nq_128k helmet_rag_triviaqa_128k
+run 24:00:00 "gpu:mi250:8" 131072 helmet_rag_hotpotqa_128k
+run 24:00:00 "gpu:mi250:8" 131072 helmet_rag_popqa_128k
 
 # Longqa tasks (3 datasets, per-dataset with optimized timing)
 echo "--- Longqa 128k (per-dataset) ---"
