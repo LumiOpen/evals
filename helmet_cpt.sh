@@ -70,9 +70,17 @@ run 0:30:00 "gpu:mi250:2" 8192 helmet_longqa_infbench_qa_8k helmet_longqa_infben
 echo "--- ICL 8k (per-dataset) ---"
 run 1:00:00 "gpu:mi250:2" 8192 helmet_icl_trec_coarse_8k helmet_icl_trec_fine_8k helmet_icl_banking77_8k helmet_icl_clinic_8k helmet_icl_nlu_8k
 
-# Other tasks (bundled)
+# CITE tasks (per-dataset)
+echo "--- CITE 8k (per-dataset) ---"
+run 2:00:00 "gpu:mi250:2" 8192 helmet_cite_asqa_8k helmet_cite_qampari_8k
+
+# SUMM tasks (per-dataset)
+echo "--- SUMM 8k (per-dataset) ---"
+run 1:00:00 "gpu:mi250:2" 8192 helmet_summ_infbench_8k helmet_summ_multi_lexsum_8k
+
+# Other tasks (single-dataset)
 echo "--- Other 8k tasks ---"
-run 4:00:00 "gpu:mi250:2" 8192 helmet_recall_8k helmet_rerank_8k helmet_cite_8k helmet_alce_nocite_8k helmet_summ_8k
+run 1:00:00 "gpu:mi250:2" 8192 helmet_rerank_8k helmet_alce_nocite_8k
 
 # ==============================================================================
 # 16k CONTEXT TASKS (max_model_len=16384)
@@ -95,9 +103,17 @@ run 0:30:00 "gpu:mi250:4" 16384 helmet_longqa_infbench_qa_16k helmet_longqa_infb
 echo "--- ICL 16k (per-dataset) ---"
 run 2:00:00 "gpu:mi250:8" 16384 helmet_icl_trec_coarse_16k helmet_icl_trec_fine_16k helmet_icl_banking77_16k helmet_icl_clinic_16k helmet_icl_nlu_16k
 
-# Other tasks (bundled)
+# CITE tasks (per-dataset)
+echo "--- CITE 16k (per-dataset) ---"
+run 4:00:00 "gpu:mi250:8" 16384 helmet_cite_asqa_16k helmet_cite_qampari_16k
+
+# SUMM tasks (per-dataset)
+echo "--- SUMM 16k (per-dataset) ---"
+run 2:00:00 "gpu:mi250:8" 16384 helmet_summ_infbench_16k helmet_summ_multi_lexsum_16k
+
+# Other tasks (single-dataset)
 echo "--- Other 16k tasks ---"
-run 12:00:00 "gpu:mi250:8" 16384 helmet_recall_16k helmet_rerank_16k helmet_cite_16k helmet_alce_nocite_16k helmet_summ_16k
+run 2:00:00 "gpu:mi250:8" 16384 helmet_rerank_16k helmet_alce_nocite_16k
 
 # ==============================================================================
 # 32k CONTEXT TASKS (max_model_len=32768)
@@ -120,9 +136,17 @@ run 1:00:00 "gpu:mi250:8" 32768 helmet_longqa_infbench_qa_32k helmet_longqa_infb
 echo "--- ICL 32k (per-dataset) ---"
 run 3:00:00 "gpu:mi250:8" 32768 helmet_icl_trec_coarse_32k helmet_icl_trec_fine_32k helmet_icl_banking77_32k helmet_icl_clinic_32k helmet_icl_nlu_32k
 
-# Other tasks (bundled)
+# CITE tasks (per-dataset)
+echo "--- CITE 32k (per-dataset) ---"
+run 6:00:00 "gpu:mi250:8" 32768 helmet_cite_asqa_32k helmet_cite_qampari_32k
+
+# SUMM tasks (per-dataset)
+echo "--- SUMM 32k (per-dataset) ---"
+run 3:00:00 "gpu:mi250:8" 32768 helmet_summ_infbench_32k helmet_summ_multi_lexsum_32k
+
+# Other tasks (single-dataset)
 echo "--- Other 32k tasks ---"
-run 12:00:00 "gpu:mi250:8" 32768 helmet_recall_32k helmet_rerank_32k helmet_cite_32k helmet_alce_nocite_32k helmet_summ_32k
+run 3:00:00 "gpu:mi250:8" 32768 helmet_rerank_32k helmet_alce_nocite_32k
 
 # ==============================================================================
 # 64k CONTEXT TASKS (max_model_len=65536)
@@ -145,9 +169,17 @@ run 1:00:00 "gpu:mi250:8" 65536 helmet_longqa_infbench_qa_64k helmet_longqa_infb
 echo "--- ICL 64k (per-dataset) ---"
 run 6:00:00 "gpu:mi250:8" 65536 helmet_icl_trec_coarse_64k helmet_icl_trec_fine_64k helmet_icl_banking77_64k helmet_icl_clinic_64k helmet_icl_nlu_64k
 
-# Other tasks (bundled)
+# CITE tasks (per-dataset)
+echo "--- CITE 64k (per-dataset) ---"
+run 10:00:00 "gpu:mi250:8" 65536 helmet_cite_asqa_64k helmet_cite_qampari_64k
+
+# SUMM tasks (per-dataset)
+echo "--- SUMM 64k (per-dataset) ---"
+run 4:00:00 "gpu:mi250:8" 65536 helmet_summ_infbench_64k helmet_summ_multi_lexsum_64k
+
+# Other tasks (single-dataset)
 echo "--- Other 64k tasks ---"
-run 18:00:00 "gpu:mi250:8" 65536 helmet_recall_64k helmet_rerank_64k helmet_cite_64k helmet_alce_nocite_64k helmet_summ_64k
+run 4:00:00 "gpu:mi250:8" 65536 helmet_rerank_64k helmet_alce_nocite_64k
 
 # ==============================================================================
 # 128k CONTEXT TASKS (max_model_len=131072)
@@ -170,9 +202,17 @@ run 2:00:00 "gpu:mi250:8" 131072 helmet_longqa_infbench_qa_128k helmet_longqa_in
 echo "--- ICL 128k (per-dataset) ---"
 run 12:00:00 "gpu:mi250:8" 131072 helmet_icl_trec_coarse_128k helmet_icl_trec_fine_128k helmet_icl_banking77_128k helmet_icl_clinic_128k helmet_icl_nlu_128k
 
-# Other tasks (bundled)
+# CITE tasks (per-dataset)
+echo "--- CITE 128k (per-dataset) ---"
+run 14:00:00 "gpu:mi250:8" 131072 helmet_cite_asqa_128k helmet_cite_qampari_128k
+
+# SUMM tasks (per-dataset)
+echo "--- SUMM 128k (per-dataset) ---"
+run 6:00:00 "gpu:mi250:8" 131072 helmet_summ_infbench_128k helmet_summ_multi_lexsum_128k
+
+# Other tasks (single-dataset)
 echo "--- Other 128k tasks ---"
-run 24:00:00 "gpu:mi250:8" 131072 helmet_recall_128k helmet_rerank_128k helmet_cite_128k helmet_alce_nocite_128k helmet_summ_128k
+run 4:00:00 "gpu:mi250:8" 131072 helmet_rerank_128k helmet_alce_nocite_128k
 
 echo ""
 echo "========================================"
@@ -181,9 +221,12 @@ echo "  Per-dataset tasks:"
 echo "    - RAG: 20 tasks (4 datasets × 5 contexts)"
 echo "    - Longqa: 15 tasks (3 datasets × 5 contexts)"
 echo "    - ICL: 25 tasks (5 datasets × 5 contexts)"
-echo "  Bundled tasks:"
-echo "    - 5 other task types × 5 contexts = 25 tasks"
-echo "  Total: 85 tasks"
+echo "    - CITE: 10 tasks (2 datasets × 5 contexts)"
+echo "    - SUMM: 10 tasks (2 datasets × 5 contexts)"
+echo "  Single-dataset tasks:"
+echo "    - RERANK: 5 tasks (1 dataset × 5 contexts)"
+echo "    - ALCE_NOCITE: 5 tasks (1 dataset × 5 contexts)"
+echo "  Total: 90 tasks (RECALL tasks removed)"
 echo "  Context lengths: 8k, 16k, 32k, 64k, 128k"
 echo "========================================"
 echo "Monitor progress with: python watch.py"
