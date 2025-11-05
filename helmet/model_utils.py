@@ -918,7 +918,7 @@ class HFModel(LLM):
         # use the default if possible, append if necessary
         stop_token_ids = self.model.generation_config.eos_token_id
         stop_token_ids = [stop_token_ids] if not isinstance(stop_token_ids, list) else stop_token_ids
-        if stop_newline:
+        if stop_new_line:
             stop = list(set(["\n", "Ċ", "ĊĊ", "<0x0A>"]))
             stop_token_ids = list(set([self.tokenizer.convert_tokens_to_ids(stop_token) for stop_token in stop] + stop_token_ids))
             if "llama" in model_name.lower():
