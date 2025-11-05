@@ -181,7 +181,10 @@ except OSError:
     print("[stage] copied", so_src, "->", dst)
 
 print("[ldd]")
-print(subprocess.check_output(["ldd", dst], text=True))
+try:
+    print(subprocess.check_output(["ldd", dst], text=True))
+except subprocess.CalledProcessError as e:
+    print(f"[ldd] warning: ldd failed (exit {e.returncode}), continuing to import test...")
 
 sys.path.insert(0, inst_root)
 m = importlib.import_module("private_aiter.jit.module_aiter_enum")
