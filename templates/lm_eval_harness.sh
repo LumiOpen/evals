@@ -99,6 +99,8 @@ export VLLM_USE_V1=1
 export VLLM_TARGET_DEVICE=rocm
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export HIP_ARCHITECTURES=gfx90a
+# Use ROCm Flash Attention (CK) backend for vLLM
+export VLLM_ATTENTION_BACKEND=ROCM_FLASH
 
 # Avoid the 1-GPU trap - ensure PyTorch uses all allocated GPUs
 unset HIP_VISIBLE_DEVICES
@@ -311,7 +313,7 @@ MODEL_BACKEND="dummy"
 MODEL_ARGS="pretrained={{ env_vars.MODEL }}"
 echo "Using dummy backend (cache-only, no model weights loaded)"
 {% else %}
-BASE_ARGS="pretrained=${MODEL_LOCAL},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
+BASE_ARGS="pretrained=${MODEL_LOCAL},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=flash_attention_2"
 
 {% if env_vars.MODEL_ARGS %}
 MODEL_ARGS="${BASE_ARGS},{{ env_vars.MODEL_ARGS }}"
