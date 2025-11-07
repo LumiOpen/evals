@@ -56,40 +56,32 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env MODEL_ID="$MODEL_ID" \
     --env TP="$TP" \
     --env SCR="$SCR" \
+    --env USER="$USER" \
     --env HF_HOME=/project/hf_cache \
     --env HUGGINGFACE_HUB_CACHE=/project/hf_cache/hub \
     --env TRANSFORMERS_CACHE=/project/hf_cache/models \
     --env HF_DATASETS_CACHE=/project/hf_cache/datasets \
     --env XDG_CACHE_HOME=/project/hf_cache/xdg \
     --env HF_TOKEN="${HF_TOKEN:-}" \
-    "$IMG" bash -lc '
+    "$IMG" bash -c '
 set -euo pipefail
 umask 002
 
-# ---- model/topology (now variables) ----
-MODEL_ID="${MODEL_ID:?MODEL_ID not set}"
-TP="${TP:-4}"
+# Force HOME=/tmp so aiter builds ephemerally and disappears with the job
+export HOME=/tmp
+
+PYTHON_BIN="/opt/miniconda3/envs/pytorch/bin/python"
+export PYTHON_BIN
+
 MODEL_SAFE="${MODEL_ID//\//-}"
-PREFETCH_LOCAL_DIR="/project/hf_cache/models/${MODEL_SAFE}"
-MODEL_LOCAL="${PREFETCH_LOCAL_DIR}"
+MODEL_LOCAL="/project/hf_cache/models/${MODEL_SAFE}"
 
 # ---- env & caches (disable xet + telemetry) ----
 export HF_HUB_DISABLE_XET=1
 export HF_HUB_ENABLE_HF_TRANSFER=0
 export HF_HUB_DISABLE_TELEMETRY=1
 
-export PATH="$HOME/.local/bin:/opt/miniconda3/envs/pytorch/bin:/opt/rocm/llvm/bin:/opt/rocm/bin:/usr/bin:/bin"
-export HF_HOME=/project/hf_cache
-export HUGGINGFACE_HUB_CACHE=/project/hf_cache/hub
-export TRANSFORMERS_CACHE=/project/hf_cache/models
-export HF_DATASETS_CACHE=/project/hf_cache/datasets
-export XDG_CACHE_HOME=/project/hf_cache/xdg
-
-# Debug: Print cache configuration
-echo "DEBUG: Cache configuration:"
-echo "  HF_HOME=${HF_HOME:-NOT_SET}"
-echo "  HF_DATASETS_CACHE=${HF_DATASETS_CACHE:-NOT_SET}"
-echo "  HUGGINGFACE_HUB_CACHE=${HUGGINGFACE_HUB_CACHE:-NOT_SET}"
+export PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:/opt/miniconda3/envs/pytorch/bin:/usr/local/bin:/usr/bin:/bin"
 export TORCH_EXTENSIONS_DIR=/dev/shm/torch_ext
 export TORCHINDUCTOR_CACHE_DIR=/project/hf_cache/torchinductor
 export VLLM_COMPILER_CACHE_DIR=/project/hf_cache/vllm-compile
@@ -105,21 +97,16 @@ unset HIP_VISIBLE_DEVICES
 
 mkdir -p /project/hf_cache/{hub,models,datasets,torchinductor,xdg,vllm-compile,triton} \
          /dev/shm/torch_ext "$HOME/.aiter/jit/build" "$HOME/.aiter/jit/install" \
-         /workspace/tools
+         /tmp/tools
 
-if command -v /opt/rocm/llvm/bin/clang++ >/dev/null 2>&1; then
-  export CC=/opt/rocm/llvm/bin/clang
-  export CXX=/opt/rocm/llvm/bin/clang++
-else
-  export CC=/opt/rocm/bin/hipcc
-  export CXX=/opt/rocm/bin/hipcc
-fi
+export CC=/opt/rocm/llvm/bin/clang
+export CXX=/opt/rocm/llvm/bin/clang++
 
 # Make sure ninja is available
-python -m pip -q install --user -U ninja || true
+${PYTHON_BIN} -m pip -q install --user -U ninja || true
 
 # ------- write helper: stage_aiter.py (NO stdin execution) -------
-cat > /workspace/tools/stage_aiter.py <<PY
+cat > /tmp/tools/stage_aiter.py <<PY
 import os, glob, shutil, importlib, pathlib, subprocess, sys
 
 home = os.path.expanduser("~")
@@ -166,47 +153,13 @@ import aiter; from aiter.ops import enum as _e
 print("[stage] aiter import OK")
 PY
 
-{% if env_vars.BACKEND != "dummy" %}
-# ------- write helper: prefetch.py -------
-cat > /workspace/tools/prefetch.py <<PY
-from huggingface_hub import snapshot_download
-p = snapshot_download(
-  repo_id="${MODEL_ID}",
-  local_dir="${PREFETCH_LOCAL_DIR}",
-  local_dir_use_symlinks=False,
-  allow_patterns=["*.safetensors","*.json","tokenizer.*","*vocab*","*.model"]
-)
-print("prefetch OK ->", p)
-PY
-{% endif %}
+# Stage aiter
+${PYTHON_BIN} /tmp/tools/stage_aiter.py
 
-# ------- write helper: sanity.py -------
-cat > /workspace/tools/sanity.py <<PY
-import torch, os
-print("torch", torch.__version__, "HIP", getattr(torch.version, "hip", None))
-print("HF_HUB_DISABLE_XET =", os.getenv("HF_HUB_DISABLE_XET"))
-n = torch.cuda.device_count()
-print("cuda.device_count =", n)
-for i in range(n):
-    print("  idx", i, "->", torch.cuda.get_device_name(i))
-PY
-
-# ------- run the helpers from files (no <stdin>) -------
-python /workspace/tools/sanity.py
-python /workspace/tools/stage_aiter.py
-{% if env_vars.BACKEND != "dummy" %}
-python /workspace/tools/prefetch.py
-
-# Model is prefetched, but allow datasets to be downloaded as needed
-# Note: Datasets will be cached automatically for subsequent runs
-{% endif %}
-
-# ensure staged package is visible
 export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
 
 # ------- get LUMI harness (puts it first on sys.path) -------
-# Use job-specific directory to avoid git conflicts between parallel jobs
-EVAL_HARNESS_DIR="/workspace/lm-eval-${SLURM_JOB_ID:-$}"
+EVAL_HARNESS_DIR="/tmp/lm-eval"
 
 # Function to setup lm-evaluation-harness (no locking needed with job-specific dirs)
 setup_lm_eval() {
@@ -228,57 +181,14 @@ setup_lm_eval() {
 
 # Setup lm-evaluation-harness
 setup_lm_eval
-export PYTHONPATH="$EVAL_HARNESS_DIR:$PYTHONPATH"
+export PYTHONPATH="$EVAL_HARNESS_DIR:${PYTHONPATH-}"
 
 # Create a temporary directory for lm_eval output
 RANDOM_DIR="/tmp/lm_eval_$(date +%s%N)"
 mkdir -p "$RANDOM_DIR"
-echo "Saving temporary results to $RANDOM_DIR"
 
-# Convert host paths to container paths
-# OUTPUT_DIR and OUTPUT_FILE contain host paths, but we need container paths
-CONTAINER_OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
-if [[ -z "$CONTAINER_OUTPUT_FILE" ]]; then
-  echo "ERROR: OUTPUT_FILE is empty. Check main.py env_vars." >&2
-  exit 2
-fi
-USER_SCRATCH_DIR="/scratch/project_462000353/$USER"
-PFS_USER_PREFIX="/pfs/lustrep2/scratch/project_462000353/$USER/"
-
-echo "DEBUG: Original OUTPUT_FILE: $CONTAINER_OUTPUT_FILE"
-echo "DEBUG: SCR inside container: $SCR"
-
-# Convert various host path patterns to container paths
-if [[ "$CONTAINER_OUTPUT_FILE" == "$SCR"* ]]; then
-    echo "DEBUG: Path matches SCR prefix, converting..."
-    # Path relative to current working directory - remove SCR prefix and add /workspace
-    RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$SCR}"
-    # Remove leading slash if present
-    RELATIVE_PATH="${RELATIVE_PATH#/}"
-    CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
-    echo "DEBUG: Converted to: $CONTAINER_OUTPUT_FILE"
-elif [[ "$CONTAINER_OUTPUT_FILE" == "$PFS_USER_PREFIX"* ]]; then
-    echo "DEBUG: Path matches PFS prefix, converting..."
-    # /pfs paths under user directory
-    RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$PFS_USER_PREFIX}"
-    RELATIVE_PATH="${RELATIVE_PATH#evals/}"
-    CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
-    echo "DEBUG: Converted to: $CONTAINER_OUTPUT_FILE"
-elif [[ "$CONTAINER_OUTPUT_FILE" == "$USER_SCRATCH_DIR"* ]]; then
-    echo "DEBUG: Path matches USER_SCRATCH_DIR prefix, converting..."
-    # Direct /scratch paths under user directory
-    RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$USER_SCRATCH_DIR}"
-    # Remove leading slash if present
-    RELATIVE_PATH="${RELATIVE_PATH#/}"
-    CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
-    echo "DEBUG: Converted to: $CONTAINER_OUTPUT_FILE"
-else
-    echo "DEBUG: No path conversion matched - keeping original path"
-fi
-
-# Prepare final output directory inside container
-mkdir -p "$(dirname "$CONTAINER_OUTPUT_FILE")"
-echo "Final results will be saved to: $CONTAINER_OUTPUT_FILE"
+OUTPUT_FILE="/workspace/{{ env_vars.OUTPUT_FILE }}"
+mkdir -p "$(dirname "$OUTPUT_FILE")"
 
 # Set up chat template flags
 {% if env_vars.APPLY_CHAT_TEMPLATE %}
@@ -293,46 +203,27 @@ FEWSHOT_AS_MULTITURN_FLAG="--fewshot_as_multiturn"
 FEWSHOT_AS_MULTITURN_FLAG=""
 {% endif %}
 
-# Backend-specific model configuration
 {% if env_vars.BACKEND == "vllm" %}
-BASE_ARGS="pretrained=${MODEL_LOCAL},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP}"
-DEFAULT_ARGS="max_model_len=4096,gpu_memory_utilization=0.90"
-
-{% if env_vars.MODEL_ARGS %}
-MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS},{{ env_vars.MODEL_ARGS }}"
-{% else %}
-MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS}"
-{% endif %}
-
 MODEL_BACKEND="vllm"
-echo "Using vLLM backend with args: $MODEL_ARGS"
+MODEL_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP},max_model_len=4096,gpu_memory_utilization=0.90"
+{% if env_vars.MODEL_ARGS %}
+MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
+{% endif %}
 {% elif env_vars.BACKEND == "dummy" %}
 MODEL_BACKEND="dummy"
 MODEL_ARGS="pretrained={{ env_vars.MODEL }}"
-echo "Using dummy backend (cache-only, no model weights loaded)"
 {% else %}
-BASE_ARGS="pretrained=${MODEL_LOCAL},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
-
-{% if env_vars.MODEL_ARGS %}
-MODEL_ARGS="${BASE_ARGS},{{ env_vars.MODEL_ARGS }}"
-{% else %}
-MODEL_ARGS="${BASE_ARGS}"
-{% endif %}
-
 MODEL_BACKEND="hf-auto"
-echo "Using HuggingFace backend with args: $MODEL_ARGS"
+MODEL_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
+{% if env_vars.MODEL_ARGS %}
+MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
+{% endif %}
 {% endif %}
 
-# ------- run the eval (point to local model dir) -------
-{% if env_vars.BATCH_SIZE %}
-BATCH_SIZE="{{ env_vars.BATCH_SIZE }}"
-{% elif env_vars.BACKEND == "vllm" %}
-BATCH_SIZE="auto"
-{% else %}
-BATCH_SIZE="4"
-{% endif %}
+# Run eval
+BATCH_SIZE="{% if env_vars.BATCH_SIZE %}{{ env_vars.BATCH_SIZE }}{% elif env_vars.BACKEND == "vllm" %}auto{% else %}4{% endif %}"
 
-python -m lm_eval \
+${PYTHON_BIN} -m lm_eval \
   --model "$MODEL_BACKEND" \
   --model_args "$MODEL_ARGS" \
   --tasks "{{ env_vars.TASK_LIST }}" \
@@ -346,14 +237,6 @@ python -m lm_eval \
 {% if env_vars.LM_EVAL_ARGS %}  {{ env_vars.LM_EVAL_ARGS }}
 {% endif %}
 
-echo "Moving temporary results from $RANDOM_DIR to $CONTAINER_OUTPUT_FILE"
-find "$RANDOM_DIR" -name "results_*.json" -exec mv {} "$CONTAINER_OUTPUT_FILE" \;
+find "$RANDOM_DIR" -name "results_*.json" -exec mv {} "$OUTPUT_FILE" \;
 rm -rf "$RANDOM_DIR"
-
-# Clean up the temporary lm-eval-harness directory
-echo "Cleaning up temporary lm-eval directory: $EVAL_HARNESS_DIR"
-rm -rf "$EVAL_HARNESS_DIR"
-
-echo "== results saved to $CONTAINER_OUTPUT_FILE =="
-ls -l "$CONTAINER_OUTPUT_FILE" || true
 '

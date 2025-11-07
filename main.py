@@ -127,7 +127,7 @@ def run_eval(eval_name, args):
 
     # Create output filename with backend prefix for vLLM
     output_filename = f"vllm_{eval_name}.json" if backend == 'vllm' else f"{eval_name}.json"
-    output_file = os.path.join(os.path.abspath(output_dir), output_filename)
+    output_file = os.path.join(output_dir, output_filename)
 
     if os.path.exists(output_file) and not args.force:
         print(f"Output file {output_file} already exists and --force not specified, skipping...")
