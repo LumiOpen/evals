@@ -137,11 +137,11 @@ mkdir -p "$TMPDIR" "$PIP_CACHE_DIR"
 PIP_INSTALL_DIR="$PIP_TMP_DIR/packages"
 mkdir -p "$PIP_INSTALL_DIR"
 
-# Install only missing packages
-python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score pytrec_eval 2>&1 | grep -v "Requirement already satisfied" || true
+# Install only missing packages (skip pytrec_eval - needs gcc, not used by LongPPL)
+python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score 2>&1 | grep -v "Requirement already satisfied" || true
 
-# Add to Python path
-export PYTHONPATH="$PIP_INSTALL_DIR:${PYTHONPATH:-}"
+# Add to Python path (include longppl directory for module imports)
+export PYTHONPATH="/workspace/longppl:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
 
 # Determine output directory
 if [[ "${MODEL_ID}" == /* ]]; then
