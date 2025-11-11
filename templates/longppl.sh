@@ -129,19 +129,24 @@ cd "$LONGPPL_DIR"
 # Install LongPPL dependencies (lightweight, only what container doesnt have)
 echo "Installing LongPPL dependencies..."
 PIP_TMP_DIR="/tmp/pip_install_${SLURM_JOB_ID:-$$}"
-mkdir -p "$PIP_TMP_DIR"
+echo "DEBUG: Creating PIP_TMP_DIR=$PIP_TMP_DIR"
+mkdir -p "$PIP_TMP_DIR" || { echo "Failed to create PIP_TMP_DIR"; exit 1; }
+echo "DEBUG: PIP_TMP_DIR created"
 export TMPDIR="$PIP_TMP_DIR/tmp"
 export PIP_CACHE_DIR="$PIP_TMP_DIR/cache"
-mkdir -p "$TMPDIR" "$PIP_CACHE_DIR"
+mkdir -p "$TMPDIR" "$PIP_CACHE_DIR" || { echo "Failed to create TMPDIR/PIP_CACHE_DIR"; exit 1; }
+echo "DEBUG: TMPDIR and PIP_CACHE_DIR created"
 
 PIP_INSTALL_DIR="$PIP_TMP_DIR/packages"
-mkdir -p "$PIP_INSTALL_DIR"
+mkdir -p "$PIP_INSTALL_DIR" || { echo "Failed to create PIP_INSTALL_DIR"; exit 1; }
+echo "DEBUG: PIP_INSTALL_DIR created"
 
 # Install only missing packages (skip pytrec_eval - needs gcc, not used by LongPPL)
-# python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score
+python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score
+echo "DEBUG: Pip install completed"
 
 # Add to Python path (parent of longppl directory so 'import longppl' works)
-export PYTHONPATH="/workspace:${PYTHONPATH:-}"
+export PYTHONPATH="/workspace:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
 echo "DEBUG: Reached PYTHONPATH export"
 
 # Determine output directory
