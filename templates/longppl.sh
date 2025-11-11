@@ -138,13 +138,13 @@ PIP_INSTALL_DIR="$PIP_TMP_DIR/packages"
 mkdir -p "$PIP_INSTALL_DIR"
 
 # Install only missing packages (skip pytrec_eval - needs gcc, not used by LongPPL)
-python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score 2>&1
-RET=$?
-echo "Pip install exit code: $RET"
+python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score
+echo "After pip install"
 
 # Add to Python path (parent of longppl directory so 'import longppl' works)
+echo "About to export PYTHONPATH"
 export PYTHONPATH="/workspace:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
-echo "PYTHONPATH set, continuing..."
+echo "After export PYTHONPATH"
 
 # Determine output directory
 if [[ "${MODEL_ID}" == /* ]]; then
