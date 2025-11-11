@@ -208,8 +208,8 @@ with open(log_file) as f:
 
 # Extract longppl and ppl values from output
 # Format: \"model_name: longppl: XX.XX, ppl: YY.YY\"
-longppl_match = re.search(r'longppl:\s*([\d.]+)', log_text)
-ppl_match = re.search(r'ppl:\s*([\d.]+)', log_text)
+longppl_match = re.search(r\"longppl:\s*([\d.]+)\", log_text)
+ppl_match = re.search(r\"ppl:\s*([\d.]+)\", log_text)
 
 if not longppl_match or not ppl_match:
     print(\"Warning: Could not parse longppl/ppl from output\")
@@ -217,25 +217,25 @@ if not longppl_match or not ppl_match:
     print(log_text[-500:])
 
 results = {
-    'model': \"$MODEL_ID\",
-    'context_length': $CONTEXT_LENGTH,
-    'dataset': 'govreport-test-tokenized',
-    'dataset_samples': $DATASET_SAMPLES,
-    'alpha': $ALPHA,
-    'beta': $BETA,
-    'longppl': float(longppl_match.group(1)) if longppl_match else None,
-    'ppl': float(ppl_match.group(1)) if ppl_match else None,
-    'timestamp': datetime.now().isoformat(),
-    'slurm_job_id': \"$SLURM_JOB_ID\"
+    \"model\": \"$MODEL_ID\",
+    \"context_length\": $CONTEXT_LENGTH,
+    \"dataset\": \"govreport-test-tokenized\",
+    \"dataset_samples\": $DATASET_SAMPLES,
+    \"alpha\": $ALPHA,
+    \"beta\": $BETA,
+    \"longppl\": float(longppl_match.group(1)) if longppl_match else None,
+    \"ppl\": float(ppl_match.group(1)) if ppl_match else None,
+    \"timestamp\": datetime.now().isoformat(),
+    \"slurm_job_id\": \"$SLURM_JOB_ID\"
 }
 
 output_file = \"$OUTPUT_DIR/longppl_${CONTEXT_LENGTH}.json\"
-with open(output_file, 'w') as f:
+with open(output_file, \"w\") as f:
     json.dump(results, f, indent=2)
 
 print(f\"\\n=== Results Summary ===\")
-print(f\"LongPPL: {results['longppl']}\")
-print(f\"Standard PPL: {results['ppl']}\")
+print(f\"LongPPL: {results[\\\"longppl\\\"]}\")
+print(f\"Standard PPL: {results[\\\"ppl\\\"]}\")
 print(f\"Results saved to: {output_file}\")
 "
 
