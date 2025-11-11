@@ -70,7 +70,7 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env HF_DATASETS_CACHE=/project/hf_cache/datasets \
     --env XDG_CACHE_HOME=/project/hf_cache/xdg \
     --env HF_TOKEN="${HF_TOKEN:-}" \
-    "$IMG" bash -c '
+    "$IMG" bash -lc '
 set -euo pipefail
 umask 002
 
@@ -129,25 +129,19 @@ cd "$LONGPPL_DIR"
 # Install LongPPL dependencies (lightweight, only what container doesnt have)
 echo "Installing LongPPL dependencies..."
 PIP_TMP_DIR="/tmp/pip_install_${SLURM_JOB_ID:-$$}"
-echo "DEBUG: Creating PIP_TMP_DIR=$PIP_TMP_DIR"
-mkdir -p "$PIP_TMP_DIR" || { echo "Failed to create PIP_TMP_DIR"; exit 1; }
-echo "DEBUG: PIP_TMP_DIR created"
+mkdir -p "$PIP_TMP_DIR"
 export TMPDIR="$PIP_TMP_DIR/tmp"
 export PIP_CACHE_DIR="$PIP_TMP_DIR/cache"
-mkdir -p "$TMPDIR" "$PIP_CACHE_DIR" || { echo "Failed to create TMPDIR/PIP_CACHE_DIR"; exit 1; }
-echo "DEBUG: TMPDIR and PIP_CACHE_DIR created"
+mkdir -p "$TMPDIR" "$PIP_CACHE_DIR"
 
 PIP_INSTALL_DIR="$PIP_TMP_DIR/packages"
-mkdir -p "$PIP_INSTALL_DIR" || { echo "Failed to create PIP_INSTALL_DIR"; exit 1; }
-echo "DEBUG: PIP_INSTALL_DIR created"
+mkdir -p "$PIP_INSTALL_DIR"
 
 # Install only missing packages (skip pytrec_eval - needs gcc, not used by LongPPL)
 python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score
-echo "DEBUG: Pip install completed"
 
 # Add to Python path (parent of longppl directory so 'import longppl' works)
 export PYTHONPATH="/workspace:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
-echo "DEBUG: Reached PYTHONPATH export"
 
 # Determine output directory
 if [[ "${MODEL_ID}" == /* ]]; then
