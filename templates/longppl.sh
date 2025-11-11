@@ -157,8 +157,8 @@ mkdir -p "$OUTPUT_DIR"
 # LongPPL evaluation parameters
 CONTEXT_LENGTH={{ env_vars.CONTEXT_LENGTH }}
 DATASET_SAMPLES={{ env_vars.DATASET_SAMPLES }}
-ALPHA={{ env_vars.get("ALPHA", 2.0) }}
-BETA={{ env_vars.get("BETA", -2.0) }}
+ALPHA={{ env_vars.ALPHA }}
+BETA={{ env_vars.BETA }}
 
 echo "=== LongPPL Evaluation Configuration ==="
 echo "Model: $MODEL_ID"
