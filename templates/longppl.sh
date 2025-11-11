@@ -171,16 +171,24 @@ echo
 # Run LongPPL evaluation
 cd /workspace
 
+# Use meta-llama/Llama-3.1-8B as evaluator (same as paper)
+# This model identifies key tokens; then we compute LongPPL for target model on those tokens
+EVALUATOR_MODEL="meta-llama/Llama-3.1-8B"
+
 echo "=== Starting LongPPL evaluation ==="
+echo "Target model: $MODEL_LOCAL"
+echo "Evaluator model: $EVALUATOR_MODEL"
 python longppl/perplexity/perplexity.py \
   --dataset emozilla/govreport-test-tokenized \
   --tokenized \
   --dataset-min-tokens "$CONTEXT_LENGTH" \
   --samples "$DATASET_SAMPLES" \
   --model "$MODEL_LOCAL" \
-  --evaluator-model "$MODEL_LOCAL" \
+  --evaluator-model "$EVALUATOR_MODEL" \
   --mode online \
   --max-length "$CONTEXT_LENGTH" \
+  --trunc-len 4096 \
+  --sliding-window 1024 \
   --alpha "$ALPHA" \
   --beta "$BETA" \
   2>&1 | tee "$OUTPUT_DIR/longppl_${CONTEXT_LENGTH}.log"
