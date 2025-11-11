@@ -72,6 +72,7 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env HF_TOKEN="${HF_TOKEN:-}" \
     "$IMG" bash -lc '
 set -euo pipefail
+set -x
 umask 002
 
 # ---- model setup ----
