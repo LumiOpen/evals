@@ -64,3 +64,34 @@ class HELMETHarness:
         rendered_script = template.render(**config)
 
         return rendered_script
+
+class LongPPLHarness:
+    def __init__(self, context_length, dataset_samples=50, alpha=2.0, beta=-2.0):
+        self.context_length = context_length
+        self.dataset_samples = dataset_samples
+        self.alpha = alpha
+        self.beta = beta
+        self.harness = self
+
+    def generate_script(self, slurm_config, env_vars, backend='hf'):
+        # LongPPL only supports HF backend (no vLLM support)
+        if backend == 'vllm':
+            print("Warning: LongPPL does not support vLLM backend, using HF instead")
+            backend = 'hf'
+
+        env_vars = copy.deepcopy(env_vars)
+        env_vars["CONTEXT_LENGTH"] = self.context_length
+        env_vars["DATASET_SAMPLES"] = self.dataset_samples
+        env_vars["ALPHA"] = self.alpha
+        env_vars["BETA"] = self.beta
+        env_vars["BACKEND"] = backend
+
+        config = {}
+        config["env_vars"] = env_vars
+        config["slurm_config"] = slurm_config
+
+        template_str = open('templates/longppl.sh', 'r').read()
+        template = Template(template_str)
+        rendered_script = template.render(**config)
+
+        return rendered_script

@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from .harnesses import LMEvalHarness, BigcodeEvaluationHarness, HELMETHarness
+from .harnesses import LMEvalHarness, BigcodeEvaluationHarness, HELMETHarness, LongPPLHarness
 import json
 
 
@@ -141,6 +141,22 @@ class HELMETConfig(EvalConfig):
         # HELMET saves results to a directory with multiple files
         # The main summary is in the json_data we load
         return json_data
+
+class LongPPLConfig(EvalConfig):
+    def __init__(self, name, context_length, dataset_samples=50, alpha=2.0, beta=-2.0):
+        super().__init__(name, "custom", LongPPLHarness(context_length, dataset_samples, alpha, beta))
+        self.context_length = context_length
+        self.dataset_samples = dataset_samples
+        self.alpha = alpha
+        self.beta = beta
+
+    def get_results_custom(self, json_data):
+        # LongPPL saves results to a JSON file with longppl and ppl metrics
+        return json_data
+
+    def get_output_filename(self, model_name, backend='hf'):
+        # Override to return the specific output filename for LongPPL
+        return f"longppl_{self.context_length}.json"
 
 
 evals = {
@@ -596,5 +612,22 @@ evals = {
     "helmet_recall_json_kv_32k": HELMETConfig("helmet_recall_json_kv_32k", "recall_json_kv_32k"),
     "helmet_recall_json_kv_64k": HELMETConfig("helmet_recall_json_kv_64k", "recall_json_kv_64k"),
     "helmet_recall_json_kv_128k": HELMETConfig("helmet_recall_json_kv_128k", "recall_json_kv_128k"),
+
+    # LongPPL perplexity evaluations
+    # Standard configurations (50 samples, default alpha/beta)
+    "longppl_8k": LongPPLConfig("longppl_8k", 8192),
+    "longppl_16k": LongPPLConfig("longppl_16k", 16384),
+    "longppl_32k": LongPPLConfig("longppl_32k", 32768),
+    "longppl_64k": LongPPLConfig("longppl_64k", 65536),
+    "longppl_128k": LongPPLConfig("longppl_128k", 131072),
+
+    # Quick configurations (25 samples for faster iteration)
+    "longppl_8k_quick": LongPPLConfig("longppl_8k_quick", 8192, dataset_samples=25),
+    "longppl_16k_quick": LongPPLConfig("longppl_16k_quick", 16384, dataset_samples=25),
+    "longppl_32k_quick": LongPPLConfig("longppl_32k_quick", 32768, dataset_samples=25),
+
+    # Full configurations (100 samples for more reliable results)
+    "longppl_16k_full": LongPPLConfig("longppl_16k_full", 16384, dataset_samples=100),
+    "longppl_32k_full": LongPPLConfig("longppl_32k_full", 32768, dataset_samples=100),
 
 }
