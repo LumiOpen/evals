@@ -171,10 +171,10 @@ echo "Output directory: $OUTPUT_DIR"
 echo
 
 # Run LongPPL evaluation
-cd /workspace/longppl/perplexity
+cd /workspace
 
 echo "=== Starting LongPPL evaluation ==="
-python perplexity.py \
+python longppl/perplexity/perplexity.py \
   --dataset emozilla/govreport-test-tokenized \
   --tokenized \
   --dataset-min-tokens "$CONTEXT_LENGTH" \
