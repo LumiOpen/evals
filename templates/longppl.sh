@@ -206,13 +206,18 @@ with open(log_file) as f:
 
 # Extract longppl and ppl values from output
 # Format: \"model_name: longppl: XX.XX, ppl: YY.YY\"
-longppl_match = re.search(r\"longppl:\s*([\d.]+)\", log_text)
-ppl_match = re.search(r\"ppl:\s*([\d.]+)\", log_text)
+# Match the final line with both values
+final_line_match = re.search(r\"longppl:\s*([\d.]+),\s*ppl:\s*([\d.]+)\", log_text)
 
-if not longppl_match or not ppl_match:
+if not final_line_match:
     print(\"Warning: Could not parse longppl/ppl from output\")
     print(\"Log excerpt:\")
     print(log_text[-500:])
+    longppl_val = None
+    ppl_val = None
+else:
+    longppl_val = float(final_line_match.group(1))
+    ppl_val = float(final_line_match.group(2))
 
 results = {
     \"model\": \"$MODEL_ID\",
@@ -221,8 +226,8 @@ results = {
     \"dataset_samples\": $DATASET_SAMPLES,
     \"alpha\": $ALPHA,
     \"beta\": $BETA,
-    \"longppl\": float(longppl_match.group(1)) if longppl_match else None,
-    \"ppl\": float(ppl_match.group(1)) if ppl_match else None,
+    \"longppl\": longppl_val,
+    \"ppl\": ppl_val,
     \"timestamp\": datetime.now().isoformat(),
     \"slurm_job_id\": \"$SLURM_JOB_ID\"
 }
