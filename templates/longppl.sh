@@ -237,10 +237,6 @@ with open(output_file, \"w\") as f:
     json.dump(results, f, indent=2)
 
 print(\"Results saved to:\", output_file)
-if results.get('longppl') is not None:
-    print(\"LongPPL value:\", results.get('longppl'))
-if results.get('ppl') is not None:
-    print(\"Standard PPL value:\", results.get('ppl'))
 "
 
   echo
