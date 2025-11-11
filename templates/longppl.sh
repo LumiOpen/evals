@@ -140,10 +140,15 @@ mkdir -p "$PIP_INSTALL_DIR"
 # Install only missing packages (skip pytrec_eval - needs gcc, not used by LongPPL)
 python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score 2>&1 | grep -v "Requirement already satisfied" || true
 
+echo "DEBUG: Pip install completed"
+
 # Add to Python path (parent of longppl directory so 'import longppl' works)
 export PYTHONPATH="/workspace:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
 
+echo "DEBUG: PYTHONPATH set to $PYTHONPATH"
+
 # Determine output directory
+echo "DEBUG: Determining output directory for MODEL_ID=$MODEL_ID"
 if [[ "${MODEL_ID}" == /* ]]; then
   MODEL_BASENAME=$(basename "$MODEL_ID")
   export OUTPUT_DIR="/workspace/output/v2/local/${MODEL_BASENAME}"
@@ -152,13 +157,16 @@ else
   export MODEL_NAME=$(echo "$MODEL_ID" | cut -d/ -f2)
   export OUTPUT_DIR="/workspace/output/v2/${MODEL_ORG}/${MODEL_NAME}"
 fi
+echo "DEBUG: Creating output directory: $OUTPUT_DIR"
 mkdir -p "$OUTPUT_DIR"
+echo "DEBUG: Output directory created"
 
 # LongPPL evaluation parameters
 CONTEXT_LENGTH={{ env_vars.CONTEXT_LENGTH }}
 DATASET_SAMPLES={{ env_vars.DATASET_SAMPLES }}
 ALPHA={{ env_vars.ALPHA }}
 BETA={{ env_vars.BETA }}
+echo "DEBUG: Parameters set - CONTEXT_LENGTH=$CONTEXT_LENGTH, DATASET_SAMPLES=$DATASET_SAMPLES"
 
 echo "=== LongPPL Evaluation Configuration ==="
 echo "Model: $MODEL_ID"
