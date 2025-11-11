@@ -4,6 +4,17 @@ This is a script to simplify running many evals simultaneously in our slurm
 environment.  It accepts hugging face model IDs (i.e. org/modelname) or
 directory paths to models in the huggingface format.
 
+## Quick Start
+
+For common evaluation scenarios, use the pre-configured scripts:
+
+- `cpt.sh` / `cpt-vllm.sh` - Standard continuous pretraining evaluations
+- `chat.sh` - Chat model evaluations
+- `code.sh` - Code generation evaluations
+- `ruler.sh` / `ruler-vllm.sh` - **NEW:** Long context evaluations (4K-128K tokens)
+
+See [RULER_README.md](RULER_README.md) for detailed documentation on long context evaluations.
+
 ## Usage
 
 Common run configs can be found in command line scripts like `cpt.sh` which you

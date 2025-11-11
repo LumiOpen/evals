@@ -140,6 +140,47 @@ class MultiIFConfig(EvalConfig):
             return json_data["results"]["english_average"]
         return 0.0
 
+class RulerConfig(EvalConfig):
+    """Configuration for RULER long context evaluation tasks.
+    
+    RULER (Rule-based Long-context Understanding Evaluation) evaluates models
+    on their ability to retrieve and use information from long contexts.
+    """
+    def __init__(self, sequence_length, num_fewshot=0):
+        # RULER task group includes multiple subtasks:
+        # - niah_* (Needle in a Haystack)
+        # - vt (Variable Tracking)
+        # - cwe (Common Words Extraction)
+        # - fwe (Frequent Words Extraction)
+        # - qa_* (Question Answering)
+        task_name = f"ruler_{sequence_length}"
+        super().__init__(task_name, "custom", LMEvalHarness([task_name], num_fewshot=num_fewshot))
+        self.sequence_length = sequence_length
+        self.num_fewshot = num_fewshot
+
+    def get_results_custom(self, json_data):
+        # Average score across all RULER subtasks
+        if "results" not in json_data:
+            return 0.0
+        
+        # Collect all RULER task results
+        ruler_scores = []
+        for task_name, task_results in json_data["results"].items():
+            if task_name.startswith("ruler_"):
+                # Try different result keys that might be present
+                if "acc,none" in task_results:
+                    ruler_scores.append(task_results["acc,none"])
+                elif "acc" in task_results:
+                    ruler_scores.append(task_results["acc"])
+                elif "exact_match,none" in task_results:
+                    ruler_scores.append(task_results["exact_match,none"])
+                elif "exact_match" in task_results:
+                    ruler_scores.append(task_results["exact_match"])
+        
+        if ruler_scores:
+            return sum(ruler_scores) / len(ruler_scores)
+        return 0.0
+
 
 
 evals = {
@@ -380,4 +421,13 @@ evals = {
     "alpaca_eval_en": AlpacaEvalConfig(language="en"),
     "alpaca_eval_fi": AlpacaEvalConfig(language="fi"),
     "multi_if": MultiIFConfig(),
+
+    # RULER long context evaluations
+    # Sequence lengths: powers of 2 from 4096 to 131072 (128K)
+    "ruler_4096": RulerConfig(sequence_length=4096, num_fewshot=0),
+    "ruler_8192": RulerConfig(sequence_length=8192, num_fewshot=0),
+    "ruler_16384": RulerConfig(sequence_length=16384, num_fewshot=0),
+    "ruler_32768": RulerConfig(sequence_length=32768, num_fewshot=0),
+    "ruler_65536": RulerConfig(sequence_length=65536, num_fewshot=0),
+    "ruler_131072": RulerConfig(sequence_length=131072, num_fewshot=0),
 }

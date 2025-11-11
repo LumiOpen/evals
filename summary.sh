@@ -677,4 +677,41 @@ if [ -f $DIR/alpaca_eval_fi.json ] ; then
     cat $DIR/alpaca_eval_fi.json | jq '.results.length_controlled_winrate'
 fi
 
+# RULER long context evaluations
+if [ -f $DIR/ruler_4096.json ] || [ -f $DIR/ruler_8192.json ] || [ -f $DIR/ruler_16384.json ] || [ -f $DIR/ruler_32768.json ] || [ -f $DIR/ruler_65536.json ] || [ -f $DIR/ruler_131072.json ] ; then
+    echo
+    echo "RULER Long Context:"
+fi
+
+if [ -f $DIR/ruler_4096.json ] ; then
+    echo -n "     ruler_4096 (4K): "
+    # Try to get average of all ruler subtasks
+    cat $DIR/ruler_4096.json | jq '[.results | to_entries[] | select(.key | startswith("ruler_")) | .value | to_entries[] | select(.key | endswith(",none") or .key == "acc" or .key == "exact_match") | .value] | add / length' | awk '{print $1 * 100}'
+fi
+
+if [ -f $DIR/ruler_8192.json ] ; then
+    echo -n "     ruler_8192 (8K): "
+    cat $DIR/ruler_8192.json | jq '[.results | to_entries[] | select(.key | startswith("ruler_")) | .value | to_entries[] | select(.key | endswith(",none") or .key == "acc" or .key == "exact_match") | .value] | add / length' | awk '{print $1 * 100}'
+fi
+
+if [ -f $DIR/ruler_16384.json ] ; then
+    echo -n "    ruler_16384 (16K): "
+    cat $DIR/ruler_16384.json | jq '[.results | to_entries[] | select(.key | startswith("ruler_")) | .value | to_entries[] | select(.key | endswith(",none") or .key == "acc" or .key == "exact_match") | .value] | add / length' | awk '{print $1 * 100}'
+fi
+
+if [ -f $DIR/ruler_32768.json ] ; then
+    echo -n "    ruler_32768 (32K): "
+    cat $DIR/ruler_32768.json | jq '[.results | to_entries[] | select(.key | startswith("ruler_")) | .value | to_entries[] | select(.key | endswith(",none") or .key == "acc" or .key == "exact_match") | .value] | add / length' | awk '{print $1 * 100}'
+fi
+
+if [ -f $DIR/ruler_65536.json ] ; then
+    echo -n "    ruler_65536 (64K): "
+    cat $DIR/ruler_65536.json | jq '[.results | to_entries[] | select(.key | startswith("ruler_")) | .value | to_entries[] | select(.key | endswith(",none") or .key == "acc" or .key == "exact_match") | .value] | add / length' | awk '{print $1 * 100}'
+fi
+
+if [ -f $DIR/ruler_131072.json ] ; then
+    echo -n "   ruler_131072 (128K): "
+    cat $DIR/ruler_131072.json | jq '[.results | to_entries[] | select(.key | startswith("ruler_")) | .value | to_entries[] | select(.key | endswith(",none") or .key == "acc" or .key == "exact_match") | .value] | add / length' | awk '{print $1 * 100}'
+fi
+
 echo
