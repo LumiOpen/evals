@@ -139,10 +139,7 @@ mkdir -p "$PIP_INSTALL_DIR"
 
 # Install only missing packages (skip pytrec_eval - needs gcc, not used by LongPPL)
 python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score || true
-echo "=== Pip install done ==="
-echo "=== About to export PYTHONPATH ==="
 export PYTHONPATH="/workspace:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
-echo "=== PYTHONPATH exported: $PYTHONPATH ==="
 
 # Determine output directory
 if [[ "${MODEL_ID}" == /* ]]; then
