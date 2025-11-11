@@ -231,9 +231,9 @@ output_file = \"$OUTPUT_DIR/longppl_${CONTEXT_LENGTH}.json\"
 with open(output_file, \"w\") as f:
     json.dump(results, f, indent=2)
 
-print(f\"\\n=== Results Summary ===\")
-print(f\"LongPPL: {results[\\\"longppl\\\"]}\")
-print(f\"Standard PPL: {results[\\\"ppl\\\"]}\")
+print(f\"\\\\n=== Results Summary ===\")
+print(f\"LongPPL: {results['longppl']}\")
+print(f\"Standard PPL: {results['ppl']}\")
 print(f\"Results saved to: {output_file}\")
 "
 
