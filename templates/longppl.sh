@@ -178,6 +178,7 @@ EVALUATOR_MODEL="meta-llama/Llama-3.1-8B"
 echo "=== Starting LongPPL evaluation ==="
 echo "Target model: $MODEL_LOCAL"
 echo "Evaluator model: $EVALUATOR_MODEL"
+echo "Note: Using default max-length=32768 to match paper evaluation setup"
 python longppl/perplexity/perplexity.py \
   --dataset emozilla/govreport-test-tokenized \
   --tokenized \
@@ -186,7 +187,6 @@ python longppl/perplexity/perplexity.py \
   --model "$MODEL_LOCAL" \
   --evaluator-model "$EVALUATOR_MODEL" \
   --mode online \
-  --max-length "$CONTEXT_LENGTH" \
   --trunc-len 4096 \
   --sliding-window 1024 \
   --alpha "$ALPHA" \
