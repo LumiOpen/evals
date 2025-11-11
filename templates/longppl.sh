@@ -72,7 +72,6 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env HF_TOKEN="${HF_TOKEN:-}" \
     "$IMG" bash -c '
 set -euo pipefail
-set -x
 umask 002
 
 # ---- model setup ----
@@ -140,12 +139,9 @@ mkdir -p "$PIP_INSTALL_DIR"
 
 # Install only missing packages (skip pytrec_eval - needs gcc, not used by LongPPL)
 python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score
-echo "After pip install"
 
 # Add to Python path (parent of longppl directory so 'import longppl' works)
-echo "About to export PYTHONPATH"
 export PYTHONPATH="/workspace:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
-echo "After export PYTHONPATH"
 
 # Determine output directory
 if [[ "${MODEL_ID}" == /* ]]; then
