@@ -138,7 +138,7 @@ PIP_INSTALL_DIR="$PIP_TMP_DIR/packages"
 mkdir -p "$PIP_INSTALL_DIR"
 
 # Install only missing packages (skip pytrec_eval - needs gcc, not used by LongPPL)
-python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score 2>&1 | grep -v "Requirement already satisfied" || true
+python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score || true
 
 echo "DEBUG: Pip install completed"
 
