@@ -24,9 +24,9 @@ export XDG_CACHE_HOME=/project/hf_cache/xdg
 
 mkdir -p /project/hf_cache/{hub,models,datasets,xdg}
 
-echo "=== Environment Setup ===\"
+echo "=== Environment Setup ==="
 echo "MODEL_ID: $MODEL_ID"
-python -c "import torch; print(f\"PyTorch: {torch.__version__}, CUDA devices: {torch.cuda.device_count()}\")"
+python -c 'import torch; print(f"PyTorch: {torch.__version__}, CUDA devices: {torch.cuda.device_count()}")'
 
 # ---- Prefetch model if HuggingFace repo ID ----
 if [[ "${MODEL_ID}" == /* ]]; then
