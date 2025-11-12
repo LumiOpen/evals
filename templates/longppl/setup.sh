@@ -70,8 +70,9 @@ PIP_INSTALL_DIR="$PIP_TMP_DIR/packages"
 mkdir -p "$PIP_INSTALL_DIR"
 
 # Install only missing packages (skip pytrec_eval - needs gcc, not used by LongPPL)
-# Note: datasets, torch, transformers, tqdm, numpy should already be in container
-python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score datasets || true
+# Note: torch, transformers, tqdm, numpy should already be in container
+# Install datasets without --no-deps to get necessary dependencies
+python -m pip install --target "$PIP_INSTALL_DIR" datasets evaluate rouge_score || true
 export PYTHONPATH="/workspace:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
 
 # Determine output directory
