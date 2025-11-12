@@ -306,6 +306,13 @@ setup_lm_eval() {
 setup_lm_eval
 export PYTHONPATH="$EVAL_HARNESS_DIR:$PYTHONPATH"
 
+# Install RULER dependencies if running RULER tasks
+{% if env_vars.MAX_SEQ_LENGTH %}
+echo "Installing RULER dependencies (wonderwords, nltk)..."
+pip install --no-cache-dir wonderwords nltk
+echo "RULER dependencies installed successfully"
+{% endif %}
+
 # Create a temporary directory for lm_eval output
 RANDOM_DIR="/tmp/lm_eval_$(date +%s%N)"
 mkdir -p "$RANDOM_DIR"
