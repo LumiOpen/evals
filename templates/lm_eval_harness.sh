@@ -83,15 +83,12 @@ if [[ "$MODEL_ID" == /* ]] || [[ "$MODEL_ID" == ./* ]]; then
     
     if [[ "$MODEL_ID" == "$HOST_PROJECT_PATH"* ]]; then
         # Path is under the bind-mounted project directory
-        MODEL_LOCAL="/project${MODEL_ID#$HOST_PROJECT_PATH}"
+        MODEL_LOCAL="${MODEL_ID/$HOST_PROJECT_PATH/\/project}"
         echo "Converted to container path: $MODEL_LOCAL"
     elif [[ "$MODEL_ID" == /pfs/lustrep* ]]; then
-        # Alternative PFS path format - try to extract relative path
-        # Pattern: /pfs/lustrepN/scratch/{{ slurm_config.account }}/rest/of/path
-        # We want: /project/rest/of/path
-        TEMP_PATH="${MODEL_ID#/pfs/lustrep?/scratch/{{ slurm_config.account }}}"
-        if [[ "$TEMP_PATH" != "$MODEL_ID" ]]; then
-            MODEL_LOCAL="/project${TEMP_PATH}"
+        # Alternative PFS path format - use sed for more complex pattern matching
+        MODEL_LOCAL=$(echo "$MODEL_ID" | sed "s|/pfs/lustrep[0-9]/scratch/{{ slurm_config.account }}|/project|")
+        if [[ "$MODEL_LOCAL" != "$MODEL_ID" ]]; then
             echo "Converted PFS path to container path: $MODEL_LOCAL"
         else
             echo "WARNING: Could not convert PFS path"
