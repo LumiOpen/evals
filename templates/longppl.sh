@@ -63,18 +63,30 @@ if [[ ! "$DATASET_PATH" =~ ^/ ]]; then
   DATASET_PATH="$SCR/$DATASET_PATH"
   echo "Converting relative dataset path to absolute: $DATASET_PATH"
 fi
-# Normalize path (remove ./ and ../)
+
+# Normalize paths (remove ./ and ../)
 DATASET_PATH=$(realpath -m "$DATASET_PATH")
+SCR_NORMALIZED=$(realpath -m "$SCR")
 echo "Normalized dataset path: $DATASET_PATH"
-# Rewrite absolute /scratch/project_X/... paths to /project/...
-if [[ "$DATASET_PATH" =~ ^/scratch/project_[0-9]+/(.*)$ ]]; then
-  DATASET_PATH_CONTAINER="/project/${BASH_REMATCH[1]}"
-  echo "Rewriting dataset path for container: $DATASET_PATH -> $DATASET_PATH_CONTAINER"
-  export DATASET_PATH="$DATASET_PATH_CONTAINER"
-elif [[ "$DATASET_PATH" =~ ^$SCR/(.*)$ ]]; then
+echo "Normalized SCR: $SCR_NORMALIZED"
+
+# Rewrite absolute paths for container
+# First check if dataset is under workspace directory (most common case for relative paths)
+if [[ "$DATASET_PATH" =~ ^"$SCR_NORMALIZED"/(.*)$ ]]; then
   # Path is under $SCR (the current scratch dir), map to /workspace
-  DATASET_PATH_CONTAINER="/workspace/${BASH_REMATCH[1]}"
-  echo "Rewriting dataset path for container: $DATASET_PATH -> $DATASET_PATH_CONTAINER"
+  RELATIVE_PATH="${BASH_REMATCH[1]}"
+  DATASET_PATH_CONTAINER="/workspace/$RELATIVE_PATH"
+  echo "Rewriting dataset path for container (workspace): $DATASET_PATH -> $DATASET_PATH_CONTAINER"
+  export DATASET_PATH="$DATASET_PATH_CONTAINER"
+# Handle /pfs/lustrep2/scratch/project_X/... pattern (LUMI normalized paths)
+elif [[ "$DATASET_PATH" =~ ^/pfs/lustrep2/scratch/project_[0-9]+/(.*)$ ]]; then
+  DATASET_PATH_CONTAINER="/project/${BASH_REMATCH[1]}"
+  echo "Rewriting dataset path for container (project): $DATASET_PATH -> $DATASET_PATH_CONTAINER"
+  export DATASET_PATH="$DATASET_PATH_CONTAINER"
+# Handle /scratch/project_X/... pattern (standard paths)
+elif [[ "$DATASET_PATH" =~ ^/scratch/project_[0-9]+/(.*)$ ]]; then
+  DATASET_PATH_CONTAINER="/project/${BASH_REMATCH[1]}"
+  echo "Rewriting dataset path for container (project): $DATASET_PATH -> $DATASET_PATH_CONTAINER"
   export DATASET_PATH="$DATASET_PATH_CONTAINER"
 fi
 {% endif %}
