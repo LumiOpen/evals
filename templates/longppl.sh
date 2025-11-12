@@ -56,6 +56,25 @@ if [[ "$MODEL_ID" =~ ^/scratch/project_[0-9]+/(.*)$ ]]; then
   export MODEL_ID="$MODEL_ID_CONTAINER"
 fi
 
+# Rewrite dataset path for container if provided
+{% if env_vars.LONGPPL_DATASET %}DATASET_PATH="{{ env_vars.LONGPPL_DATASET }}"
+# Convert relative paths to absolute (relative to $SCR)
+if [[ ! "$DATASET_PATH" =~ ^/ ]]; then
+  DATASET_PATH="$SCR/$DATASET_PATH"
+  echo "Converting relative dataset path to absolute: $DATASET_PATH"
+fi
+# Rewrite absolute /scratch/project_X/... paths to /project/...
+if [[ "$DATASET_PATH" =~ ^/scratch/project_[0-9]+/(.*)$ ]]; then
+  DATASET_PATH_CONTAINER="/project/${BASH_REMATCH[1]}"
+  echo "Rewriting dataset path for container: $DATASET_PATH -> $DATASET_PATH_CONTAINER"
+  export DATASET_PATH="$DATASET_PATH_CONTAINER"
+elif [[ "$DATASET_PATH" =~ ^$SCR/(.*)$ ]]; then
+  # Path is under $SCR (the current scratch dir), map to /workspace
+  DATASET_PATH_CONTAINER="/workspace/${BASH_REMATCH[1]}"
+  echo "Rewriting dataset path for container: $DATASET_PATH -> $DATASET_PATH_CONTAINER"
+  export DATASET_PATH="$DATASET_PATH_CONTAINER"
+fi
+{% endif %}
 srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_config.time }}" --gpus-per-task="$GPUS" \
   singularity exec --rocm --cleanenv \
     --bind "$SCR":/workspace \
@@ -68,7 +87,7 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env DATASET_SAMPLES={{ env_vars.DATASET_SAMPLES }} \
     --env ALPHA={{ env_vars.ALPHA }} \
     --env BETA={{ env_vars.BETA }} \
-    {% if env_vars.LONGPPL_DATASET %}--env LONGPPL_DATASET={{ env_vars.LONGPPL_DATASET }} \
+    {% if env_vars.LONGPPL_DATASET %}--env LONGPPL_DATASET="$DATASET_PATH" \
     {% endif %}--env HF_HOME=/project/hf_cache \
     --env HUGGINGFACE_HUB_CACHE=/project/hf_cache/hub \
     --env TRANSFORMERS_CACHE=/project/hf_cache/models \
