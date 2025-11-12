@@ -80,22 +80,10 @@ umask 002
 
 # ==================== STAGE SCRIPTS SETUP ====================
 
-mkdir -p /workspace/tools
-
-# Write LongPPL setup stage script
-cat > /workspace/tools/longppl_setup.sh <<'"'"'SETUP_EOF'"'"'
-{% include 'longppl/setup.sh' %}
-SETUP_EOF
-
-# Write LongPPL run evaluation stage script
-cat > /workspace/tools/longppl_run_eval.sh <<'"'"'RUNEVAL_EOF'"'"'
-{% include 'longppl/run_eval.sh' %}
-RUNEVAL_EOF
-
-# Write LongPPL result parser script
-cat > /workspace/tools/longppl_parse_results.py <<'"'"'PARSE_EOF'"'"'
-{% include 'longppl/parse_results.py' %}
-PARSE_EOF
+# Copy stage scripts from templates directory
+cp /workspace/templates/longppl/setup.sh /workspace/tools/longppl_setup.sh
+cp /workspace/templates/longppl/run_eval.sh /workspace/tools/longppl_run_eval.sh
+cp /workspace/templates/longppl/parse_results.py /workspace/tools/longppl_parse_results.py
 
 chmod +x /workspace/tools/longppl_setup.sh /workspace/tools/longppl_run_eval.sh
 
