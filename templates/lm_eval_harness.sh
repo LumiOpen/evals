@@ -379,18 +379,31 @@ FEWSHOT_AS_MULTITURN_FLAG=""
 {% if env_vars.BACKEND == "vllm" %}
 BASE_ARGS="pretrained=${MODEL_LOCAL},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP}"
 
-# Set max_model_len based on RULER sequence length or default
 {% if env_vars.MAX_SEQ_LENGTH %}
-DEFAULT_ARGS="max_model_len={{ env_vars.MAX_SEQ_LENGTH }},gpu_memory_utilization=0.90"
-echo "RULER: Setting max_model_len={{ env_vars.MAX_SEQ_LENGTH }}"
+# RULER task: Force max_model_len to match RULER sequence length
+# Strip any max_model_len from MODEL_ARGS if present, then add RULER length
+{% if env_vars.MODEL_ARGS %}
+EXTRA_ARGS="{{ env_vars.MODEL_ARGS }}"
+# Remove any max_model_len setting from extra args
+EXTRA_ARGS=$(echo "$EXTRA_ARGS" | sed 's/max_model_len=[0-9]*,\?//g' | sed 's/,,/,/g' | sed 's/^,//;s/,$//')
 {% else %}
-DEFAULT_ARGS="max_model_len=4096,gpu_memory_utilization=0.90"
+EXTRA_ARGS=""
 {% endif %}
-
+# Add RULER max_model_len (must match sequence length for RULER)
+if [ -n "$EXTRA_ARGS" ]; then
+    MODEL_ARGS="${BASE_ARGS},${EXTRA_ARGS},max_model_len={{ env_vars.MAX_SEQ_LENGTH }},gpu_memory_utilization=0.90"
+else
+    MODEL_ARGS="${BASE_ARGS},max_model_len={{ env_vars.MAX_SEQ_LENGTH }},gpu_memory_utilization=0.90"
+fi
+echo "RULER: Using max_model_len={{ env_vars.MAX_SEQ_LENGTH }} (matching RULER sequence length)"
+{% else %}
+# Non-RULER task: Use default or provided max_model_len
+DEFAULT_ARGS="max_model_len=4096,gpu_memory_utilization=0.90"
 {% if env_vars.MODEL_ARGS %}
 MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS},{{ env_vars.MODEL_ARGS }}"
 {% else %}
 MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS}"
+{% endif %}
 {% endif %}
 
 MODEL_BACKEND="vllm"
@@ -402,16 +415,29 @@ echo "Using dummy backend (cache-only, no model weights loaded)"
 {% else %}
 BASE_ARGS="pretrained=${MODEL_LOCAL},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
 
-# Add max_length for RULER tasks
 {% if env_vars.MAX_SEQ_LENGTH %}
-BASE_ARGS="${BASE_ARGS},max_length={{ env_vars.MAX_SEQ_LENGTH }}"
-echo "RULER: Setting max_length={{ env_vars.MAX_SEQ_LENGTH }}"
+# RULER task: Force max_length to match RULER sequence length
+# Strip any max_length from MODEL_ARGS if present, then add RULER length
+{% if env_vars.MODEL_ARGS %}
+EXTRA_ARGS="{{ env_vars.MODEL_ARGS }}"
+# Remove any max_length setting from extra args
+EXTRA_ARGS=$(echo "$EXTRA_ARGS" | sed 's/max_length=[0-9]*,\?//g' | sed 's/,,/,/g' | sed 's/^,//;s/,$//')
+{% else %}
+EXTRA_ARGS=""
 {% endif %}
-
+if [ -n "$EXTRA_ARGS" ]; then
+    MODEL_ARGS="${BASE_ARGS},${EXTRA_ARGS},max_length={{ env_vars.MAX_SEQ_LENGTH }}"
+else
+    MODEL_ARGS="${BASE_ARGS},max_length={{ env_vars.MAX_SEQ_LENGTH }}"
+fi
+echo "RULER: Using max_length={{ env_vars.MAX_SEQ_LENGTH }} (matching RULER sequence length)"
+{% else %}
+# Non-RULER task: Use provided or default settings
 {% if env_vars.MODEL_ARGS %}
 MODEL_ARGS="${BASE_ARGS},{{ env_vars.MODEL_ARGS }}"
 {% else %}
 MODEL_ARGS="${BASE_ARGS}"
+{% endif %}
 {% endif %}
 
 MODEL_BACKEND="hf-auto"
@@ -428,8 +454,8 @@ BATCH_SIZE="4"
 {% endif %}
 
 {% if env_vars.MAX_SEQ_LENGTH %}
-# Set up metadata for RULER tasks - properly escaped for bash
-TASK_METADATA_FLAG="--metadata {\\\"max_seq_lengths\\\":[{{ env_vars.MAX_SEQ_LENGTH }}]}"
+# Set up metadata for RULER tasks
+TASK_METADATA_FLAG="--metadata {\"max_seq_lengths\":[{{ env_vars.MAX_SEQ_LENGTH }}]}"
 echo "Using RULER metadata for sequence length: {{ env_vars.MAX_SEQ_LENGTH }}"
 {% else %}
 TASK_METADATA_FLAG=""
