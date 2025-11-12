@@ -94,6 +94,7 @@ export CONTEXT_LENGTH="$CONTEXT_LENGTH"
 export DATASET_SAMPLES="$DATASET_SAMPLES"
 export ALPHA="$ALPHA"
 export BETA="$BETA"
+export PYTHONPATH="$PYTHONPATH"
 EOF
 
 echo "✓ Setup complete"
