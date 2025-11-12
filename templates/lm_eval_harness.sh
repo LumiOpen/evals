@@ -318,41 +318,47 @@ if [[ -z "$CONTAINER_OUTPUT_FILE" ]]; then
   echo "ERROR: OUTPUT_FILE is empty. Check main.py env_vars." >&2
   exit 2
 fi
-USER_SCRATCH_DIR="/scratch/project_462000353/$USER"
-PFS_USER_PREFIX="/pfs/lustrep2/scratch/project_462000353/$USER/"
 
 echo "DEBUG: Original OUTPUT_FILE: $CONTAINER_OUTPUT_FILE"
 echo "DEBUG: SCR inside container: $SCR"
 
-# Convert various host path patterns to container paths
+# The bind mount is: /scratch/{{ slurm_config.account }} -> /project in container
+HOST_PROJECT_PATH="/scratch/{{ slurm_config.account }}"
+
+# Convert output file path from host to container
 if [[ "$CONTAINER_OUTPUT_FILE" == "$SCR"* ]]; then
-    echo "DEBUG: Path matches SCR prefix, converting..."
-    # Path relative to current working directory - remove SCR prefix and add /workspace
+    echo "DEBUG: Path matches SCR (workspace) prefix, converting..."
+    # Path relative to current working directory - already in workspace
     RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$SCR}"
-    # Remove leading slash if present
     RELATIVE_PATH="${RELATIVE_PATH#/}"
     CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
     echo "DEBUG: Converted to: $CONTAINER_OUTPUT_FILE"
-elif [[ "$CONTAINER_OUTPUT_FILE" == "$PFS_USER_PREFIX"* ]]; then
-    echo "DEBUG: Path matches PFS prefix, converting..."
-    # /pfs paths under user directory
-    RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$PFS_USER_PREFIX}"
-    RELATIVE_PATH="${RELATIVE_PATH#evals/}"
-    CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
+elif [[ "$CONTAINER_OUTPUT_FILE" == "$HOST_PROJECT_PATH"* ]]; then
+    echo "DEBUG: Path matches project path, converting..."
+    # Path is under /scratch/project_XXXXX on host -> /project in container
+    RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$HOST_PROJECT_PATH}"
+    CONTAINER_OUTPUT_FILE="/project${RELATIVE_PATH}"
     echo "DEBUG: Converted to: $CONTAINER_OUTPUT_FILE"
-elif [[ "$CONTAINER_OUTPUT_FILE" == "$USER_SCRATCH_DIR"* ]]; then
-    echo "DEBUG: Path matches USER_SCRATCH_DIR prefix, converting..."
-    # Direct /scratch paths under user directory
-    RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$USER_SCRATCH_DIR}"
-    # Remove leading slash if present
-    RELATIVE_PATH="${RELATIVE_PATH#/}"
-    CONTAINER_OUTPUT_FILE="/workspace/${RELATIVE_PATH}"
-    echo "DEBUG: Converted to: $CONTAINER_OUTPUT_FILE"
+elif [[ "$CONTAINER_OUTPUT_FILE" == /pfs/lustrep* ]]; then
+    echo "DEBUG: Path is PFS path, converting..."
+    # PFS paths like /pfs/lustrepN/scratch/project_XXXXX/... -> /project/...
+    # Try each lustre version
+    for LUSTREP in lustrep2 lustrep3 lustrep4; do
+        PFS_PATH="/pfs/${LUSTREP}/scratch/{{ slurm_config.account }}"
+        if [[ "$CONTAINER_OUTPUT_FILE" == "$PFS_PATH"* ]]; then
+            RELATIVE_PATH="${CONTAINER_OUTPUT_FILE#$PFS_PATH}"
+            CONTAINER_OUTPUT_FILE="/project${RELATIVE_PATH}"
+            echo "DEBUG: Converted PFS path to: $CONTAINER_OUTPUT_FILE"
+            break
+        fi
+    done
 else
-    echo "DEBUG: No path conversion matched - keeping original path"
+    echo "DEBUG: Path does not match expected patterns - using as-is (might fail)"
+    echo "       If this fails, ensure output path is under /scratch/{{ slurm_config.account }}"
 fi
 
 # Prepare final output directory inside container
+echo "Creating output directory: $(dirname "$CONTAINER_OUTPUT_FILE")"
 mkdir -p "$(dirname "$CONTAINER_OUTPUT_FILE")"
 echo "Final results will be saved to: $CONTAINER_OUTPUT_FILE"
 
