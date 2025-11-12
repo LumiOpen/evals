@@ -128,7 +128,7 @@ def main(args):
         elif args.dataset.endswith('.json') and os.path.exists(args.dataset):
             print(f"DEBUG: Detected local JSON file: {args.dataset}", flush=True)
             print("DEBUG: Calling datasets.load_dataset('json', ...)...", flush=True)
-            input_texts = datasets.load_dataset('json', data_files=args.dataset, split='train')
+            input_texts = datasets.load_dataset('json', data_files=args.dataset, field='documents', split='train')
             print(f"DEBUG: ✓ JSON loaded: {len(input_texts)} documents", flush=True)
         else:
             print(f"DEBUG: Loading HF dataset: {args.dataset}", flush=True)
