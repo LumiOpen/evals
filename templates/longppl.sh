@@ -127,6 +127,8 @@ echo
 echo "=========================================="
 echo "STAGE 3: PARSE RESULTS"
 echo "=========================================="
+# Source environment variables from setup stage
+source /workspace/tools/longppl_env.sh
 python /workspace/tools/longppl_parse_results.py \
   --log-file "$OUTPUT_DIR/longppl_${CONTEXT_LENGTH}.log" \
   --output-file "$OUTPUT_DIR/longppl_${CONTEXT_LENGTH}.json" \
