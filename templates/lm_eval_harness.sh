@@ -378,7 +378,14 @@ FEWSHOT_AS_MULTITURN_FLAG=""
 # Backend-specific model configuration
 {% if env_vars.BACKEND == "vllm" %}
 BASE_ARGS="pretrained=${MODEL_LOCAL},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP}"
+
+# Set max_model_len based on RULER sequence length or default
+{% if env_vars.MAX_SEQ_LENGTH %}
+DEFAULT_ARGS="max_model_len={{ env_vars.MAX_SEQ_LENGTH }},gpu_memory_utilization=0.90"
+echo "RULER: Setting max_model_len={{ env_vars.MAX_SEQ_LENGTH }}"
+{% else %}
 DEFAULT_ARGS="max_model_len=4096,gpu_memory_utilization=0.90"
+{% endif %}
 
 {% if env_vars.MODEL_ARGS %}
 MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS},{{ env_vars.MODEL_ARGS }}"
@@ -394,6 +401,12 @@ MODEL_ARGS="pretrained={{ env_vars.MODEL }}"
 echo "Using dummy backend (cache-only, no model weights loaded)"
 {% else %}
 BASE_ARGS="pretrained=${MODEL_LOCAL},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
+
+# Add max_length for RULER tasks
+{% if env_vars.MAX_SEQ_LENGTH %}
+BASE_ARGS="${BASE_ARGS},max_length={{ env_vars.MAX_SEQ_LENGTH }}"
+echo "RULER: Setting max_length={{ env_vars.MAX_SEQ_LENGTH }}"
+{% endif %}
 
 {% if env_vars.MODEL_ARGS %}
 MODEL_ARGS="${BASE_ARGS},{{ env_vars.MODEL_ARGS }}"
@@ -414,6 +427,14 @@ BATCH_SIZE="auto"
 BATCH_SIZE="4"
 {% endif %}
 
+{% if env_vars.TASK_METADATA %}
+# Set up metadata for RULER tasks
+TASK_METADATA_FLAG="--metadata '{{ env_vars.TASK_METADATA }}'"
+echo "Using task metadata: {{ env_vars.TASK_METADATA }}"
+{% else %}
+TASK_METADATA_FLAG=""
+{% endif %}
+
 python -m lm_eval \
   --model "$MODEL_BACKEND" \
   --model_args "$MODEL_ARGS" \
@@ -423,6 +444,7 @@ python -m lm_eval \
   --output_path "$RANDOM_DIR" \
   $CHAT_TEMPLATE_FLAG \
   $FEWSHOT_AS_MULTITURN_FLAG \
+  $TASK_METADATA_FLAG \
 {% if env_vars.LIMIT %}  --limit {{ env_vars.LIMIT }} \
 {% endif %}  --log_samples \
 {% if env_vars.LM_EVAL_ARGS %}  {{ env_vars.LM_EVAL_ARGS }}

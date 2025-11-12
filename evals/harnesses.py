@@ -5,9 +5,10 @@ import os
 
 
 class LMEvalHarness:
-    def __init__(self, task_list, num_fewshot=0):
+    def __init__(self, task_list, num_fewshot=0, metadata=None):
         self.task_list = task_list
         self.num_fewshot = num_fewshot
+        self.metadata = metadata or {}
         self.harness = self # TODO remove
 
     def generate_script(self, slurm_config, env_vars, backend='hf'):
@@ -15,6 +16,18 @@ class LMEvalHarness:
         env_vars["TASK_LIST"] = ",".join(self.task_list)
         env_vars["NUM_FEWSHOT"] = self.num_fewshot
         env_vars["BACKEND"] = backend
+        
+        # Add metadata for RULER tasks
+        if self.metadata:
+            import json
+            env_vars["TASK_METADATA"] = json.dumps(self.metadata)
+            # Extract max_seq_lengths for model args
+            if "max_seq_lengths" in self.metadata and self.metadata["max_seq_lengths"]:
+                env_vars["MAX_SEQ_LENGTH"] = str(self.metadata["max_seq_lengths"][0])
+        else:
+            env_vars["TASK_METADATA"] = ""
+            env_vars["MAX_SEQ_LENGTH"] = ""
+        
         config = {}
         config["env_vars"] = env_vars
         config["slurm_config"] = slurm_config

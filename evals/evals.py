@@ -168,16 +168,20 @@ class RulerConfig(EvalConfig):
         self.subtask = subtask
         self.num_fewshot = num_fewshot
         
+        # RULER tasks use the "ruler" task name with metadata for sequence length
+        # Individual subtasks are specified via task name patterns
         if subtask:
-            # Individual subtask
+            # Individual subtask - each subtask is a separate task in RULER
+            # Task format in lm-eval is: ruler_niah_single_1, ruler_vt, ruler_qa_1, etc.
             task_name = f"ruler_{subtask}_{sequence_length}"
-            lm_task_name = f"ruler:{sequence_length}:{subtask}"
+            lm_task_name = f"ruler_{subtask}"
         else:
-            # All subtasks for this sequence length
+            # All subtasks for this sequence length (run all RULER tests)
             task_name = f"ruler_{sequence_length}"
-            lm_task_name = f"ruler:{sequence_length}"
+            lm_task_name = "ruler"
         
-        super().__init__(task_name, "custom", LMEvalHarness([lm_task_name], num_fewshot=num_fewshot))
+        super().__init__(task_name, "custom", LMEvalHarness([lm_task_name], num_fewshot=num_fewshot, 
+                                                             metadata={"max_seq_lengths": [sequence_length]}))
 
     def get_results_custom(self, json_data):
         # Get score for this specific task or average across all subtasks
