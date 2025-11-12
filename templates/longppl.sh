@@ -209,7 +209,7 @@ if not os.path.exists(log_file):
     print(f\"Error: Log file not found: {log_file}\")
     sys.exit(1)
 
-with open(log_file) as f:
+with open(log_file, errors='ignore') as f:
     log_text = f.read()
 
 # Extract longppl and ppl values from output
