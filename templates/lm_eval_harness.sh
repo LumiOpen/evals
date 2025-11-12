@@ -248,7 +248,7 @@ python /workspace/tools/sanity.py
 python /workspace/tools/stage_aiter.py
 
 {% if env_vars.BACKEND != "dummy" %}
-# Prefetch model if it's a HuggingFace repo (skip for local models)
+# Prefetch model if it's a HuggingFace repo and skip for local models
 if [ "$IS_LOCAL_MODEL" = "false" ]; then
     echo "Downloading model from HuggingFace..."
     python /workspace/tools/prefetch.py
