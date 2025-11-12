@@ -13,6 +13,11 @@ def convert_json_to_dataset(json_path, output_dir):
     with open(json_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
+    # If data is a dict with 'documents' key, extract it
+    if isinstance(data, dict) and 'documents' in data:
+        print(f"Extracting 'documents' field from wrapped JSON...")
+        data = data['documents']
+
     print(f"Loaded {len(data)} documents")
 
     # Convert to HuggingFace Dataset
