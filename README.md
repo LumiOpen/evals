@@ -13,7 +13,22 @@ For common evaluation scenarios, use the pre-configured scripts:
 - `code.sh` - Code generation evaluations
 - `ruler.sh` / `ruler-vllm.sh` - **NEW:** Long context evaluations (4K-128K tokens)
 
-See [RULER_README.md](RULER_README.md) for detailed documentation on long context evaluations.
+### RULER Long Context Evaluations
+
+RULER provides 13 distinct subtasks across 6 sequence lengths (4K-128K tokens) for comprehensive long-context evaluation:
+
+```bash
+# Quick test
+sh ruler.sh /path/to/model --subtasks "niah_single_1" --sequence-lengths "4096" --limit 10
+
+# Run all 78 combinations (13 subtasks × 6 sequence lengths)
+sh ruler-vllm.sh /path/to/model
+```
+
+**Documentation:**
+- [RULER_QUICK_REFERENCE.md](RULER_QUICK_REFERENCE.md) - Command cheat sheet
+- [RULER_README.md](RULER_README.md) - Complete documentation
+- [RULER_TESTING.md](RULER_TESTING.md) - Testing guide
 
 ## Usage
 

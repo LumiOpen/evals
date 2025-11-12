@@ -145,28 +145,50 @@ class RulerConfig(EvalConfig):
     
     RULER (Rule-based Long-context Understanding Evaluation) evaluates models
     on their ability to retrieve and use information from long contexts.
+    
+    RULER includes 13 subtasks:
+    - niah_single_1, niah_single_2, niah_single_3 (Needle in a Haystack - single)
+    - niah_multikey_1, niah_multikey_2, niah_multikey_3 (NIAH - multiple keys)
+    - niah_multivalue (NIAH - multiple values)
+    - niah_multiquery (NIAH - multiple queries)
+    - vt (Variable Tracking)
+    - cwe (Common Words Extraction)
+    - fwe (Frequent Words Extraction)
+    - qa_1, qa_2 (Question Answering)
     """
-    def __init__(self, sequence_length, num_fewshot=0):
-        # RULER task group includes multiple subtasks:
-        # - niah_* (Needle in a Haystack)
-        # - vt (Variable Tracking)
-        # - cwe (Common Words Extraction)
-        # - fwe (Frequent Words Extraction)
-        # - qa_* (Question Answering)
-        task_name = f"ruler_{sequence_length}"
-        super().__init__(task_name, "custom", LMEvalHarness([task_name], num_fewshot=num_fewshot))
+    def __init__(self, sequence_length, subtask=None, num_fewshot=0):
+        """
+        Args:
+            sequence_length: Context length (4096, 8192, 16384, 32768, 65536, 131072)
+            subtask: Specific RULER subtask name (e.g., 'niah_single_1', 'vt', 'qa_1')
+                    If None, runs all subtasks for this sequence length
+            num_fewshot: Number of few-shot examples
+        """
         self.sequence_length = sequence_length
+        self.subtask = subtask
         self.num_fewshot = num_fewshot
+        
+        if subtask:
+            # Individual subtask
+            task_name = f"ruler_{subtask}_{sequence_length}"
+            lm_task_name = f"ruler:{sequence_length}:{subtask}"
+        else:
+            # All subtasks for this sequence length
+            task_name = f"ruler_{sequence_length}"
+            lm_task_name = f"ruler:{sequence_length}"
+        
+        super().__init__(task_name, "custom", LMEvalHarness([lm_task_name], num_fewshot=num_fewshot))
 
     def get_results_custom(self, json_data):
-        # Average score across all RULER subtasks
+        # Get score for this specific task or average across all subtasks
         if "results" not in json_data:
             return 0.0
         
-        # Collect all RULER task results
+        # Collect relevant task results
         ruler_scores = []
         for task_name, task_results in json_data["results"].items():
-            if task_name.startswith("ruler_"):
+            # Match tasks that contain our sequence length
+            if f"{self.sequence_length}" in task_name or task_name.startswith("ruler"):
                 # Try different result keys that might be present
                 if "acc,none" in task_results:
                     ruler_scores.append(task_results["acc,none"])
@@ -424,6 +446,10 @@ evals = {
 
     # RULER long context evaluations
     # Sequence lengths: powers of 2 from 4096 to 131072 (128K)
+    # Format: ruler_<subtask>_<seqlen> for individual subtasks
+    #         ruler_<seqlen> for all subtasks at that sequence length
+    
+    # Grouped tasks (all subtasks per sequence length)
     "ruler_4096": RulerConfig(sequence_length=4096, num_fewshot=0),
     "ruler_8192": RulerConfig(sequence_length=8192, num_fewshot=0),
     "ruler_16384": RulerConfig(sequence_length=16384, num_fewshot=0),
@@ -431,3 +457,28 @@ evals = {
     "ruler_65536": RulerConfig(sequence_length=65536, num_fewshot=0),
     "ruler_131072": RulerConfig(sequence_length=131072, num_fewshot=0),
 }
+
+# Generate individual RULER subtask entries for each sequence length
+# 13 subtasks × 6 sequence lengths = 78 total task combinations
+_RULER_SUBTASKS = [
+    "niah_single_1",
+    "niah_single_2", 
+    "niah_single_3",
+    "niah_multikey_1",
+    "niah_multikey_2",
+    "niah_multikey_3",
+    "niah_multivalue",
+    "niah_multiquery",
+    "vt",
+    "cwe",
+    "fwe",
+    "qa_1",
+    "qa_2",
+]
+
+_RULER_SEQUENCE_LENGTHS = [4096, 8192, 16384, 32768, 65536, 131072]
+
+for subtask in _RULER_SUBTASKS:
+    for seqlen in _RULER_SEQUENCE_LENGTHS:
+        task_key = f"ruler_{subtask}_{seqlen}"
+        evals[task_key] = RulerConfig(sequence_length=seqlen, subtask=subtask, num_fewshot=0)
