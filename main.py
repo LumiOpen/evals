@@ -150,6 +150,7 @@ def run_eval(eval_name, args):
         'LIMIT': str(args.limit) if args.limit is not None else '',
         'ROPE_SCALING_FACTOR': str(args.rope_scaling_factor) if args.rope_scaling_factor is not None else '',
         'ROPE_SCALING_TYPE': args.rope_scaling_type if args.rope_scaling_type else '',
+        'LONGPPL_DATASET': args.longppl_dataset if hasattr(args, 'longppl_dataset') else '',
         'LM_EVAL_REPO': lm_eval_config['LM_EVAL_REPO'],
         'LM_EVAL_REF': lm_eval_config['LM_EVAL_REF'],
         'LM_EVAL_PATH': lm_eval_config['LM_EVAL_PATH'],
@@ -280,6 +281,8 @@ def main():
     parser.add_argument('--lm_eval', type=str, help='lm-evaluation-harness source: URL, URL@ref, or local path (default: LumiOpen/main)')
     parser.add_argument('--rope_scaling_factor', type=float, default=None, help='RoPE scaling factor for context extension (e.g., 2.0)')
     parser.add_argument('--rope_scaling_type', type=str, default=None, choices=['linear', 'dynamic'], help='RoPE scaling type (linear or dynamic)')
+    # longppl-specific options
+    parser.add_argument('--longppl-dataset', type=str, default='', help='Custom dataset path for LongPPL evaluation (e.g., data/eurovoc_filtered/eurovoc_fi.json)')
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000353", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")

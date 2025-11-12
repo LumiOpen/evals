@@ -68,7 +68,8 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env DATASET_SAMPLES={{ env_vars.DATASET_SAMPLES }} \
     --env ALPHA={{ env_vars.ALPHA }} \
     --env BETA={{ env_vars.BETA }} \
-    --env HF_HOME=/project/hf_cache \
+    {% if env_vars.LONGPPL_DATASET %}--env LONGPPL_DATASET={{ env_vars.LONGPPL_DATASET }} \
+    {% endif %}--env HF_HOME=/project/hf_cache \
     --env HUGGINGFACE_HUB_CACHE=/project/hf_cache/hub \
     --env TRANSFORMERS_CACHE=/project/hf_cache/models \
     --env HF_DATASETS_CACHE=/project/hf_cache/datasets \

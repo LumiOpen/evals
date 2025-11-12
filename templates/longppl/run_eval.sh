@@ -25,9 +25,20 @@ echo "Output directory: $OUTPUT_DIR"
 echo "Note: Using default max-length=32768 to match paper evaluation setup"
 echo
 
+# Check if LONGPPL_DATASET is set, otherwise use default govreport dataset
+if [ -n "$LONGPPL_DATASET" ]; then
+  echo "Using custom dataset: $LONGPPL_DATASET"
+  DATASET_ARG="$LONGPPL_DATASET"
+  TOKENIZED_FLAG=""
+else
+  echo "Using default govreport dataset"
+  DATASET_ARG="emozilla/govreport-test-tokenized"
+  TOKENIZED_FLAG="--tokenized"
+fi
+
 python longppl/perplexity/perplexity.py \
-  --dataset emozilla/govreport-test-tokenized \
-  --tokenized \
+  --dataset "$DATASET_ARG" \
+  $TOKENIZED_FLAG \
   --dataset-min-tokens "$CONTEXT_LENGTH" \
   --samples "$DATASET_SAMPLES" \
   --model "$MODEL_LOCAL" \
