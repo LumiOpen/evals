@@ -28,28 +28,16 @@ echo
 # Check if LONGPPL_DATASET is set, otherwise use default govreport dataset
 if [ -n "$LONGPPL_DATASET" ]; then
   echo "Using custom dataset: $LONGPPL_DATASET"
-  # Check if it's a local file (starts with / or contains .json)
-  if [[ "$LONGPPL_DATASET" =~ \.json$ ]]; then
-    # Local JSON file - use json loader with data_files
-    echo "Detected local JSON file, using json loader"
-    DATASET_ARG="json"
-    DATA_FILES_ARG="--data-files $LONGPPL_DATASET"
-  else
-    # HuggingFace dataset name
-    DATASET_ARG="$LONGPPL_DATASET"
-    DATA_FILES_ARG=""
-  fi
+  DATASET_ARG="$LONGPPL_DATASET"
   TOKENIZED_FLAG=""
 else
   echo "Using default govreport dataset"
   DATASET_ARG="emozilla/govreport-test-tokenized"
-  DATA_FILES_ARG=""
   TOKENIZED_FLAG="--tokenized"
 fi
 
 python longppl/perplexity/perplexity.py \
   --dataset "$DATASET_ARG" \
-  $DATA_FILES_ARG \
   $TOKENIZED_FLAG \
   --dataset-min-tokens "$CONTEXT_LENGTH" \
   --samples "$DATASET_SAMPLES" \
