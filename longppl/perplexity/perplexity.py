@@ -140,8 +140,13 @@ def main(args):
         tokenize_counter = {'count': 0, 'total': len(input_texts)}
 
         def tokenize(example, idx):
-            # Extract text from example dict if it's a dict, otherwise use example directly
-            text_to_tokenize = example['text'] if isinstance(example, dict) else example
+            # Convert LazyRow to dict to extract proper string values
+            # When .map() is called on HF Dataset, example is a LazyRow object
+            # Accessing example['text'] on LazyRow returns another LazyRow, not a string
+            # So we need to convert it to a proper dict first
+            example_dict = {k: v for k, v in example.items()}
+            text_to_tokenize = example_dict.get('text', example)
+
             tokenized = tokenizer(
                 text_to_tokenize,
                 add_special_tokens=False,
