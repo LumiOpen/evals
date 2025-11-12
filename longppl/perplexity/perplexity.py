@@ -122,7 +122,8 @@ def main(args):
             example["offsets_mapping"] = tokenized["offsets_mapping"]
             return example
 
-        input_texts = input_texts.map(tokenize)
+        print(f"Tokenizing {len(input_texts)} documents...")
+        input_texts = input_texts.map(tokenize, desc="Tokenizing documents")
         if args.save_tokenized:
             input_texts.save_to_disk(args.save_tokenized)
             print(f"Saved tokenized dataset to {args.save_tokenized}")
