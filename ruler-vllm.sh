@@ -138,7 +138,7 @@ for subtask in "${SUBTASK_ARRAY[@]}"; do
         echo "[$JOB_COUNT/$TOTAL_JOBS] Submitting SLURM job for $TASK_NAME (max_model_len=$MAX_LEN)..."
         
         # This calls main.py which internally generates and submits a SLURM job via sbatch
-        python main.py \
+        python3 main.py \
             --partition "$PARTITION" \
             --time "$TIME" \
             --gres "$GRES" \
