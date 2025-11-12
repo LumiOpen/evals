@@ -26,6 +26,8 @@ mkdir -p /project/hf_cache/{hub,models,datasets,xdg}
 
 echo "=== Environment Setup ==="
 echo "MODEL_ID: $MODEL_ID"
+echo "Python version:"
+python --version
 python -c 'import torch; print(f"PyTorch: {torch.__version__}, CUDA devices: {torch.cuda.device_count()}")'
 
 # ---- Prefetch model if HuggingFace repo ID ----
@@ -40,12 +42,12 @@ else
   python -c "
 from huggingface_hub import snapshot_download
 p = snapshot_download(
-  repo_id=\"${MODEL_ID}\",
-  local_dir=\"${PREFETCH_LOCAL_DIR}\",
+  repo_id='${MODEL_ID}',
+  local_dir='${PREFETCH_LOCAL_DIR}',
   local_dir_use_symlinks=False,
-  allow_patterns=[\"*.safetensors\",\"*.json\",\"tokenizer.*\",\"*vocab*\",\"*.model\"]
+  allow_patterns=['*.safetensors','*.json','tokenizer.*','*vocab*','*.model']
 )
-print(f\"Model prefetched to: {p}\")
+print(f'Model prefetched to: {p}')
 "
 fi
 
@@ -71,7 +73,7 @@ mkdir -p "$PIP_INSTALL_DIR"
 
 # Install only missing packages (skip pytrec_eval - needs gcc, not used by LongPPL)
 # Note: torch, transformers, tqdm, numpy should already be in container
-# Install datasets without --no-deps to get necessary dependencies
+# Install datasets and dependencies (using miniconda python 3.12)
 python -m pip install --target "$PIP_INSTALL_DIR" datasets evaluate rouge_score || true
 export PYTHONPATH="/workspace:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
 
