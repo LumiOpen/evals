@@ -63,6 +63,9 @@ if [[ ! "$DATASET_PATH" =~ ^/ ]]; then
   DATASET_PATH="$SCR/$DATASET_PATH"
   echo "Converting relative dataset path to absolute: $DATASET_PATH"
 fi
+# Normalize path (remove ./ and ../)
+DATASET_PATH=$(realpath -m "$DATASET_PATH")
+echo "Normalized dataset path: $DATASET_PATH"
 # Rewrite absolute /scratch/project_X/... paths to /project/...
 if [[ "$DATASET_PATH" =~ ^/scratch/project_[0-9]+/(.*)$ ]]; then
   DATASET_PATH_CONTAINER="/project/${BASH_REMATCH[1]}"
