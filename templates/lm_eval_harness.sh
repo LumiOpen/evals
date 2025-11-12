@@ -221,7 +221,7 @@ PY
 
 {% if env_vars.BACKEND != "dummy" %}
 # ------- write helper: prefetch.py (only for HuggingFace models) -------
-if [ "$IS_LOCAL_MODEL" = "false" ]; then
+if [[ "${IS_LOCAL_MODEL:-false}" == "false" ]]; then
 cat > /workspace/tools/prefetch.py <<PY
 from huggingface_hub import snapshot_download
 p = snapshot_download(
@@ -252,19 +252,19 @@ python /workspace/tools/stage_aiter.py
 
 {% if env_vars.BACKEND != "dummy" %}
 # Prefetch model if it's a HuggingFace repo and skip for local models
-if [ "$IS_LOCAL_MODEL" = "false" ]; then
+if [[ "${IS_LOCAL_MODEL:-false}" == "false" ]]; then
     echo "Downloading model from HuggingFace..."
     python /workspace/tools/prefetch.py
     echo "Model download complete."
 else
     echo "Using local model at: $MODEL_LOCAL"
     # Verify the model directory exists
-    if [ ! -d "$MODEL_LOCAL" ]; then
+    if [[ ! -d "$MODEL_LOCAL" ]]; then
         echo "ERROR: Local model directory not found: $MODEL_LOCAL"
         echo "Original MODEL_ID: $MODEL_ID"
         exit 1
     fi
-    if [ ! -f "$MODEL_LOCAL/config.json" ]; then
+    if [[ ! -f "$MODEL_LOCAL/config.json" ]]; then
         echo "ERROR: config.json not found in model directory: $MODEL_LOCAL"
         echo "This does not appear to be a valid model directory."
         exit 1
