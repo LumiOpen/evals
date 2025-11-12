@@ -72,6 +72,9 @@ TP="${TP:-4}"
 MODEL_SAFE="${MODEL_ID//\//-}"
 PREFETCH_LOCAL_DIR="/project/hf_cache/models/${MODEL_SAFE}"
 
+# Initialize flag (needed for set -u)
+IS_LOCAL_MODEL=false
+
 # Detect if MODEL_ID is a local path or a HuggingFace repo
 if [[ "$MODEL_ID" == /* ]] || [[ "$MODEL_ID" == ./* ]]; then
     # Local path - convert to container path if needed
