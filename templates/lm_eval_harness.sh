@@ -385,7 +385,7 @@ BASE_ARGS="pretrained=${MODEL_LOCAL},dtype=auto,download_dir=/project/hf_cache/m
 {% if env_vars.MODEL_ARGS %}
 EXTRA_ARGS="{{ env_vars.MODEL_ARGS }}"
 # Remove any max_model_len setting from extra args
-EXTRA_ARGS=$(echo "$EXTRA_ARGS" | sed 's/max_model_len=[0-9]*,\?//g' | sed 's/,,/,/g' | sed 's/^,//;s/,$//')
+EXTRA_ARGS=$(echo "$EXTRA_ARGS" | sed "s/max_model_len=[0-9]*,\?//g" | sed "s/,,/,/g" | sed "s/^,//;s/,\$//")
 {% else %}
 EXTRA_ARGS=""
 {% endif %}
@@ -421,7 +421,7 @@ BASE_ARGS="pretrained=${MODEL_LOCAL},device_map=auto,dtype=bfloat16,trust_remote
 {% if env_vars.MODEL_ARGS %}
 EXTRA_ARGS="{{ env_vars.MODEL_ARGS }}"
 # Remove any max_length setting from extra args
-EXTRA_ARGS=$(echo "$EXTRA_ARGS" | sed 's/max_length=[0-9]*,\?//g' | sed 's/,,/,/g' | sed 's/^,//;s/,$//')
+EXTRA_ARGS=$(echo "$EXTRA_ARGS" | sed "s/max_length=[0-9]*,\?//g" | sed "s/,,/,/g" | sed "s/^,//;s/,\$//")
 {% else %}
 EXTRA_ARGS=""
 {% endif %}
