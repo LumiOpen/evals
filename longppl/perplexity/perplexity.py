@@ -97,8 +97,13 @@ def main(args):
             input_texts = datasets.load_dataset(
                 args.dataset, name=args.subset, split=args.split)
     else:
-        input_texts = datasets.load_dataset(
-            args.dataset, name=args.subset, split=args.split)
+        # Check if dataset is a local JSON file
+        if args.dataset.endswith('.json') and os.path.exists(args.dataset):
+            print(f"Loading local JSON file: {args.dataset}")
+            input_texts = datasets.load_dataset('json', data_files=args.dataset, split=args.split)
+        else:
+            input_texts = datasets.load_dataset(
+                args.dataset, name=args.subset, split=args.split)
 
         def tokenize(example):
             tokenized = tokenizer(
