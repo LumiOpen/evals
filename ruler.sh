@@ -13,13 +13,13 @@ Examples:
   sh ruler.sh /path/to/model
 
   # Run specific subtasks at all sequence lengths
-  sh ruler.sh /path/to/model --subtasks "niah_single_1,vt,qa_1"
+  sh ruler.sh /path/to/model --subtasks "niah_single_1,ruler_vt,ruler_qa_hotpot"
 
   # Run all subtasks at specific sequence lengths
   sh ruler.sh /path/to/model --sequence-lengths "4096,8192,16384"
 
   # Run specific combinations
-  sh ruler.sh /path/to/model --subtasks "niah_single_1,vt" --sequence-lengths "4096,8192"
+  sh ruler.sh /path/to/model --subtasks "niah_single_1,ruler_vt" --sequence-lengths "4096,8192"
 
   # Custom SLURM configuration
   sh ruler.sh /path/to/model --partition standard-g --time 24:00:00 --gres gpu:mi250:8
@@ -30,10 +30,11 @@ Available RULER subtasks (13 total):
     niah_multikey_1, niah_multikey_2, niah_multikey_3
     niah_multivalue, niah_multiquery
   Other tasks:
-    vt (Variable Tracking)
-    cwe (Common Words Extraction)
-    fwe (Frequent Words Extraction)
-    qa_1, qa_2 (Question Answering)
+    ruler_vt (Variable Tracking)
+    ruler_cwe (Common Words Extraction)
+    ruler_fwe (Frequent Words Extraction)
+    ruler_qa_hotpot (QA - Hotpot)
+    ruler_qa_squad (QA - SQuADv2)
 
 Available sequence lengths:
   4096, 8192, 16384, 32768, 65536, 131072
@@ -55,7 +56,8 @@ BACKEND="hf"
 EXTRA_ARGS=""
 
 # Default: all subtasks and all sequence lengths
-SUBTASKS="niah_single_1,niah_single_2,niah_single_3,niah_multikey_1,niah_multikey_2,niah_multikey_3,niah_multivalue,niah_multiquery,vt,cwe,fwe,qa_1,qa_2"
+# From: https://github.com/EleutherAI/lm-evaluation-harness/tree/main/lm_eval/tasks/ruler#tasks
+SUBTASKS="niah_single_1,niah_single_2,niah_single_3,niah_multikey_1,niah_multikey_2,niah_multikey_3,niah_multivalue,niah_multiquery,ruler_vt,ruler_cwe,ruler_fwe,ruler_qa_hotpot,ruler_qa_squad"
 SEQUENCE_LENGTHS="4096,8192,16384,32768,65536,131072"
 
 # Parse arguments

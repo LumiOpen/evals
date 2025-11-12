@@ -13,10 +13,11 @@ RULER is a benchmark designed to evaluate language models on their ability to ha
 - **niah_multiquery**: Answering multiple queries about the same context
 
 ### Other Tasks - 5 types
-- **vt**: Variable Tracking - Following variable assignments and retrieving values
-- **cwe**: Common Words Extraction - Identifying frequently occurring words
-- **fwe**: Frequent Words Extraction - Extracting the most frequent words
-- **qa_1, qa_2**: Question Answering - Comprehension questions based on long contexts
+- **ruler_vt**: Variable Tracking - Following variable assignments and retrieving values
+- **ruler_cwe**: Common Words Extraction - Identifying frequently occurring words
+- **ruler_fwe**: Frequent Words Extraction - Extracting the most frequent words
+- **ruler_qa_hotpot**: Question Answering - Comprehension questions based on Hotpot dataset
+- **ruler_qa_squad**: Question Answering - Comprehension questions based on SQuADv2 dataset
 
 Each subtask is evaluated independently at each sequence length, allowing fine-grained analysis of model capabilities.
 
@@ -65,10 +66,10 @@ To run only certain subtasks across all or selected sequence lengths:
 
 ```bash
 # Specific subtasks at all sequence lengths
-sh ruler.sh /path/to/model --subtasks "niah_single_1,vt,qa_1"
+sh ruler.sh /path/to/model --subtasks "niah_single_1,ruler_vt,ruler_qa_hotpot"
 
 # Specific subtasks at specific sequence lengths
-sh ruler.sh /path/to/model --subtasks "niah_single_1,vt" --sequence-lengths "4096,8192"
+sh ruler.sh /path/to/model --subtasks "niah_single_1,ruler_vt" --sequence-lengths "4096,8192"
 
 # With vLLM backend
 sh ruler-vllm.sh /path/to/model --subtasks "niah_single_1,niah_single_2" --sequence-lengths "4096,8192,16384"
@@ -96,8 +97,8 @@ python main.py --model /path/to/model ruler_niah_single_1_4096
 # Multiple specific tasks
 python main.py --model /path/to/model \
     ruler_niah_single_1_4096 \
-    ruler_vt_4096 \
-    ruler_qa_1_8192
+    ruler_ruler_vt_4096 \
+    ruler_ruler_qa_hotpot_8192
 
 # Grouped task (all subtasks at one sequence length)
 python main.py --model /path/to/model ruler_4096
@@ -300,8 +301,8 @@ Run only specific task combinations manually:
 # Run 3 specific tasks
 python main.py --model /path/to/model \
     ruler_niah_single_1_4096 \
-    ruler_vt_8192 \
-    ruler_qa_1_16384
+    ruler_ruler_vt_8192 \
+    ruler_ruler_qa_hotpot_16384
 ```
 
 ### Example 6: Production Run with Optimal Settings

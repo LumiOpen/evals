@@ -14,10 +14,11 @@ NIAH (Needle in a Haystack):
   niah_multivalue, niah_multiquery
 
 Other Tasks:
-  vt    - Variable Tracking
-  cwe   - Common Words Extraction
-  fwe   - Frequent Words Extraction
-  qa_1, qa_2 - Question Answering
+  ruler_vt         - Variable Tracking
+  ruler_cwe        - Common Words Extraction
+  ruler_fwe        - Frequent Words Extraction
+  ruler_qa_hotpot  - Question Answering (Hotpot)
+  ruler_qa_squad   - Question Answering (SQuADv2)
 ```
 
 ## 6 Sequence Lengths
@@ -41,7 +42,7 @@ python main.py --model /path/to/model --limit 10 ruler_niah_single_1_4096
 ### Run Specific Subtasks at Specific Lengths
 ```bash
 sh ruler.sh /path/to/model \
-    --subtasks "niah_single_1,vt" \
+    --subtasks "niah_single_1,ruler_vt" \
     --sequence-lengths "4096,8192"
 ```
 
@@ -155,8 +156,8 @@ output/v2/<model-name>/ruler_<seqlen>.json  (for grouped)
 Example:
 ```
 output/v2/Llama-3.1-8B/ruler_niah_single_1_4096.json
-output/v2/Llama-3.1-8B/ruler_vt_8192.json
-output/v2/Llama-3.1-8B/ruler_qa_1_16384.json
+output/v2/Llama-3.1-8B/ruler_ruler_vt_8192.json
+output/v2/Llama-3.1-8B/ruler_ruler_qa_hotpot_16384.json
 ```
 
 ## How It Works

@@ -151,10 +151,11 @@ class RulerConfig(EvalConfig):
     - niah_multikey_1, niah_multikey_2, niah_multikey_3 (NIAH - multiple keys)
     - niah_multivalue (NIAH - multiple values)
     - niah_multiquery (NIAH - multiple queries)
-    - vt (Variable Tracking)
-    - cwe (Common Words Extraction)
-    - fwe (Frequent Words Extraction)
-    - qa_1, qa_2 (Question Answering)
+    - ruler_vt (Variable Tracking)
+    - ruler_cwe (Common Words Extraction)
+    - ruler_fwe (Frequent Words Extraction)
+    - ruler_qa_hotpot (QA - Hotpot)
+    - ruler_qa_squad (QA - SQuADv2)
     """
     def __init__(self, sequence_length, subtask=None, num_fewshot=0):
         """
@@ -168,13 +169,14 @@ class RulerConfig(EvalConfig):
         self.subtask = subtask
         self.num_fewshot = num_fewshot
         
-        # RULER tasks use the "ruler" task name with metadata for sequence length
-        # Individual subtasks are specified via task name patterns
+        # RULER tasks: individual subtask names are used directly (niah_single_1, vt, qa_1, etc.)
+        # The task name "ruler" runs all subtasks
+        # Sequence length is controlled via metadata
         if subtask:
-            # Individual subtask - each subtask is a separate task in RULER
-            # Task format in lm-eval is: ruler_niah_single_1, ruler_vt, ruler_qa_1, etc.
-            task_name = f"ruler_{subtask}_{sequence_length}"
-            lm_task_name = f"ruler_{subtask}"
+            # Individual subtask - task names are just the subtask names
+            # e.g., "niah_single_1", "vt", "qa_1"
+            task_name = f"ruler_{subtask}_{sequence_length}"  # Internal name for our tracking
+            lm_task_name = subtask  # Actual task name for lm-eval
         else:
             # All subtasks for this sequence length (run all RULER tests)
             task_name = f"ruler_{sequence_length}"
@@ -464,6 +466,7 @@ evals = {
 
 # Generate individual RULER subtask entries for each sequence length
 # 13 subtasks × 6 sequence lengths = 78 total task combinations
+# Task names from: https://github.com/EleutherAI/lm-evaluation-harness/tree/main/lm_eval/tasks/ruler#tasks
 _RULER_SUBTASKS = [
     "niah_single_1",
     "niah_single_2", 
@@ -473,11 +476,11 @@ _RULER_SUBTASKS = [
     "niah_multikey_3",
     "niah_multivalue",
     "niah_multiquery",
-    "vt",
-    "cwe",
-    "fwe",
-    "qa_1",
-    "qa_2",
+    "ruler_vt",       # Variable tracking
+    "ruler_cwe",      # Common words extraction
+    "ruler_fwe",      # Frequent words extraction
+    "ruler_qa_hotpot",  # QA Hotpot
+    "ruler_qa_squad",   # QA SQuADv2
 ]
 
 _RULER_SEQUENCE_LENGTHS = [4096, 8192, 16384, 32768, 65536, 131072]
