@@ -72,7 +72,7 @@ echo "Normalized SCR: $SCR_NORMALIZED"
 
 # Rewrite absolute paths for container
 # First check if dataset is under workspace directory (most common case for relative paths)
-if [[ "$DATASET_PATH" =~ ^"$SCR_NORMALIZED"/(.*)$ ]]; then
+if [[ "$DATASET_PATH" =~ ^${SCR_NORMALIZED}/(.*)$ ]]; then
   # Path is under $SCR (the current scratch dir), map to /workspace
   RELATIVE_PATH="${BASH_REMATCH[1]}"
   DATASET_PATH_CONTAINER="/workspace/$RELATIVE_PATH"
