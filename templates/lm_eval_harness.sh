@@ -71,7 +71,39 @@ MODEL_ID="${MODEL_ID:?MODEL_ID not set}"
 TP="${TP:-4}"
 MODEL_SAFE="${MODEL_ID//\//-}"
 PREFETCH_LOCAL_DIR="/project/hf_cache/models/${MODEL_SAFE}"
-MODEL_LOCAL="${PREFETCH_LOCAL_DIR}"
+
+# Detect if MODEL_ID is a local path or a HuggingFace repo
+if [[ "$MODEL_ID" == /* ]] || [[ "$MODEL_ID" == ./* ]]; then
+    # Local path - convert to container path if needed
+    echo "Detected local model path: $MODEL_ID"
+    
+    # The host bind mount is: /scratch/{{ slurm_config.account }} -> /project
+    # So we need to replace /scratch/{{ slurm_config.account }} with /project
+    HOST_PROJECT_PATH="/scratch/{{ slurm_config.account }}"
+    
+    if [[ "$MODEL_ID" == "$HOST_PROJECT_PATH"* ]]; then
+        # Path is under the bind-mounted project directory
+        MODEL_LOCAL="/project${MODEL_ID#$HOST_PROJECT_PATH}"
+        echo "Converted to container path: $MODEL_LOCAL"
+    elif [[ "$MODEL_ID" == /pfs/lustrep*/scratch/{{ slurm_config.account }}* ]]; then
+        # Alternative PFS path format
+        MODEL_LOCAL="${MODEL_ID#/pfs/lustrep*/scratch/{{ slurm_config.account }}}"
+        MODEL_LOCAL="/project${MODEL_LOCAL}"
+        echo "Converted PFS path to container path: $MODEL_LOCAL"
+    else
+        # Path is not in the bind mount - this might fail
+        echo "WARNING: Model path is not under /scratch/{{ slurm_config.account }}"
+        echo "         This may not be accessible in the container."
+        MODEL_LOCAL="$MODEL_ID"
+    fi
+    
+    IS_LOCAL_MODEL=true
+else
+    # HuggingFace repo - will be downloaded
+    echo "Detected HuggingFace model: $MODEL_ID"
+    MODEL_LOCAL="${PREFETCH_LOCAL_DIR}"
+    IS_LOCAL_MODEL=false
+fi
 
 # ---- env & caches (disable xet + telemetry) ----
 export HF_HUB_DISABLE_XET=1
@@ -167,7 +199,8 @@ print("[stage] aiter import OK")
 PY
 
 {% if env_vars.BACKEND != "dummy" %}
-# ------- write helper: prefetch.py -------
+# ------- write helper: prefetch.py (only for HuggingFace models) -------
+if [ "$IS_LOCAL_MODEL" = "false" ]; then
 cat > /workspace/tools/prefetch.py <<PY
 from huggingface_hub import snapshot_download
 p = snapshot_download(
@@ -178,6 +211,7 @@ p = snapshot_download(
 )
 print("prefetch OK ->", p)
 PY
+fi
 {% endif %}
 
 # ------- write helper: sanity.py -------
@@ -194,10 +228,30 @@ PY
 # ------- run the helpers from files (no <stdin>) -------
 python /workspace/tools/sanity.py
 python /workspace/tools/stage_aiter.py
-{% if env_vars.BACKEND != "dummy" %}
-python /workspace/tools/prefetch.py
 
-# Model is prefetched, but allow datasets to be downloaded as needed
+{% if env_vars.BACKEND != "dummy" %}
+# Prefetch model if it's a HuggingFace repo (skip for local models)
+if [ "$IS_LOCAL_MODEL" = "false" ]; then
+    echo "Downloading model from HuggingFace..."
+    python /workspace/tools/prefetch.py
+    echo "Model download complete."
+else
+    echo "Using local model at: $MODEL_LOCAL"
+    # Verify the model directory exists
+    if [ ! -d "$MODEL_LOCAL" ]; then
+        echo "ERROR: Local model directory not found: $MODEL_LOCAL"
+        echo "Original MODEL_ID: $MODEL_ID"
+        exit 1
+    fi
+    if [ ! -f "$MODEL_LOCAL/config.json" ]; then
+        echo "ERROR: config.json not found in model directory: $MODEL_LOCAL"
+        echo "This does not appear to be a valid model directory."
+        exit 1
+    fi
+    echo "Local model validation passed."
+fi
+
+# Datasets will be downloaded as needed
 # Note: Datasets will be cached automatically for subsequent runs
 {% endif %}
 
