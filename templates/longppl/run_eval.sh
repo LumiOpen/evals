@@ -7,6 +7,7 @@ set -euo pipefail
 echo "=== LongPPL Run Evaluation Stage ==="
 
 # Source variables from setup stage
+source /workspace/tools/longppl_env.sh
 cd /workspace
 
 # Use meta-llama/Llama-3.1-8B as evaluator (same as paper)

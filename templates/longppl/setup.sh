@@ -84,6 +84,16 @@ else
 fi
 mkdir -p "$OUTPUT_DIR"
 
+# Write environment variables for subsequent stages
+cat > /workspace/tools/longppl_env.sh <<EOF
+export MODEL_LOCAL="$MODEL_LOCAL"
+export OUTPUT_DIR="$OUTPUT_DIR"
+export CONTEXT_LENGTH="$CONTEXT_LENGTH"
+export DATASET_SAMPLES="$DATASET_SAMPLES"
+export ALPHA="$ALPHA"
+export BETA="$BETA"
+EOF
+
 echo "✓ Setup complete"
 echo "  MODEL_LOCAL=$MODEL_LOCAL"
 echo "  OUTPUT_DIR=$OUTPUT_DIR"
