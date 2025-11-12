@@ -69,6 +69,7 @@ DATASET_PATH=$(realpath -m "$DATASET_PATH")
 SCR_NORMALIZED=$(realpath -m "$SCR")
 echo "Normalized dataset path: $DATASET_PATH"
 echo "Normalized SCR: $SCR_NORMALIZED"
+echo "SCR (workspace bind source): $SCR"
 
 # Rewrite absolute paths for container
 # First check if dataset is under workspace directory (most common case for relative paths)
