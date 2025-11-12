@@ -90,6 +90,7 @@ mkdir -p "$OUTPUT_DIR"
 
 # Write environment variables for subsequent stages
 cat > /workspace/tools/longppl_env.sh <<EOF
+export PATH="$PATH"
 export MODEL_LOCAL="$MODEL_LOCAL"
 export OUTPUT_DIR="$OUTPUT_DIR"
 export CONTEXT_LENGTH="$CONTEXT_LENGTH"
