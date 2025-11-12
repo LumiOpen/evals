@@ -140,12 +140,9 @@ def main(args):
         tokenize_counter = {'count': 0, 'total': len(input_texts)}
 
         def tokenize(example, idx):
-            # Convert LazyRow to dict to extract proper string values
-            # When .map() is called on HF Dataset, example is a LazyRow object
-            # Accessing example['text'] on LazyRow returns another LazyRow, not a string
-            # So we need to convert it to a proper dict first
-            example_dict = {k: v for k, v in example.items()}
-            text_to_tokenize = example_dict.get('text', example)
+            # Extract text field from multi-column dataset
+            # If dataset has a 'text' column, use it; otherwise pass whole example
+            text_to_tokenize = example.get('text', example) if hasattr(example, 'get') else example
 
             tokenized = tokenizer(
                 text_to_tokenize,
@@ -159,7 +156,7 @@ def main(args):
             example["input_ids"] = tokenized["input_ids"]
             example["attention_mask"] = tokenized["attention_mask"]
             example["tokenized_len"] = len(tokenized["input_ids"])
-            example["offsets_mapping"] = tokenized["offsets_mapping"]
+            example["offset_mapping"] = tokenized["offset_mapping"]
 
             # Print progress every 10 documents or at the end
             tokenize_counter['count'] = idx + 1
