@@ -427,10 +427,10 @@ BATCH_SIZE="auto"
 BATCH_SIZE="4"
 {% endif %}
 
-{% if env_vars.TASK_METADATA %}
-# Set up metadata for RULER tasks
-TASK_METADATA_FLAG="--metadata '{{ env_vars.TASK_METADATA }}'"
-echo "Using task metadata: {{ env_vars.TASK_METADATA }}"
+{% if env_vars.MAX_SEQ_LENGTH %}
+# Set up metadata for RULER tasks - properly escaped for bash
+TASK_METADATA_FLAG="--metadata {\\\"max_seq_lengths\\\":[{{ env_vars.MAX_SEQ_LENGTH }}]}"
+echo "Using RULER metadata for sequence length: {{ env_vars.MAX_SEQ_LENGTH }}"
 {% else %}
 TASK_METADATA_FLAG=""
 {% endif %}
