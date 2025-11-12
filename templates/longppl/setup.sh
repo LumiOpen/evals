@@ -74,7 +74,8 @@ mkdir -p "$PIP_INSTALL_DIR"
 # Install only missing packages (skip pytrec_eval - needs gcc, not used by LongPPL)
 # Note: torch, transformers, tqdm, numpy should already be in container
 # Install datasets and dependencies (using miniconda python 3.12)
-python -m pip install --target "$PIP_INSTALL_DIR" datasets evaluate rouge_score || true
+# Constrain huggingface-hub to <1.0 to be compatible with container's transformers
+python -m pip install --target "$PIP_INSTALL_DIR" 'huggingface-hub<1.0,>=0.34.0' datasets evaluate rouge_score || true
 export PYTHONPATH="/workspace:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
 
 # Determine output directory
