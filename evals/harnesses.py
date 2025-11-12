@@ -1,4 +1,4 @@
-from jinja2 import Template
+from jinja2 import Template, Environment, FileSystemLoader
 import copy
 import datetime
 
@@ -90,8 +90,8 @@ class LongPPLHarness:
         config["env_vars"] = env_vars
         config["slurm_config"] = slurm_config
 
-        template_str = open('templates/longppl.sh', 'r').read()
-        template = Template(template_str)
+        env = Environment(loader=FileSystemLoader('templates'))
+        template = env.get_template('longppl.sh')
         rendered_script = template.render(**config)
 
         return rendered_script

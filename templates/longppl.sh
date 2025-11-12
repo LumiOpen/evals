@@ -64,6 +64,10 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env SLURM_JOB_ID="$SLURM_JOB_ID" \
     --env MODEL_ID="$MODEL_ID" \
     --env SCR="$SCR" \
+    --env CONTEXT_LENGTH={{ env_vars.CONTEXT_LENGTH }} \
+    --env DATASET_SAMPLES={{ env_vars.DATASET_SAMPLES }} \
+    --env ALPHA={{ env_vars.ALPHA }} \
+    --env BETA={{ env_vars.BETA }} \
     --env HF_HOME=/project/hf_cache \
     --env HUGGINGFACE_HUB_CACHE=/project/hf_cache/hub \
     --env TRANSFORMERS_CACHE=/project/hf_cache/models \
@@ -74,185 +78,90 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
 set -euo pipefail
 umask 002
 
-# ---- model setup ----
-export MODEL_ID="${MODEL_ID:?MODEL_ID not set}"
-export MODEL_SAFE="${MODEL_ID//\//-}"
+# ==================== STAGE SCRIPTS SETUP ====================
 
-# ---- env & caches ----
-export HF_HUB_DISABLE_XET=1
-export HF_HUB_ENABLE_HF_TRANSFER=0
-export HF_HUB_DISABLE_TELEMETRY=1
+mkdir -p /workspace/tools
 
-export PATH="$HOME/.local/bin:/opt/miniconda3/envs/pytorch/bin:/opt/rocm/llvm/bin:/opt/rocm/bin:/usr/bin:/bin"
-export HF_HOME=/project/hf_cache
-export HUGGINGFACE_HUB_CACHE=/project/hf_cache/hub
-export TRANSFORMERS_CACHE=/project/hf_cache/models
-export HF_DATASETS_CACHE=/project/hf_cache/datasets
-export XDG_CACHE_HOME=/project/hf_cache/xdg
+# Write LongPPL setup stage script
+cat > /workspace/tools/longppl_setup.sh <<'"'"'SETUP_EOF'"'"'
+{% include 'longppl/setup.sh' %}
+SETUP_EOF
 
-mkdir -p /project/hf_cache/{hub,models,datasets,xdg}
+# Write LongPPL run evaluation stage script
+cat > /workspace/tools/longppl_run_eval.sh <<'"'"'RUNEVAL_EOF'"'"'
+{% include 'longppl/run_eval.sh' %}
+RUNEVAL_EOF
 
-echo "=== Environment Setup ==="
-echo "MODEL_ID: $MODEL_ID"
-python -c "import torch; print(f\"PyTorch: {torch.__version__}, CUDA devices: {torch.cuda.device_count()}\")"
+# Write LongPPL result parser script
+cat > /workspace/tools/longppl_parse_results.py <<'"'"'PARSE_EOF'"'"'
+{% include 'longppl/parse_results.py' %}
+PARSE_EOF
 
-# ---- Prefetch model if HuggingFace repo ID ----
-if [[ "${MODEL_ID}" == /* ]]; then
-  echo "Model is a local path, using directly: ${MODEL_ID}"
-  export MODEL_LOCAL="${MODEL_ID}"
-else
-  echo "Prefetching HuggingFace model: ${MODEL_ID}"
-  export PREFETCH_LOCAL_DIR="/project/hf_cache/models/${MODEL_SAFE}"
-  export MODEL_LOCAL="${PREFETCH_LOCAL_DIR}"
+chmod +x /workspace/tools/longppl_setup.sh /workspace/tools/longppl_run_eval.sh
 
-  python -c "
-from huggingface_hub import snapshot_download
-p = snapshot_download(
-  repo_id=\"${MODEL_ID}\",
-  local_dir=\"${PREFETCH_LOCAL_DIR}\",
-  local_dir_use_symlinks=False,
-  allow_patterns=[\"*.safetensors\",\"*.json\",\"tokenizer.*\",\"*vocab*\",\"*.model\"]
-)
-print(f\"Model prefetched to: {p}\")
-"
-fi
+# ==================== EXECUTE STAGES ====================
 
-echo "Using model from: $MODEL_LOCAL"
-
-# ==================== LONGPPL SETUP ====================
-
-# Setup LongPPL directory
-export LONGPPL_DIR="/workspace/longppl"
-echo "Using LongPPL from $LONGPPL_DIR"
-cd "$LONGPPL_DIR"
-
-# Install LongPPL dependencies (lightweight, only what container doesnt have)
-echo "Installing LongPPL dependencies..."
-PIP_TMP_DIR="/tmp/pip_install_${SLURM_JOB_ID:-$$}"
-mkdir -p "$PIP_TMP_DIR"
-export TMPDIR="$PIP_TMP_DIR/tmp"
-export PIP_CACHE_DIR="$PIP_TMP_DIR/cache"
-mkdir -p "$TMPDIR" "$PIP_CACHE_DIR"
-
-PIP_INSTALL_DIR="$PIP_TMP_DIR/packages"
-mkdir -p "$PIP_INSTALL_DIR"
-
-# Install only missing packages (skip pytrec_eval - needs gcc, not used by LongPPL)
-python -m pip install --target "$PIP_INSTALL_DIR" --no-deps evaluate rouge_score || true
-export PYTHONPATH="/workspace:$PIP_INSTALL_DIR:${PYTHONPATH:-}"
-
-# Determine output directory
-if [[ "${MODEL_ID}" == /* ]]; then
-  MODEL_BASENAME=$(basename "$MODEL_ID")
-  export OUTPUT_DIR="/workspace/output/v2/local/${MODEL_BASENAME}"
-else
-  export MODEL_ORG=$(echo "$MODEL_ID" | cut -d/ -f1)
-  export MODEL_NAME=$(echo "$MODEL_ID" | cut -d/ -f2)
-  export OUTPUT_DIR="/workspace/output/v2/${MODEL_ORG}/${MODEL_NAME}"
-fi
-mkdir -p "$OUTPUT_DIR"
-
-# LongPPL evaluation parameters
-CONTEXT_LENGTH={{ env_vars.CONTEXT_LENGTH }}
-DATASET_SAMPLES={{ env_vars.DATASET_SAMPLES }}
-ALPHA={{ env_vars.ALPHA }}
-BETA={{ env_vars.BETA }}
-
-echo "=== LongPPL Evaluation Configuration ==="
+echo "=========================================="
+echo "LONGPPL EVALUATION - STAGED EXECUTION"
+echo "=========================================="
 echo "Model: $MODEL_ID"
-echo "Model path: $MODEL_LOCAL"
-echo "Context length: $CONTEXT_LENGTH"
-echo "Dataset samples: $DATASET_SAMPLES"
-echo "Alpha threshold: $ALPHA"
-echo "Beta threshold: $BETA"
-echo "Output directory: $OUTPUT_DIR"
+echo "Context Length: $CONTEXT_LENGTH"
+echo "Dataset Samples: $DATASET_SAMPLES"
+echo "Alpha: $ALPHA, Beta: $BETA"
+echo "=========================================="
 echo
 
-# Run LongPPL evaluation
-cd /workspace
+# Stage 1: Setup
+echo "=========================================="
+echo "STAGE 1: SETUP"
+echo "=========================================="
+bash /workspace/tools/longppl_setup.sh
+STAGE1_EXIT=$?
 
-# Use meta-llama/Llama-3.1-8B as evaluator (same as paper)
-# This model identifies key tokens; then we compute LongPPL for target model on those tokens
-EVALUATOR_MODEL="meta-llama/Llama-3.1-8B"
-
-echo "=== Starting LongPPL evaluation ==="
-echo "Target model: $MODEL_LOCAL"
-echo "Evaluator model: $EVALUATOR_MODEL"
-echo "Note: Using default max-length=32768 to match paper evaluation setup"
-python longppl/perplexity/perplexity.py \
-  --dataset emozilla/govreport-test-tokenized \
-  --tokenized \
-  --dataset-min-tokens "$CONTEXT_LENGTH" \
-  --samples "$DATASET_SAMPLES" \
-  --model "$MODEL_LOCAL" \
-  --evaluator-model "$EVALUATOR_MODEL" \
-  --mode online \
-  --trunc-len 4096 \
-  --sliding-window 1024 \
-  --alpha "$ALPHA" \
-  --beta "$BETA" \
-  2>&1 | tee "$OUTPUT_DIR/longppl_${CONTEXT_LENGTH}.log"
-
-EXIT_CODE=${PIPESTATUS[0]}
-
-if [ $EXIT_CODE -eq 0 ]; then
-  echo "=== LongPPL evaluation completed successfully ==="
-
-  # Parse output and save structured results
-  echo "Parsing results and creating JSON output..."
-  python -c "
-import re, json, sys, os
-from datetime import datetime
-
-log_file = \"$OUTPUT_DIR/longppl_${CONTEXT_LENGTH}.log\"
-if not os.path.exists(log_file):
-    print(f\"Error: Log file not found: {log_file}\")
-    sys.exit(1)
-
-with open(log_file, errors='ignore') as f:
-    log_text = f.read()
-
-# Extract longppl and ppl values from output
-# Format: \"model_name: longppl: XX.XX, ppl: YY.YY\"
-# Match the final line with both values
-final_line_match = re.search(r\"longppl:\s*([\d.]+),\s*ppl:\s*([\d.]+)\", log_text)
-
-if not final_line_match:
-    print(\"Warning: Could not parse longppl/ppl from output\")
-    print(\"Log excerpt:\")
-    print(log_text[-500:])
-    longppl_val = None
-    ppl_val = None
-else:
-    longppl_val = float(final_line_match.group(1))
-    ppl_val = float(final_line_match.group(2))
-
-results = {
-    \"model\": \"$MODEL_ID\",
-    \"context_length\": $CONTEXT_LENGTH,
-    \"dataset\": \"govreport-test-tokenized\",
-    \"dataset_samples\": $DATASET_SAMPLES,
-    \"alpha\": $ALPHA,
-    \"beta\": $BETA,
-    \"longppl\": longppl_val,
-    \"ppl\": ppl_val,
-    \"timestamp\": datetime.now().isoformat(),
-    \"slurm_job_id\": \"$SLURM_JOB_ID\"
-}
-
-output_file = \"$OUTPUT_DIR/longppl_${CONTEXT_LENGTH}.json\"
-with open(output_file, \"w\") as f:
-    json.dump(results, f, indent=2)
-
-print(\"Results saved to:\", output_file)
-"
-
-  echo
-  echo "=== Output files ==="
-  ls -lh "$OUTPUT_DIR"/longppl_* || true
-
-else
-  echo "=== LongPPL evaluation failed with exit code $EXIT_CODE ==="
-  exit $EXIT_CODE
+if [ $STAGE1_EXIT -ne 0 ]; then
+  echo "✗ Stage 1 (Setup) failed with exit code $STAGE1_EXIT"
+  exit $STAGE1_EXIT
 fi
+
+echo
+echo "=========================================="
+echo "STAGE 2: RUN EVALUATION"
+echo "=========================================="
+bash /workspace/tools/longppl_run_eval.sh
+STAGE2_EXIT=$?
+
+if [ $STAGE2_EXIT -ne 0 ]; then
+  echo "✗ Stage 2 (Run Evaluation) failed with exit code $STAGE2_EXIT"
+  exit $STAGE2_EXIT
+fi
+
+echo
+echo "=========================================="
+echo "STAGE 3: PARSE RESULTS"
+echo "=========================================="
+python /workspace/tools/longppl_parse_results.py \
+  --log-file "$OUTPUT_DIR/longppl_${CONTEXT_LENGTH}.log" \
+  --output-file "$OUTPUT_DIR/longppl_${CONTEXT_LENGTH}.json" \
+  --model-id "$MODEL_ID" \
+  --context-length $CONTEXT_LENGTH \
+  --dataset-samples $DATASET_SAMPLES \
+  --alpha $ALPHA \
+  --beta $BETA \
+  --slurm-job-id "$SLURM_JOB_ID"
+
+STAGE3_EXIT=$?
+
+if [ $STAGE3_EXIT -ne 0 ]; then
+  echo "✗ Stage 3 (Parse Results) failed with exit code $STAGE3_EXIT"
+  exit $STAGE3_EXIT
+fi
+
+echo
+echo "=========================================="
+echo "LONGPPL EVALUATION COMPLETE"
+echo "=========================================="
+echo "✓ All stages completed successfully"
+echo
+echo "Output files:"
+ls -lh "$OUTPUT_DIR"/longppl_* || true
 '
