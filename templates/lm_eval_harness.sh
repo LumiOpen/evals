@@ -86,13 +86,27 @@ if [[ "$MODEL_ID" == /* ]] || [[ "$MODEL_ID" == ./* ]]; then
         MODEL_LOCAL="${MODEL_ID/$HOST_PROJECT_PATH/\/project}"
         echo "Converted to container path: $MODEL_LOCAL"
     elif [[ "$MODEL_ID" == /pfs/lustrep* ]]; then
-        # Alternative PFS path format - use sed for more complex pattern matching
-        MODEL_LOCAL=$(echo "$MODEL_ID" | sed "s|/pfs/lustrep[0-9]/scratch/{{ slurm_config.account }}|/project|")
-        if [[ "$MODEL_LOCAL" != "$MODEL_ID" ]]; then
+        # Alternative PFS path format
+        # Try multiple lustre versions: lustrep2, lustrep3, lustrep4
+        PFS_PROJECT="/pfs/lustrep2/scratch/{{ slurm_config.account }}"
+        if [[ "$MODEL_ID" == "$PFS_PROJECT"* ]]; then
+            MODEL_LOCAL="${MODEL_ID/$PFS_PROJECT/\/project}"
             echo "Converted PFS path to container path: $MODEL_LOCAL"
         else
-            echo "WARNING: Could not convert PFS path"
-            MODEL_LOCAL="$MODEL_ID"
+            PFS_PROJECT="/pfs/lustrep3/scratch/{{ slurm_config.account }}"
+            if [[ "$MODEL_ID" == "$PFS_PROJECT"* ]]; then
+                MODEL_LOCAL="${MODEL_ID/$PFS_PROJECT/\/project}"
+                echo "Converted PFS path to container path: $MODEL_LOCAL"
+            else
+                PFS_PROJECT="/pfs/lustrep4/scratch/{{ slurm_config.account }}"
+                if [[ "$MODEL_ID" == "$PFS_PROJECT"* ]]; then
+                    MODEL_LOCAL="${MODEL_ID/$PFS_PROJECT/\/project}"
+                    echo "Converted PFS path to container path: $MODEL_LOCAL"
+                else
+                    echo "WARNING: Could not convert PFS path"
+                    MODEL_LOCAL="$MODEL_ID"
+                fi
+            fi
         fi
     else
         # Path is not in the bind mount - this might fail
