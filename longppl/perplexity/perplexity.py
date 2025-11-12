@@ -100,7 +100,8 @@ def main(args):
         # Check if dataset is a local JSON file
         if args.dataset.endswith('.json') and os.path.exists(args.dataset):
             print(f"Loading local JSON file: {args.dataset}")
-            input_texts = datasets.load_dataset('json', data_files=args.dataset, split=args.split)
+            # JSON files are always loaded with 'train' split by default
+            input_texts = datasets.load_dataset('json', data_files=args.dataset, split='train')
         else:
             input_texts = datasets.load_dataset(
                 args.dataset, name=args.subset, split=args.split)
