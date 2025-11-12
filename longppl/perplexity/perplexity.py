@@ -106,7 +106,10 @@ def main(args):
             input_texts = datasets.load_dataset(
                 args.dataset, name=args.subset, split=args.split)
 
-        def tokenize(example):
+        # Progress tracking for tokenization
+        tokenize_counter = {'count': 0, 'total': len(input_texts)}
+
+        def tokenize(example, idx):
             tokenized = tokenizer(
                 example,
                 add_special_tokens=False,
@@ -120,10 +123,16 @@ def main(args):
             example["attention_mask"] = tokenized["attention_mask"]
             example["tokenized_len"] = len(tokenized["input_ids"])
             example["offsets_mapping"] = tokenized["offsets_mapping"]
+
+            # Print progress every 10 documents or at the end
+            tokenize_counter['count'] = idx + 1
+            if (idx + 1) % 10 == 0 or (idx + 1) == tokenize_counter['total']:
+                print(f"Tokenized {idx + 1}/{tokenize_counter['total']} documents", flush=True)
+
             return example
 
-        print(f"Tokenizing {len(input_texts)} documents...")
-        input_texts = input_texts.map(tokenize, desc="Tokenizing documents")
+        print(f"Tokenizing {len(input_texts)} documents...", flush=True)
+        input_texts = input_texts.map(tokenize, with_indices=True, desc="Tokenizing documents")
         if args.save_tokenized:
             input_texts.save_to_disk(args.save_tokenized)
             print(f"Saved tokenized dataset to {args.save_tokenized}")
