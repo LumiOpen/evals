@@ -140,8 +140,10 @@ def main(args):
         tokenize_counter = {'count': 0, 'total': len(input_texts)}
 
         def tokenize(example, idx):
+            # Extract text from example dict if it's a dict, otherwise use example directly
+            text_to_tokenize = example['text'] if isinstance(example, dict) else example
             tokenized = tokenizer(
-                example,
+                text_to_tokenize,
                 add_special_tokens=False,
                 padding=True,
                 truncation=False,
