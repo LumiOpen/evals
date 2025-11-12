@@ -119,8 +119,13 @@ def main(args):
                 args.dataset, name=args.subset, split=args.split)
             print(f"DEBUG: Loaded from HF: {len(input_texts)} samples", flush=True)
     else:
+        # Check if dataset is a local HF Dataset directory
+        if os.path.isdir(args.dataset) and os.path.exists(os.path.join(args.dataset, 'dataset_info.json')):
+            print(f"DEBUG: Detected HF Dataset directory: {args.dataset}", flush=True)
+            input_texts = datasets.load_from_disk(args.dataset)
+            print(f"DEBUG: ✓ HF Dataset loaded from disk: {len(input_texts)} documents", flush=True)
         # Check if dataset is a local JSON file
-        if args.dataset.endswith('.json') and os.path.exists(args.dataset):
+        elif args.dataset.endswith('.json') and os.path.exists(args.dataset):
             print(f"DEBUG: Detected local JSON file: {args.dataset}", flush=True)
             print("DEBUG: Calling datasets.load_dataset('json', ...)...", flush=True)
             input_texts = datasets.load_dataset('json', data_files=args.dataset, split='train')

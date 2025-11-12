@@ -1,0 +1,174 @@
+{
+  "dataset": "EuropeanParliament/Eurovoc",
+  "reference_tokenizer": "meta-llama/Meta-Llama-3-8B",
+  "languages": {
+    "bg": {
+      "language_name": "Bulgarian",
+      "num_documents": 50,
+      "avg_tokens": 71103.68,
+      "max_tokens": 255249,
+      "min_tokens": 32510
+    },
+    "cs": {
+      "language_name": "Czech",
+      "num_documents": 50,
+      "avg_tokens": 70357.3,
+      "max_tokens": 233497,
+      "min_tokens": 31161
+    },
+    "da": {
+      "language_name": "Danish",
+      "num_documents": 50,
+      "avg_tokens": 65271.28,
+      "max_tokens": 227931,
+      "min_tokens": 30328
+    },
+    "de": {
+      "language_name": "German",
+      "num_documents": 50,
+      "avg_tokens": 70730.64,
+      "max_tokens": 222298,
+      "min_tokens": 30951
+    },
+    "el": {
+      "language_name": "Greek",
+      "num_documents": 50,
+      "avg_tokens": 98186.68,
+      "max_tokens": 1190824,
+      "min_tokens": 33892
+    },
+    "en": {
+      "language_name": "English",
+      "num_documents": 50,
+      "avg_tokens": 115107.8,
+      "max_tokens": 347894,
+      "min_tokens": 43369
+    },
+    "es": {
+      "language_name": "Spanish",
+      "num_documents": 50,
+      "avg_tokens": 66566.48,
+      "max_tokens": 232187,
+      "min_tokens": 30359
+    },
+    "et": {
+      "language_name": "Estonian",
+      "num_documents": 50,
+      "avg_tokens": 70484.84,
+      "max_tokens": 234929,
+      "min_tokens": 32715
+    },
+    "fi": {
+      "language_name": "Finnish",
+      "num_documents": 50,
+      "avg_tokens": 75813.58,
+      "max_tokens": 248580,
+      "min_tokens": 32823
+    },
+    "fr": {
+      "language_name": "French",
+      "num_documents": 50,
+      "avg_tokens": 73143.9,
+      "max_tokens": 232697,
+      "min_tokens": 33136
+    },
+    "ga": {
+      "language_name": "Irish",
+      "num_documents": 50,
+      "avg_tokens": 69699.42,
+      "max_tokens": 278406,
+      "min_tokens": 32004
+    },
+    "hr": {
+      "language_name": "Croatian",
+      "num_documents": 50,
+      "avg_tokens": 69629.14,
+      "max_tokens": 245537,
+      "min_tokens": 32620
+    },
+    "hu": {
+      "language_name": "Hungarian",
+      "num_documents": 50,
+      "avg_tokens": 75190.82,
+      "max_tokens": 253806,
+      "min_tokens": 33371
+    },
+    "it": {
+      "language_name": "Italian",
+      "num_documents": 50,
+      "avg_tokens": 72841.16,
+      "max_tokens": 227316,
+      "min_tokens": 31947
+    },
+    "lt": {
+      "language_name": "Lithuanian",
+      "num_documents": 50,
+      "avg_tokens": 76973.36,
+      "max_tokens": 262090,
+      "min_tokens": 33988
+    },
+    "lv": {
+      "language_name": "Latvian",
+      "num_documents": 50,
+      "avg_tokens": 76338.56,
+      "max_tokens": 265042,
+      "min_tokens": 32821
+    },
+    "mt": {
+      "language_name": "Maltese",
+      "num_documents": 50,
+      "avg_tokens": 75772.6,
+      "max_tokens": 265846,
+      "min_tokens": 34872
+    },
+    "nl": {
+      "language_name": "Dutch",
+      "num_documents": 50,
+      "avg_tokens": 68307.74,
+      "max_tokens": 230515,
+      "min_tokens": 30789
+    },
+    "pl": {
+      "language_name": "Polish",
+      "num_documents": 50,
+      "avg_tokens": 69598.8,
+      "max_tokens": 255504,
+      "min_tokens": 31861
+    },
+    "pt": {
+      "language_name": "Portuguese",
+      "num_documents": 50,
+      "avg_tokens": 65077.3,
+      "max_tokens": 228505,
+      "min_tokens": 30314
+    },
+    "ro": {
+      "language_name": "Romanian",
+      "num_documents": 50,
+      "avg_tokens": 69822.68,
+      "max_tokens": 236667,
+      "min_tokens": 32341
+    },
+    "sk": {
+      "language_name": "Slovak",
+      "num_documents": 50,
+      "avg_tokens": 71561.74,
+      "max_tokens": 251760,
+      "min_tokens": 32323
+    },
+    "sl": {
+      "language_name": "Slovenian",
+      "num_documents": 50,
+      "avg_tokens": 74138.82,
+      "max_tokens": 242969,
+      "min_tokens": 32019
+    },
+    "sv": {
+      "language_name": "Swedish",
+      "num_documents": 50,
+      "avg_tokens": 64972.74,
+      "max_tokens": 223718,
+      "min_tokens": 30356
+    }
+  }
+}

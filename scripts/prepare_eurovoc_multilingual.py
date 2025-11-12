@@ -23,7 +23,7 @@ from datasets import load_dataset
 from transformers import AutoTokenizer
 from tqdm import tqdm
 
-# 24 EU languages
+# 24 EU languages (2-letter ISO 639-1 codes)
 EU_LANGUAGES = [
     "bg",  # Bulgarian
     "cs",  # Czech
@@ -50,6 +50,16 @@ EU_LANGUAGES = [
     "sl",  # Slovenian
     "sv",  # Swedish
 ]
+
+# EuroVoc dataset uses 3-letter ISO 639-2 codes, map to 2-letter ISO 639-1
+LANG_3_TO_2 = {
+    "bul": "bg", "ces": "cs", "dan": "da", "deu": "de", "ger": "de",
+    "ell": "el", "gre": "el", "eng": "en", "spa": "es", "est": "et",
+    "fin": "fi", "fra": "fr", "fre": "fr", "gle": "ga", "hrv": "hr",
+    "hun": "hu", "ita": "it", "lit": "lt", "lav": "lv", "mlt": "mt",
+    "nld": "nl", "dut": "nl", "pol": "pl", "por": "pt", "ron": "ro",
+    "rum": "ro", "slk": "sk", "slo": "sk", "slv": "sl", "swe": "sv"
+}
 
 LANGUAGE_NAMES = {
     "bg": "Bulgarian", "cs": "Czech", "da": "Danish", "de": "German",
@@ -83,7 +93,7 @@ def analyze_eurovoc_dataset(
     """
     print(f"Loading Eurovoc dataset: {dataset_name}")
     print(f"Target: {samples_per_language} documents per language with ≥{min_tokens} tokens")
-    print(f"Scanning up to {max_samples_to_scan} samples per config")
+    print(f"Max to scan per config: {max_samples_to_scan}")
     print()
 
     # Load reference tokenizer for length estimation
@@ -92,123 +102,109 @@ def analyze_eurovoc_dataset(
     # Storage for filtered documents per language
     language_docs: Dict[str, List[Tuple[int, Dict]]] = {lang: [] for lang in EU_LANGUAGES}
 
-    # Try to load dataset
+    # Try to load dataset - Eurovoc requires date configs
     try:
-        # Eurovoc is organized by date configs (e.g., "1996-03", "2004-06")
-        # We'll try a few different approaches to load it
+        from datasets import get_dataset_config_names
 
-        print("Attempting to load dataset...")
+        print("Getting available Eurovoc configs...")
+        configs = get_dataset_config_names(dataset_name)
+        print(f"Found {len(configs)} configs")
 
-        # Approach 1: Try loading without config (may work if there's a default)
-        try:
-            dataset = load_dataset(dataset_name, split="train", streaming=True)
-            print("✓ Loaded dataset in streaming mode")
-        except Exception as e:
-            print(f"Could not load without config: {e}")
-            print("\nNote: Eurovoc may require specific date configs.")
-            print("Checking available configs...")
+        # Prioritize more recent configs (likely to have longer documents)
+        # Configs are in format YYYY-MM, so sorting gives chronological order
+        configs_sorted = sorted(configs, reverse=True)  # Start with most recent
+        print(f"Scanning configs from {configs_sorted[0]} (newest) to {configs_sorted[-1]} (oldest)")
+        print()
 
-            # Try to get dataset info
-            from datasets import get_dataset_config_names
-            try:
-                configs = get_dataset_config_names(dataset_name)
-                print(f"Available configs: {len(configs)} found")
-                print(f"Sample configs: {configs[:5]}")
+        # Sample from multiple configs to get diverse documents
+        configs_processed = 0
 
-                # Load first few configs to sample documents
-                dataset = load_dataset(dataset_name, configs[0], split="train", streaming=True)
-                print(f"✓ Loaded first config: {configs[0]}")
-            except Exception as e2:
-                print(f"Error loading configs: {e2}")
-                return language_docs
-
-        # Process documents
-        print("\nProcessing documents...")
-        scanned = 0
-
-        for doc in tqdm(dataset, desc="Scanning documents", total=max_samples_to_scan):
-            if scanned >= max_samples_to_scan:
+        for config in tqdm(configs_sorted, desc="Scanning configs"):
+            # Stop if we have enough documents for all languages
+            all_languages_satisfied = all(
+                len(language_docs[lang]) >= samples_per_language * 2  # Get 2x for safety
+                for lang in EU_LANGUAGES
+            )
+            if all_languages_satisfied:
+                print(f"\n✓ Found sufficient documents for all {len(EU_LANGUAGES)} languages")
                 break
 
-            # Extract language and text
-            lang = doc.get("lang", "").lower()
-            text = doc.get("text", "")
+            try:
+                print(f"\n→ Loading config {config}...", flush=True)
+                config_dataset = load_dataset(dataset_name, config, split="train")
+                print(f"✓ Loaded {len(config_dataset)} documents from {config}", flush=True)
+                configs_processed += 1
 
-            # Skip if not EU language or no text
-            if lang not in EU_LANGUAGES or not text:
-                scanned += 1
+                scanned_in_config = 0
+                found_in_config = 0
+
+                for doc in config_dataset:
+                    # Limit per config, not total
+                    if scanned_in_config >= max_samples_to_scan:
+                        break
+
+                    lang_3 = doc.get("lang", "").lower()
+                    text = doc.get("text", "")
+
+                    scanned_in_config += 1
+
+                    # Progress update every 1000 documents
+                    if scanned_in_config % 1000 == 0:
+                        print(f"  → Scanned {scanned_in_config} docs in {config}, found {found_in_config} long docs so far", flush=True)
+
+                    # Convert 3-letter code to 2-letter code
+                    lang = LANG_3_TO_2.get(lang_3, lang_3)
+
+                    if lang not in EU_LANGUAGES or not text:
+                        continue
+
+                    # Check if we already have enough for this language
+                    if len(language_docs[lang]) >= samples_per_language * 2:  # Get 2x for safety
+                        continue
+
+                    tokens = tokenizer.encode(text, add_special_tokens=False)
+                    token_count = len(tokens)
+
+                    if token_count >= min_tokens:
+                        # Convert date to string if it's a datetime object
+                        date_value = doc.get("date", "")
+                        if hasattr(date_value, 'isoformat'):
+                            date_value = date_value.isoformat()
+
+                        doc_info = {
+                            "title": doc.get("title", ""),
+                            "text": text,
+                            "lang": lang,
+                            "token_count": token_count,
+                            "url": doc.get("url", ""),
+                            "date": str(date_value) if date_value else "",
+                            "eurovoc_concepts": doc.get("eurovoc_concepts", [])
+                        }
+                        language_docs[lang].append((token_count, doc_info))
+                        found_in_config += 1
+
+                # Progress update
+                langs_with_docs = sum(1 for lang in EU_LANGUAGES if len(language_docs[lang]) > 0)
+                print(f"\nConfig {config}: scanned {scanned_in_config}, found {found_in_config} long docs. "
+                      f"Languages with docs: {langs_with_docs}/24")
+
+                # Print current counts per language
+                if found_in_config > 0:
+                    for lang in EU_LANGUAGES:
+                        if len(language_docs[lang]) > 0:
+                            print(f"  {lang}: {len(language_docs[lang])} docs")
+
+            except Exception as e:
+                print(f"\nWarning: Skipping config {config}: {e}")
                 continue
 
-            # Tokenize and check length
-            tokens = tokenizer.encode(text, add_special_tokens=False)
-            token_count = len(tokens)
-
-            # If long enough, add to language's list
-            if token_count >= min_tokens:
-                doc_info = {
-                    "title": doc.get("title", ""),
-                    "text": text,
-                    "lang": lang,
-                    "token_count": token_count,
-                    "url": doc.get("url", ""),
-                    "date": doc.get("date", ""),
-                    "eurovoc_concepts": doc.get("eurovoc_concepts", [])
-                }
-
-                # Store with token count for sorting
-                language_docs[lang].append((token_count, doc_info))
-
-            scanned += 1
-
-        print(f"\nScanned {scanned} documents")
+        print(f"\n✓ Processed {configs_processed} configs")
 
     except Exception as e:
         print(f"Error loading dataset: {e}")
-        print("\nTrying alternative approach: loading multiple configs...")
-
-        # Alternative: Try loading multiple date configs
-        try:
-            from datasets import get_dataset_config_names
-            configs = get_dataset_config_names(dataset_name)
-
-            # Sample from multiple configs to get diverse documents
-            for config in tqdm(configs[:20], desc="Loading configs"):  # Try first 20 configs
-                try:
-                    config_dataset = load_dataset(dataset_name, config, split="train")
-
-                    for doc in config_dataset:
-                        lang = doc.get("lang", "").lower()
-                        text = doc.get("text", "")
-
-                        if lang not in EU_LANGUAGES or not text:
-                            continue
-
-                        # Check if we already have enough for this language
-                        if len(language_docs[lang]) >= samples_per_language * 2:  # Get 2x for safety
-                            continue
-
-                        tokens = tokenizer.encode(text, add_special_tokens=False)
-                        token_count = len(tokens)
-
-                        if token_count >= min_tokens:
-                            doc_info = {
-                                "title": doc.get("title", ""),
-                                "text": text,
-                                "lang": lang,
-                                "token_count": token_count,
-                                "url": doc.get("url", ""),
-                                "date": doc.get("date", ""),
-                                "eurovoc_concepts": doc.get("eurovoc_concepts", [])
-                            }
-                            language_docs[lang].append((token_count, doc_info))
-
-                except Exception as e:
-                    print(f"Skipping config {config}: {e}")
-                    continue
-
-        except Exception as e:
-            print(f"Could not load configs: {e}")
-            return language_docs
+        import traceback
+        traceback.print_exc()
+        return language_docs
 
     # Filter to top N longest documents per language
     print("\n" + "=" * 80)
