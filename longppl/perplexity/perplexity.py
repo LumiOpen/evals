@@ -74,6 +74,15 @@ def compute_perplexity(
 
 
 def main(args):
+    print("=" * 80, flush=True)
+    print("DEBUG: Starting main() function", flush=True)
+    print(f"DEBUG: Model path: {args.model}", flush=True)
+    print(f"DEBUG: Evaluator model: {args.evaluator_model}", flush=True)
+    print(f"DEBUG: Mode: {args.mode}", flush=True)
+    print(f"DEBUG: Dataset: {args.dataset}", flush=True)
+    print("=" * 80, flush=True)
+
+    print("\nDEBUG: [1/8] Loading target model...", flush=True)
     model = AutoModelForCausalLM.from_pretrained(
         args.model,
         torch_dtype=torch.bfloat16,
@@ -81,30 +90,46 @@ def main(args):
         trust_remote_code=True,
         attn_implementation="flash_attention_2"
     )
+    print("DEBUG: [1/8] ✓ Target model loaded successfully", flush=True)
+
+    print("DEBUG: [2/8] Loading tokenizer...", flush=True)
     tokenizer = AutoTokenizer.from_pretrained(args.model, trust_remote_code=True)
     tokenizer.pad_token = tokenizer.eos_token
+    print("DEBUG: [2/8] ✓ Tokenizer loaded successfully", flush=True)
 
     if args.mode == 'online':
+        print("DEBUG: [3/8] Loading evaluator model (online mode)...", flush=True)
         evaluator_model = AutoModelForCausalLM.from_pretrained(args.evaluator_model, torch_dtype=torch.bfloat16, device_map="auto")
+        print("DEBUG: [3/8] ✓ Evaluator model loaded", flush=True)
+        print("DEBUG: [4/8] Loading evaluator tokenizer...", flush=True)
         evaluator_tokenizer = AutoTokenizer.from_pretrained(args.evaluator_model)
+        print("DEBUG: [4/8] ✓ Evaluator tokenizer loaded", flush=True)
     elif args.mode == 'offline':
+        print("DEBUG: [3/8] Skipping evaluator model (offline mode)", flush=True)
         evaluator_model, evaluator_tokenizer = None, None
 
+    print("DEBUG: [5/8] Loading dataset...", flush=True)
     if args.tokenized:
+        print("DEBUG: Dataset is pre-tokenized", flush=True)
         try:
             input_texts = datasets.load_from_disk(args.dataset)
+            print(f"DEBUG: Loaded from disk: {len(input_texts)} samples", flush=True)
         except:
             input_texts = datasets.load_dataset(
                 args.dataset, name=args.subset, split=args.split)
+            print(f"DEBUG: Loaded from HF: {len(input_texts)} samples", flush=True)
     else:
         # Check if dataset is a local JSON file
         if args.dataset.endswith('.json') and os.path.exists(args.dataset):
-            print(f"Loading local JSON file: {args.dataset}")
-            # JSON files are always loaded with 'train' split by default
+            print(f"DEBUG: Detected local JSON file: {args.dataset}", flush=True)
+            print("DEBUG: Calling datasets.load_dataset('json', ...)...", flush=True)
             input_texts = datasets.load_dataset('json', data_files=args.dataset, split='train')
+            print(f"DEBUG: ✓ JSON loaded: {len(input_texts)} documents", flush=True)
         else:
+            print(f"DEBUG: Loading HF dataset: {args.dataset}", flush=True)
             input_texts = datasets.load_dataset(
                 args.dataset, name=args.subset, split=args.split)
+            print(f"DEBUG: ✓ HF dataset loaded: {len(input_texts)} documents", flush=True)
 
         # Progress tracking for tokenization
         tokenize_counter = {'count': 0, 'total': len(input_texts)}
@@ -131,28 +156,47 @@ def main(args):
 
             return example
 
-        print(f"Tokenizing {len(input_texts)} documents...", flush=True)
+        print("DEBUG: [6/8] Starting tokenization...", flush=True)
+        print(f"DEBUG: Tokenizing {len(input_texts)} documents...", flush=True)
         input_texts = input_texts.map(tokenize, with_indices=True, desc="Tokenizing documents")
+        print(f"DEBUG: [6/8] ✓ Tokenization complete: {len(input_texts)} documents", flush=True)
+
         if args.save_tokenized:
+            print(f"DEBUG: Saving tokenized dataset to {args.save_tokenized}", flush=True)
             input_texts.save_to_disk(args.save_tokenized)
-            print(f"Saved tokenized dataset to {args.save_tokenized}")
+            print(f"DEBUG: ✓ Saved tokenized dataset", flush=True)
             return
 
+    print("DEBUG: [5/8] ✓ Dataset loaded successfully", flush=True)
+    print(f"DEBUG: Dataset size: {len(input_texts)} documents", flush=True)
+
     if args.dataset_min_tokens:
+        print(f"DEBUG: [7/8] Filtering by min tokens: {args.dataset_min_tokens}...", flush=True)
+        before_filter = len(input_texts)
         input_texts = input_texts.filter(
             lambda x: x["tokenized_len"] >= args.dataset_min_tokens)
-    if args.samples:
-        input_texts = input_texts[:args.samples]
+        print(f"DEBUG: [7/8] ✓ Filtered: {before_filter} → {len(input_texts)} documents", flush=True)
 
+    if args.samples:
+        print(f"DEBUG: Limiting to first {args.samples} samples...", flush=True)
+        input_texts = input_texts[:args.samples]
+        print(f"DEBUG: ✓ Limited to {len(input_texts)} samples", flush=True)
+
+    print(f"DEBUG: [8/8] Starting compute_perplexity with {len(input_texts)} documents...", flush=True)
     ppl = compute_perplexity(
-        model=model, 
-        evaluator_model=evaluator_model, 
-        tokenizer=tokenizer, 
+        model=model,
+        evaluator_model=evaluator_model,
+        tokenizer=tokenizer,
         evaluator_tokenizer=evaluator_tokenizer,
         encodings=input_texts,
         args=args,
     )
-    print(f"{args.model}: longppl: {ppl['longppl']}, ppl: {ppl['ppl']}")
+    print(f"DEBUG: [8/8] ✓ Perplexity computation complete", flush=True)
+    print("=" * 80, flush=True)
+    print(f"FINAL RESULTS: {args.model}", flush=True)
+    print(f"  LongPPL: {ppl['longppl']}", flush=True)
+    print(f"  PPL: {ppl['ppl']}", flush=True)
+    print("=" * 80, flush=True)
     
 
 if __name__ == "__main__":
