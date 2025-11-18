@@ -187,7 +187,13 @@ export PYTHONPATH="$EVAL_HARNESS_DIR:${PYTHONPATH-}"
 RANDOM_DIR="/tmp/lm_eval_$(date +%s%N)"
 mkdir -p "$RANDOM_DIR"
 
-OUTPUT_FILE="/workspace/{{ env_vars.OUTPUT_FILE }}"
+OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
+if [[ "$OUTPUT_FILE" == "$SCR"* ]]; then
+  # map host path under $SCR to the /workspace bind mount
+  OUTPUT_FILE="/workspace${OUTPUT_FILE#$SCR}"
+elif [[ "$OUTPUT_FILE" != /* ]]; then
+  OUTPUT_FILE="/workspace/$OUTPUT_FILE"
+fi
 mkdir -p "$(dirname "$OUTPUT_FILE")"
 
 # Set up chat template flags
