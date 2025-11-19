@@ -1,0 +1,224 @@
+#!/bin/bash
+
+# Script to summarize RULER long context evaluation results across different sequence lengths
+
+if [ "$#" -ne 1 ]; then
+    echo "Usage: $0 <DIR>"
+    echo ""
+    echo "Example: $0 results/my-model"
+    echo ""
+    echo "This script summarizes RULER long context evaluation results."
+    echo "It looks for files matching: ruler_<subtask>_<seqlen>.json or vllm_ruler_<subtask>_<seqlen>.json"
+    exit 1
+fi
+
+DIR=$1
+
+# RULER subtasks
+NIAH_SINGLE=("niah_single_1" "niah_single_2" "niah_single_3")
+NIAH_MULTI=("niah_multikey_1" "niah_multikey_2" "niah_multikey_3" "niah_multivalue" "niah_multiquery")
+OTHER_TASKS=("ruler_vt" "ruler_cwe" "ruler_fwe" "ruler_qa_hotpot" "ruler_qa_squad")
+ALL_SUBTASKS=("${NIAH_SINGLE[@]}" "${NIAH_MULTI[@]}" "${OTHER_TASKS[@]}")
+
+# Sequence lengths (powers of 2 from 4K to 128K)
+SEQ_LENGTHS=(4096 8192 16384 32768 65536 131072)
+SEQ_LABELS=("4K" "8K" "16K" "32K" "64K" "128K")
+
+# Function to get result from a file
+# Args: filename, metric_key
+get_result() {
+    local file="$1"
+    local subtask="$2"
+    
+    if [ ! -f "$file" ]; then
+        echo "na"
+        return
+    fi
+    
+    # Try different possible metric keys based on task type
+    # First try the main result key with acc,none or exact_match,none
+    local result=$(cat "$file" | jq -r "
+        if .results[\"$subtask\"][\"acc,none\"] then 
+            .results[\"$subtask\"][\"acc,none\"] * 100
+        elif .results[\"$subtask\"][\"exact_match,none\"] then 
+            .results[\"$subtask\"][\"exact_match,none\"] * 100
+        elif .results[\"$subtask\"].acc then 
+            .results[\"$subtask\"].acc * 100
+        elif .results[\"$subtask\"].exact_match then 
+            .results[\"$subtask\"].exact_match * 100
+        else 
+            \"na\" 
+        end
+    " 2>/dev/null)
+    
+    if [ "$result" == "null" ] || [ "$result" == "na" ] || [ -z "$result" ]; then
+        echo "na"
+    else
+        printf "%.2f" "$result"
+    fi
+}
+
+# Function to find the file (check both regular and vllm prefix)
+find_file() {
+    local subtask="$1"
+    local seqlen="$2"
+    
+    if [ -f "$DIR/ruler_${subtask}_${seqlen}.json" ]; then
+        echo "$DIR/ruler_${subtask}_${seqlen}.json"
+    elif [ -f "$DIR/vllm_ruler_${subtask}_${seqlen}.json" ]; then
+        echo "$DIR/vllm_ruler_${subtask}_${seqlen}.json"
+    else
+        echo ""
+    fi
+}
+
+# Print header
+echo "=========================================="
+echo "RULER Long Context Evaluation Summary"
+echo "=========================================="
+echo ""
+
+# Check if any RULER files exist
+found_any=false
+for subtask in "${ALL_SUBTASKS[@]}"; do
+    for seqlen in "${SEQ_LENGTHS[@]}"; do
+        file=$(find_file "$subtask" "$seqlen")
+        if [ -n "$file" ]; then
+            found_any=true
+            break 2
+        fi
+    done
+done
+
+if [ "$found_any" = false ]; then
+    echo "No RULER results found in $DIR"
+    echo ""
+    echo "Expected files: ruler_<subtask>_<seqlen>.json or vllm_ruler_<subtask>_<seqlen>.json"
+    echo "Example: ruler_niah_single_1_4096.json"
+    exit 0
+fi
+
+# Print results by category
+echo "NIAH Single Needle Tasks:"
+echo "------------------------"
+for subtask in "${NIAH_SINGLE[@]}"; do
+    printf "%-20s" "$subtask:"
+    for i in "${!SEQ_LENGTHS[@]}"; do
+        seqlen="${SEQ_LENGTHS[$i]}"
+        file=$(find_file "$subtask" "$seqlen")
+        result=$(get_result "$file" "$subtask")
+        printf "%8s" "$result"
+    done
+    echo ""
+done
+
+echo ""
+echo "NIAH Multi-Key/Value/Query Tasks:"
+echo "---------------------------------"
+for subtask in "${NIAH_MULTI[@]}"; do
+    printf "%-20s" "$subtask:"
+    for i in "${!SEQ_LENGTHS[@]}"; do
+        seqlen="${SEQ_LENGTHS[$i]}"
+        file=$(find_file "$subtask" "$seqlen")
+        result=$(get_result "$file" "$subtask")
+        printf "%8s" "$result"
+    done
+    echo ""
+done
+
+echo ""
+echo "Other RULER Tasks (VT, CWE, FWE, QA):"
+echo "-------------------------------------"
+for subtask in "${OTHER_TASKS[@]}"; do
+    printf "%-20s" "$subtask:"
+    for i in "${!SEQ_LENGTHS[@]}"; do
+        seqlen="${SEQ_LENGTHS[$i]}"
+        file=$(find_file "$subtask" "$seqlen")
+        result=$(get_result "$file" "$subtask")
+        printf "%8s" "$result"
+    done
+    echo ""
+done
+
+echo ""
+echo "=========================================="
+echo "Average Scores by Sequence Length:"
+echo "=========================================="
+printf "%-20s" "Sequence Length:"
+for i in "${!SEQ_LABELS[@]}"; do
+    printf "%8s" "${SEQ_LABELS[$i]}"
+done
+echo ""
+printf "%-20s" "Average Score:"
+
+for i in "${!SEQ_LENGTHS[@]}"; do
+    seqlen="${SEQ_LENGTHS[$i]}"
+    
+    # Collect all valid scores for this sequence length
+    scores=()
+    for subtask in "${ALL_SUBTASKS[@]}"; do
+        file=$(find_file "$subtask" "$seqlen")
+        result=$(get_result "$file" "$subtask")
+        if [ "$result" != "na" ]; then
+            scores+=("$result")
+        fi
+    done
+    
+    # Calculate average if we have scores
+    if [ ${#scores[@]} -gt 0 ]; then
+        avg=$(printf '%s\n' "${scores[@]}" | awk '{sum+=$1; count++} END {if (count>0) printf "%.2f", sum/count; else print "na"}')
+        printf "%8s" "$avg"
+    else
+        printf "%8s" "na"
+    fi
+done
+echo ""
+
+echo ""
+echo "=========================================="
+echo "Average Scores by Task Category:"
+echo "=========================================="
+
+# Calculate category averages across all sequence lengths
+for category_name in "NIAH Single" "NIAH Multi" "Other Tasks" "Overall"; do
+    printf "%-20s" "$category_name:"
+    
+    case "$category_name" in
+        "NIAH Single")
+            tasks=("${NIAH_SINGLE[@]}")
+            ;;
+        "NIAH Multi")
+            tasks=("${NIAH_MULTI[@]}")
+            ;;
+        "Other Tasks")
+            tasks=("${OTHER_TASKS[@]}")
+            ;;
+        "Overall")
+            tasks=("${ALL_SUBTASKS[@]}")
+            ;;
+    esac
+    
+    for i in "${!SEQ_LENGTHS[@]}"; do
+        seqlen="${SEQ_LENGTHS[$i]}"
+        
+        scores=()
+        for subtask in "${tasks[@]}"; do
+            file=$(find_file "$subtask" "$seqlen")
+            result=$(get_result "$file" "$subtask")
+            if [ "$result" != "na" ]; then
+                scores+=("$result")
+            fi
+        done
+        
+        if [ ${#scores[@]} -gt 0 ]; then
+            avg=$(printf '%s\n' "${scores[@]}" | awk '{sum+=$1; count++} END {if (count>0) printf "%.2f", sum/count; else print "na"}')
+            printf "%8s" "$avg"
+        else
+            printf "%8s" "na"
+        fi
+    done
+    echo ""
+done
+
+echo ""
+
