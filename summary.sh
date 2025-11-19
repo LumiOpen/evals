@@ -11,6 +11,8 @@ DIR=$1
 echo -n "    arc_challenge: "
 if [ -f $DIR/arc_challenge.json ] ; then 
     cat $DIR/arc_challenge.json | jq '.results.arc_challenge.acc_norm // .results.arc_challenge["acc_norm,none"]' | awk '{print $1 * 100}'
+elif [ -f $DIR/vllm_arc_challenge.json ] ; then 
+    cat $DIR/vllm_arc_challenge.json | jq '.results.arc_challenge.acc_norm // .results.arc_challenge["acc_norm,none"]' | awk '{print $1 * 100}'
 else
     echo na
 fi
@@ -22,6 +24,8 @@ fi
 echo -n "        hellaswag: "
 if [ -f $DIR/hellaswag.json ] ; then
     cat $DIR/hellaswag.json | jq '.results.hellaswag.acc_norm // .results.hellaswag["acc_norm,none"]' | awk '{print $1 * 100}'
+elif [ -f $DIR/vllm_hellaswag.json ] ; then
+    cat $DIR/vllm_hellaswag.json | jq '.results.hellaswag.acc_norm // .results.hellaswag["acc_norm,none"]' | awk '{print $1 * 100}'
 else
     echo na
 fi
@@ -33,6 +37,8 @@ fi
 echo -n "       goldenswag: "
 if [ -f $DIR/goldenswag.json ] ; then
     cat $DIR/goldenswag.json | jq '.results.goldenswag.acc_norm // .results.goldenswag["acc_norm,none"]' | awk '{print $1 * 100}'
+elif [ -f $DIR/vllm_goldenswag.json ] ; then
+    cat $DIR/vllm_goldenswag.json | jq '.results.goldenswag.acc_norm // .results.goldenswag["acc_norm,none"]' | awk '{print $1 * 100}'
 else
     echo na
 fi
@@ -40,6 +46,8 @@ fi
 echo -n "             mmlu: "
 if [ -f $DIR/mmlu.json ] ; then
     cat $DIR/mmlu.json | jq '[if .results.mmlu | has("acc,none") then .results.mmlu["acc,none"] else .results | .[] | .acc end] | add / length * 100'
+elif [ -f $DIR/vllm_mmlu.json ] ; then
+    cat $DIR/vllm_mmlu.json | jq '[if .results.mmlu | has("acc,none") then .results.mmlu["acc,none"] else .results | .[] | .acc end] | add / length * 100'
 else
     echo na
 fi
@@ -51,6 +59,8 @@ fi
 echo -n "    truthfulqa_mc: "
 if [ -f $DIR/truthfulqa_mc.json ] ; then 
     cat $DIR/truthfulqa_mc.json | jq '.results.truthfulqa_mc.mc2 // .results.truthfulqa_mc2["acc,none"]' | awk '{print $1 * 100}'
+elif [ -f $DIR/vllm_truthfulqa_mc.json ] ; then 
+    cat $DIR/vllm_truthfulqa_mc.json | jq '.results.truthfulqa_mc.mc2 // .results.truthfulqa_mc2["acc,none"]' | awk '{print $1 * 100}'
 else
     echo na
 fi
@@ -62,6 +72,8 @@ fi
 echo -n "       winogrande: "
 if [ -f $DIR/winogrande.json ] ; then
    cat $DIR/winogrande.json | jq '.results.winogrande.acc // .results.winogrande["acc,none"]' | awk '{print $1 * 100}'
+elif [ -f $DIR/vllm_winogrande.json ] ; then
+   cat $DIR/vllm_winogrande.json | jq '.results.winogrande.acc // .results.winogrande["acc,none"]' | awk '{print $1 * 100}'
 else
     echo na
 fi
@@ -73,6 +85,8 @@ fi
 echo -n "            gsm8k: "
 if [ -f $DIR/gsm8k.json ] ; then
     cat $DIR/gsm8k.json | jq '.results.gsm8k.acc // .results.gsm8k["exact_match,flexible-extract"]' | awk '{print $1 * 100}'
+elif [ -f $DIR/vllm_gsm8k.json ] ; then
+    cat $DIR/vllm_gsm8k.json | jq '.results.gsm8k.acc // .results.gsm8k["exact_match,flexible-extract"]' | awk '{print $1 * 100}'
 else
     echo na
 fi
@@ -146,6 +160,10 @@ if [ -f $DIR/arc_challenge_fi.json ] ; then
     cat $DIR/arc_challenge_fi.json | jq '.results.arc_challenge_fi.acc_norm' | awk '{print $1 * 100}'
 elif [ -f $DIR/arc_challenge_mt_fi.json ] ; then 
     cat $DIR/arc_challenge_mt_fi.json | jq '.results.arc_challenge_mt_fi["acc_norm,none"]' | awk '{print $1 * 100}'
+elif [ -f $DIR/vllm_arc_challenge_fi.json ] ; then 
+    cat $DIR/vllm_arc_challenge_fi.json | jq '.results.arc_challenge_fi.acc_norm' | awk '{print $1 * 100}'
+elif [ -f $DIR/vllm_arc_challenge_mt_fi.json ] ; then 
+    cat $DIR/vllm_arc_challenge_mt_fi.json | jq '.results.arc_challenge_mt_fi["acc_norm,none"]' | awk '{print $1 * 100}'
 else
     echo na
 fi
@@ -153,12 +171,16 @@ fi
 echo -n "    hellaswag_mt_fi: "
 if [ -f $DIR/hellaswag_mt_fi.json ] ; then
     cat $DIR/hellaswag_mt_fi.json | jq '.results.ogx_hellaswagx_fi."acc,none"' | awk '{print $1 * 100}'
+elif [ -f $DIR/vllm_hellaswag_mt_fi.json ] ; then
+    cat $DIR/vllm_hellaswag_mt_fi.json | jq '.results.ogx_hellaswagx_fi."acc,none"' | awk '{print $1 * 100}'
 else
     echo na
 fi
 echo -n "    goldenswag_mt_fi: "
 if [ -f $DIR/goldenswag_mt_fi.json ] ; then
     cat $DIR/goldenswag_mt_fi.json | jq '.results.ogx_goldenswagx_fi."acc,none"' | awk '{print $1 * 100}'
+elif [ -f $DIR/vllm_goldenswag_mt_fi.json ] ; then
+    cat $DIR/vllm_goldenswag_mt_fi.json | jq '.results.ogx_goldenswagx_fi."acc,none"' | awk '{print $1 * 100}'
 else
     echo na
 fi
@@ -166,6 +188,8 @@ fi
 echo -n "         mmlu_mt_fi: "
 if [ -f $DIR/mmlu_mt_fi.json ] ; then
     cat $DIR/mmlu_mt_fi.json | jq '.groups.ogx_mmlux_FI."acc,none"' | awk '{print $1 * 100}'
+elif [ -f $DIR/vllm_mmlu_mt_fi.json ] ; then
+    cat $DIR/vllm_mmlu_mt_fi.json | jq '.groups.ogx_mmlux_FI."acc,none"' | awk '{print $1 * 100}'
 else
     echo na
 fi
@@ -173,6 +197,8 @@ fi
 echo -n "truthfulqa_mc_mt_fi: "
 if [ -f $DIR/truthfulqa_mc_mt_fi.json ] ; then
     cat $DIR/truthfulqa_mc_mt_fi.json | jq '.results.ogx_truthfulqax_mc2_fi."acc,none"' | awk '{print $1 * 100}'
+elif [ -f $DIR/vllm_truthfulqa_mc_mt_fi.json ] ; then
+    cat $DIR/vllm_truthfulqa_mc_mt_fi.json | jq '.results.ogx_truthfulqax_mc2_fi."acc,none"' | awk '{print $1 * 100}'
 else
     echo na
 fi
@@ -180,6 +206,8 @@ fi
 echo -n "        gsm8k_mt_fi: "
 if [ -f $DIR/gsm8k_mt_fi.json ] ; then
     cat $DIR/gsm8k_mt_fi.json | jq '.results.ogx_gsm8kx_fi."acc,none"' | awk '{print $1 * 100}'
+elif [ -f $DIR/vllm_gsm8k_mt_fi.json ] ; then
+    cat $DIR/vllm_gsm8k_mt_fi.json | jq '.results.ogx_gsm8kx_fi."acc,none"' | awk '{print $1 * 100}'
 else
     echo na
 fi
@@ -189,6 +217,8 @@ echo
 echo -n "    flores200_en_fi bleu: "
 if [ -f $DIR/flores200_trans_en_fi.json ] ; then
     cat $DIR/flores200_trans_en_fi.json | jq '.results."ogx_flores200-trans-eng_Latn-fin_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
+elif [ -f $DIR/vllm_flores200_trans_en_fi.json ] ; then
+    cat $DIR/vllm_flores200_trans_en_fi.json | jq '.results."ogx_flores200-trans-eng_Latn-fin_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
 else
     echo na
 fi
@@ -196,6 +226,8 @@ fi
 echo -n "    flores200_fi_en bleu: "
 if [ -f $DIR/flores200_trans_fi_en.json ] ; then
     cat $DIR/flores200_trans_fi_en.json | jq '.results."ogx_flores200-trans-fin_Latn-eng_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
+elif [ -f $DIR/vllm_flores200_trans_fi_en.json ] ; then
+    cat $DIR/vllm_flores200_trans_fi_en.json | jq '.results."ogx_flores200-trans-fin_Latn-eng_Latn"."bleu_flores200,none"' | awk '{print $1 * 1.0}'
 else
     echo na
 fi
@@ -203,6 +235,8 @@ fi
 echo -n "    flores200_en_fi chrf: "
 if [ -f $DIR/flores200_trans_en_fi.json ] ; then
     cat $DIR/flores200_trans_en_fi.json | jq '.results."ogx_flores200-trans-eng_Latn-fin_Latn"."chrf,none"' | awk '{print $1 * 1.0}'
+elif [ -f $DIR/vllm_flores200_trans_en_fi.json ] ; then
+    cat $DIR/vllm_flores200_trans_en_fi.json | jq '.results."ogx_flores200-trans-eng_Latn-fin_Latn"."chrf,none"' | awk '{print $1 * 1.0}'
 else
     echo na
 fi
@@ -210,6 +244,8 @@ fi
 echo -n "    flores200_fi_en chrf: "
 if [ -f $DIR/flores200_trans_fi_en.json ] ; then
     cat $DIR/flores200_trans_fi_en.json | jq '.results."ogx_flores200-trans-fin_Latn-eng_Latn"."chrf,none"' | awk '{print $1 * 1.0}'
+elif [ -f $DIR/vllm_flores200_trans_fi_en.json ] ; then
+    cat $DIR/vllm_flores200_trans_fi_en.json | jq '.results."ogx_flores200-trans-fin_Latn-eng_Latn"."chrf,none"' | awk '{print $1 * 1.0}'
 else
     echo na
 fi
