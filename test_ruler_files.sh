@@ -43,14 +43,14 @@ for subtask in "${SUBTASKS[@]}"; do
     if [ -f "$file2" ]; then
         echo "    ✓ Found (vllm)"
         
-        # Try to extract a result
+        # Try to extract a result using the correct format (with seqlen)
         echo "    Trying to extract result..."
-        result=$(cat "$file2" | jq -r ".results[\"$subtask\"][\"acc,none\"] // .results[\"$subtask\"][\"exact_match,none\"] // \"na\"" 2>/dev/null)
-        echo "    Result: $result"
+        result=$(cat "$file2" | jq -r ".results[\"$subtask\"][\"${SEQLEN},none\"] // .results[\"$subtask\"][\"acc,none\"] // .results[\"$subtask\"][\"exact_match,none\"] // \"na\"" 2>/dev/null)
+        echo "    Result (using ${SEQLEN},none): $result"
         
         # Show available keys
-        echo "    Available result keys:"
-        cat "$file2" | jq -r '.results | keys[]' 2>/dev/null | head -5
+        echo "    Available result keys for $subtask:"
+        cat "$file2" | jq -r ".results[\"$subtask\"] | keys[]" 2>/dev/null | head -10
     else
         echo "    ✗ Not found"
     fi

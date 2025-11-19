@@ -25,20 +25,23 @@ SEQ_LENGTHS=(4096 8192 16384 32768 65536 131072)
 SEQ_LABELS=("4K" "8K" "16K" "32K" "64K" "128K")
 
 # Function to get result from a file
-# Args: filename, metric_key
+# Args: filename, subtask, seqlen
 get_result() {
     local file="$1"
     local subtask="$2"
+    local seqlen="$3"
     
     if [ ! -f "$file" ]; then
         echo "na"
         return
     fi
     
-    # Try different possible metric keys based on task type
-    # First try the main result key with acc,none or exact_match,none
+    # RULER results use sequence length in the key name: "<seqlen>,none"
+    # Try multiple possible key formats
     local result=$(cat "$file" | jq -r "
-        if .results[\"$subtask\"][\"acc,none\"] then 
+        if .results[\"$subtask\"][\"${seqlen},none\"] then 
+            .results[\"$subtask\"][\"${seqlen},none\"] * 100
+        elif .results[\"$subtask\"][\"acc,none\"] then 
             .results[\"$subtask\"][\"acc,none\"] * 100
         elif .results[\"$subtask\"][\"exact_match,none\"] then 
             .results[\"$subtask\"][\"exact_match,none\"] * 100
@@ -106,7 +109,7 @@ for subtask in "${NIAH_SINGLE[@]}"; do
     for i in "${!SEQ_LENGTHS[@]}"; do
         seqlen="${SEQ_LENGTHS[$i]}"
         file=$(find_file "$subtask" "$seqlen")
-        result=$(get_result "$file" "$subtask")
+        result=$(get_result "$file" "$subtask" "$seqlen")
         printf "%8s" "$result"
     done
     echo ""
@@ -120,7 +123,7 @@ for subtask in "${NIAH_MULTI[@]}"; do
     for i in "${!SEQ_LENGTHS[@]}"; do
         seqlen="${SEQ_LENGTHS[$i]}"
         file=$(find_file "$subtask" "$seqlen")
-        result=$(get_result "$file" "$subtask")
+        result=$(get_result "$file" "$subtask" "$seqlen")
         printf "%8s" "$result"
     done
     echo ""
@@ -134,7 +137,7 @@ for subtask in "${OTHER_TASKS[@]}"; do
     for i in "${!SEQ_LENGTHS[@]}"; do
         seqlen="${SEQ_LENGTHS[$i]}"
         file=$(find_file "$subtask" "$seqlen")
-        result=$(get_result "$file" "$subtask")
+        result=$(get_result "$file" "$subtask" "$seqlen")
         printf "%8s" "$result"
     done
     echo ""
@@ -158,7 +161,7 @@ for i in "${!SEQ_LENGTHS[@]}"; do
     scores=()
     for subtask in "${ALL_SUBTASKS[@]}"; do
         file=$(find_file "$subtask" "$seqlen")
-        result=$(get_result "$file" "$subtask")
+        result=$(get_result "$file" "$subtask" "$seqlen")
         if [ "$result" != "na" ]; then
             scores+=("$result")
         fi
@@ -204,7 +207,7 @@ for category_name in "NIAH Single" "NIAH Multi" "Other Tasks" "Overall"; do
         scores=()
         for subtask in "${tasks[@]}"; do
             file=$(find_file "$subtask" "$seqlen")
-            result=$(get_result "$file" "$subtask")
+            result=$(get_result "$file" "$subtask" "$seqlen")
             if [ "$result" != "na" ]; then
                 scores+=("$result")
             fi

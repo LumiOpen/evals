@@ -92,7 +92,10 @@ python watch.py --once
 # View history
 python watch.py --hist --days 3
 
-# View results
+# View RULER results summary
+sh summary_ruler.sh output/v2/<model-name>
+
+# View other benchmark results
 sh summary.sh output/v2/<model-name>
 
 # List result files

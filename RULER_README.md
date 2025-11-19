@@ -192,11 +192,14 @@ python watch.py --hist --days 3
 ### View Results
 
 ```bash
-# View summary of all results for a model
+# View RULER summary of all results for a model
+sh summary_ruler.sh output/v2/<model-name>
+
+# View other benchmark results
 sh summary.sh output/v2/<model-name>
 
 # Results are stored in:
-# output/v2/<model-name>/<step>/ruler_<sequence_length>.json
+# output/v2/<model-name>/ruler_<subtask>_<sequence_length>.json
 ```
 
 ## Interpreting Results
@@ -290,7 +293,7 @@ sh ruler-vllm.sh /path/to/model
 python watch.py
 
 # 5. View results when complete
-sh summary.sh output/v2/<model-name>
+sh summary_ruler.sh output/v2/<model-name>
 ```
 
 ### Example 5: Specific Individual Tasks
