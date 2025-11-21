@@ -20,7 +20,7 @@ set -euo pipefail
 
 export IMG="/scratch/{{ slurm_config.account }}/containers/vllm_v10.1.1.sif"
 export PRJ="/scratch/{{ slurm_config.account }}"   # will be /project in container
-export SCR="$PWD"                          # SCR = scratch directory, will be /workspace in container
+export SCR="$(pwd -P)"                     # SCR = scratch directory, will be /workspace in container (resolve symlinks)
 export ACC="{{ slurm_config.account }}"
 
 # Parse gres for GPU count (e.g., "gpu:mi250:4" -> 4)
