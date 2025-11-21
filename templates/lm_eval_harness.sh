@@ -156,7 +156,7 @@ ${PYTHON_BIN} /tmp/tools/stage_aiter.py
 export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
 
 # Install specific transformers version
-${PYTHON_BIN} -m pip install --user -q -U transformers==4.57.0
+${PYTHON_BIN} -m pip install --user -q -U transformers=={{ env_vars.TRANSFORMERS_VERSION }}
 
 # ------- get LUMI harness (puts it first on sys.path) -------
 EVAL_HARNESS_DIR="/tmp/lm-eval"
