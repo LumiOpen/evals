@@ -45,7 +45,7 @@ def read_command_log():
             for line in f.readlines():
                 entry = json.loads(line.rstrip())
                 entries[entry["job_id"]] = entry
-        return entries
+    return entries
 
 def get_jobs():
     command = ['squeue', '--me', '-o', '%i %T %j']
