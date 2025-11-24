@@ -25,7 +25,7 @@ run() {
   local tasks=( "$@" )
 
   # Build args as an array to keep quoting correct
-  local args=( python main.py --backend "$BACKEND" --project "$PROJECT" --partition "$QUEUE" --model "$MODEL" --time "$t" )
+  local args=( python3 main.py --backend "$BACKEND" --project "$PROJECT" --partition "$QUEUE" --model "$MODEL" --time "$t" )
 
   # Only pass --gres if explicitly provided
   if [[ -n "$CPT_GRES" ]]; then
