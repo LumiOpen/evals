@@ -19,13 +19,16 @@ MODEL_ARGS="${MODEL_ARGS:-}"
 # Chat flags
 APPLY_CHAT_TEMPLATE="${APPLY_CHAT_TEMPLATE:-}"
 FEWSHOT_AS_MULTITURN="${FEWSHOT_AS_MULTITURN:-}"
+# Allow overriding the per-suite time limit (defaults remain if not provided)
+CPT_TIME="${CPT_TIME:-}"
 
 run() {
   local t="$1"; shift
+  local time_limit="${CPT_TIME:-$t}"
   local tasks=( "$@" )
 
   # Build args as an array to keep quoting correct
-  local args=( python main.py --backend "$BACKEND" --project "$PROJECT" --partition "$QUEUE" --model "$MODEL" --time "$t" )
+  local args=( python main.py --backend "$BACKEND" --project "$PROJECT" --partition "$QUEUE" --model "$MODEL" --time "$time_limit" )
 
   # Only pass --gres if explicitly provided
   if [[ -n "$CPT_GRES" ]]; then

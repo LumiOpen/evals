@@ -188,15 +188,15 @@ export PYTHONPATH="$EVAL_HARNESS_DIR:${PYTHONPATH-}"
 # Wrapper to force spawn multiprocessing start method before running lm_eval
 cat > /tmp/tools/lm_eval_spawn_wrapper.py <<'PY'
 import multiprocessing
+import runpy
 import sys
 
 def _main():
     multiprocessing.set_start_method("spawn", force=True)
-    from lm_eval.__main__ import main as lm_eval_main
-    return lm_eval_main()
+    runpy.run_module("lm_eval", run_name="__main__")
 
 if __name__ == "__main__":
-    sys.exit(_main())
+    _main()
 PY
 chmod +x /tmp/tools/lm_eval_spawn_wrapper.py
 
