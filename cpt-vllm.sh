@@ -21,6 +21,12 @@ APPLY_CHAT_TEMPLATE="${APPLY_CHAT_TEMPLATE:-}"
 FEWSHOT_AS_MULTITURN="${FEWSHOT_AS_MULTITURN:-}"
 # Allow overriding the per-suite time limit (defaults remain if not provided)
 CPT_TIME="${CPT_TIME:-}"
+# Force lm-eval to skip per-token logprob requests to avoid vLLM DP crashes
+if [[ -n "${LM_EVAL_ARGS:-}" ]]; then
+  LM_EVAL_ARGS="--no_logprobs ${LM_EVAL_ARGS}"
+else
+  LM_EVAL_ARGS="--no_logprobs"
+fi
 
 run() {
   local t="$1"; shift
@@ -43,6 +49,9 @@ run() {
   fi
   if [[ -n "$FEWSHOT_AS_MULTITURN" ]]; then
     args+=( --fewshot_as_multiturn "$FEWSHOT_AS_MULTITURN" )
+  fi
+  if [[ -n "$LM_EVAL_ARGS" ]]; then
+    args+=( --lm_eval_args "$LM_EVAL_ARGS" )
   fi
 
   args+=( "${tasks[@]}" )
