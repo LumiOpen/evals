@@ -188,7 +188,7 @@ export PYTHONPATH="$EVAL_HARNESS_DIR:${PYTHONPATH-}"
 # Patch upstream lm_eval harness to fix DP sampling param ordering for vLLM
 PATCH_TARGET="$EVAL_HARNESS_DIR/lm_eval/models/vllm_causallms.py"
 if grep -q 'for rank, (sp, req) in enumerate(zip(requests, sampling_params))' "$PATCH_TARGET"; then
-PATCH_FILE="$PATCH_TARGET" python3 <<'PY'
+  cat > /tmp/tools/patch_vllm_dp.py <<'PY'
 import os
 from pathlib import Path
 path = Path(os.environ["PATCH_FILE"])
@@ -200,6 +200,7 @@ if needle not in text:
 path.write_text(text.replace(needle, fix, 1))
 print("[patch] applied vLLM DP sampling_params hotfix")
 PY
+  PATCH_FILE="$PATCH_TARGET" python3 /tmp/tools/patch_vllm_dp.py
 fi
 
 # Wrapper to force spawn multiprocessing start method before running lm_eval
