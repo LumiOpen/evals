@@ -34,9 +34,10 @@ else
     GPUS=4
 fi
 
-# topology & model knobs
-export N_NODES=1
-export TP="$GPUS"
+# topology & model knobs (default: single node, TP=1, DP=GPUs requested)
+export N_NODES="${N_NODES_OVERRIDE:-1}"
+export TP="${TP_OVERRIDE:-1}"
+export DP="${DP_OVERRIDE:-$GPUS}"
 export MODEL_ID="{{ env_vars.MODEL }}"
 
 {% if env_vars.LM_EVAL_PATH %}
@@ -55,6 +56,7 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env SLURM_JOB_ID="$SLURM_JOB_ID" \
     --env MODEL_ID="$MODEL_ID" \
     --env TP="$TP" \
+    --env DP="$DP" \
     --env SCR="$SCR" \
     --env USER="$USER" \
     --env HF_HOME=/project/hf_cache \
@@ -183,6 +185,21 @@ setup_lm_eval() {
 setup_lm_eval
 export PYTHONPATH="$EVAL_HARNESS_DIR:${PYTHONPATH-}"
 
+# Wrapper to force spawn multiprocessing start method before running lm_eval
+cat > /tmp/tools/lm_eval_spawn_wrapper.py <<'PY'
+import multiprocessing
+import sys
+
+def _main():
+    multiprocessing.set_start_method("spawn", force=True)
+    from lm_eval.__main__ import main as lm_eval_main
+    return lm_eval_main()
+
+if __name__ == "__main__":
+    sys.exit(_main())
+PY
+chmod +x /tmp/tools/lm_eval_spawn_wrapper.py
+
 # Create a temporary directory for lm_eval output
 RANDOM_DIR="/tmp/lm_eval_$(date +%s%N)"
 mkdir -p "$RANDOM_DIR"
@@ -211,7 +228,7 @@ FEWSHOT_AS_MULTITURN_FLAG=""
 
 {% if env_vars.BACKEND == "vllm" %}
 MODEL_BACKEND="vllm"
-MODEL_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP},max_model_len=4096,gpu_memory_utilization=0.90"
+MODEL_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},download_dir=/project/hf_cache/models,trust_remote_code=True,dtype=bfloat16,tensor_parallel_size=${TP},data_parallel_size=${DP},max_model_len=8192,max_num_batched_tokens=8192,gpu_memory_utilization=0.90"
 {% if env_vars.MODEL_ARGS %}
 MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
 {% endif %}
@@ -229,7 +246,7 @@ MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
 # Run eval
 BATCH_SIZE="{% if env_vars.BATCH_SIZE %}{{ env_vars.BATCH_SIZE }}{% elif env_vars.BACKEND == "vllm" %}auto{% else %}4{% endif %}"
 
-${PYTHON_BIN} -m lm_eval \
+${PYTHON_BIN} /tmp/tools/lm_eval_spawn_wrapper.py \
   --model "$MODEL_BACKEND" \
   --model_args "$MODEL_ARGS" \
   --tasks "{{ env_vars.TASK_LIST }}" \

@@ -48,9 +48,5 @@ run() {
   "${args[@]}"
 }
 
-# Suites
-run 12:00:00 flores200_trans_en_fi flores200_trans_fi_en
-run 10:00:00 arc_challenge arc_challenge_mt_fi truthfulqa_mc truthfulqa_mc_mt_fi goldenswag_mt_fi
-run 10:00:00 mmlu mmlu_mt_fi
-run 48:00:00 gsm8k gsm8k_mt_fi hellaswag hellaswag_mt_fi goldenswag
-
+# Suites — focus on a single representative benchmark while debugging DP runs
+run 12:00:00 hellaswag
