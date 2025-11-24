@@ -188,9 +188,10 @@ export PYTHONPATH="$EVAL_HARNESS_DIR:${PYTHONPATH-}"
 # Patch upstream lm_eval harness to fix DP sampling param ordering for vLLM
 PATCH_TARGET="$EVAL_HARNESS_DIR/lm_eval/models/vllm_causallms.py"
 if grep -q 'for rank, (sp, req) in enumerate(zip(requests, sampling_params))' "$PATCH_TARGET"; then
-python3 - <<'PY'
+PATCH_FILE="$PATCH_TARGET" python3 <<'PY'
+import os
 from pathlib import Path
-path = Path("${PATCH_TARGET}")
+path = Path(os.environ["PATCH_FILE"])
 text = path.read_text()
 needle = "for rank, (sp, req) in enumerate(zip(requests, sampling_params)):\n"
 fix = "for rank, (req, sp) in enumerate(zip(requests, sampling_params)):\n"
