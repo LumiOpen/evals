@@ -356,8 +356,6 @@ MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS},{{ env_vars.MODEL_ARGS }}"
 MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS}"
 {% endif %}
 {% endif %}
-MODEL_BACKEND="vllm"
-MODEL_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP},max_model_len=4096,gpu_memory_utilization=0.90"
 {% if env_vars.MODEL_ARGS %}
 MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
 {% endif %}
