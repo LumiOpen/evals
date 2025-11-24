@@ -185,6 +185,22 @@ setup_lm_eval() {
 setup_lm_eval
 export PYTHONPATH="$EVAL_HARNESS_DIR:${PYTHONPATH-}"
 
+# Patch upstream lm_eval harness to fix DP sampling param ordering for vLLM
+PATCH_TARGET="$EVAL_HARNESS_DIR/lm_eval/models/vllm_causallms.py"
+if grep -q 'for rank, (sp, req) in enumerate(zip(requests, sampling_params))' "$PATCH_TARGET"; then
+python - <<PY
+from pathlib import Path
+path = Path("${PATCH_TARGET}")
+text = path.read_text()
+needle = "for rank, (sp, req) in enumerate(zip(requests, sampling_params)):\n"
+fix = "for rank, (req, sp) in enumerate(zip(requests, sampling_params)):\n"
+if needle not in text:
+    raise SystemExit("expected pattern not found in vllm_causallms.py")
+path.write_text(text.replace(needle, fix, 1))
+print("[patch] applied vLLM DP sampling_params hotfix")
+PY
+fi
+
 # Wrapper to force spawn multiprocessing start method before running lm_eval
 cat > /tmp/tools/lm_eval_spawn_wrapper.py <<'PY'
 import multiprocessing
