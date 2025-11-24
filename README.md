@@ -13,23 +13,6 @@ For common evaluation scenarios, use the pre-configured scripts:
 - `code.sh` - Code generation evaluations
 - `ruler.sh` / `ruler-vllm.sh` - **NEW:** Long context evaluations (4K-128K tokens)
 
-### RULER Long Context Evaluations
-
-RULER provides 13 distinct subtasks across 6 sequence lengths (4K-128K tokens) for comprehensive long-context evaluation:
-
-```bash
-# Quick test
-sh ruler.sh /path/to/model --subtasks "niah_single_1" --sequence-lengths "4096" --limit 10
-
-# Run all 78 combinations (13 subtasks × 6 sequence lengths)
-sh ruler-vllm.sh /path/to/model
-```
-
-**Documentation:**
-- [RULER_QUICK_REFERENCE.md](RULER_QUICK_REFERENCE.md) - Command cheat sheet
-- [RULER_README.md](RULER_README.md) - Complete documentation
-- [RULER_TESTING.md](RULER_TESTING.md) - Testing guide
-
 ## Usage
 
 Common run configs can be found in command line scripts like `cpt.sh` which you
@@ -56,6 +39,20 @@ python main.py \
     --model path/to/model_step1234 \
     eval_name1 eval_name2
 ```
+
+### RULER Long Context Evaluations
+
+RULER evaluates models on long contexts (4K-128K tokens) with 13 subtasks:
+
+```bash
+# Quick test
+sh ruler.sh /path/to/model --subtasks "niah_single_1" --sequence-lengths "4096"
+
+# Full evaluation (78 jobs: 13 subtasks × 6 sequence lengths)
+sh ruler-vllm.sh /path/to/model
+```
+
+**See [RULER_README.md](RULER_README.md) for complete documentation, examples, and troubleshooting.**
 
 ### Backend selection
 

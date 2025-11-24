@@ -326,7 +326,6 @@ FEWSHOT_AS_MULTITURN_FLAG=""
 {% endif %}
 
 {% if env_vars.BACKEND == "vllm" %}
-# vllm backend MODEL_ARGS logic (resolved merge conflict)
 MODEL_BACKEND="vllm"
 BASE_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP}"
 
@@ -356,13 +355,11 @@ MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS},{{ env_vars.MODEL_ARGS }}"
 MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS}"
 {% endif %}
 {% endif %}
-{% if env_vars.MODEL_ARGS %}
-MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
-{% endif %}
 {% elif env_vars.BACKEND == "dummy" %}
 MODEL_BACKEND="dummy"
 MODEL_ARGS="pretrained={{ env_vars.MODEL }}"
 {% else %}
+MODEL_BACKEND="hf-auto"
 BASE_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
 
 {% if env_vars.MAX_SEQ_LENGTH %}
@@ -388,11 +385,6 @@ MODEL_ARGS="${BASE_ARGS},{{ env_vars.MODEL_ARGS }}"
 {% else %}
 MODEL_ARGS="${BASE_ARGS}"
 {% endif %}
-{% endif %}
-MODEL_BACKEND="hf-auto"
-MODEL_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
-{% if env_vars.MODEL_ARGS %}
-MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
 {% endif %}
 {% endif %}
 

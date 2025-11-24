@@ -2,6 +2,30 @@
 
 This document describes the integration of RULER (Rule-based Long-context Understanding Evaluation) benchmarks into the evaluation framework.
 
+## Quick Reference
+
+ruler.sh and ruler-vllm.sh are interchangeble in the command line. They just run different backends. 
+
+```bash
+# Run specific subtasks at specific lengths
+sh ruler.sh /path/to/model --subtasks "niah_single_1,ruler_vt" --sequence-lengths "4096,8192"
+
+# Run all NIAH tests at all lengths (48 jobs)
+sh ruler.sh /path/to/model --subtasks "niah_single_1,niah_single_2,niah_single_3,niah_multikey_1,niah_multikey_2,niah_multikey_3,niah_multivalue,niah_multiquery"
+
+# Run everything (78 jobs)
+sh ruler-vllm.sh /path/to/model
+
+# View results
+sh summary_ruler.sh output/v2/<model-name>
+```
+
+**13 Subtasks:** `niah_single_1`, `niah_single_2`, `niah_single_3`, `niah_multikey_1`, `niah_multikey_2`, `niah_multikey_3`, `niah_multivalue`, `niah_multiquery`, `ruler_vt`, `ruler_cwe`, `ruler_fwe`, `ruler_qa_hotpot`, `ruler_qa_squad`
+
+**6 Sequence Lengths:** 4096, 8192, 16384, 32768, 65536, 131072
+
+---
+
 ## What is RULER?
 
 RULER is a benchmark designed to evaluate language models on their ability to handle long contexts. It includes **13 distinct subtasks** that test different aspects of long-context understanding:
@@ -37,7 +61,7 @@ The integration supports the following sequence lengths (powers of 2):
 The integration provides two modes:
 
 1. **Granular Mode** (Recommended): Run individual subtasks at specific sequence lengths
-   - Task format: `ruler_<subtask>_<seqlen>` (e.g., `ruler_niah_single_1_4096`)
+   - Task format: Run ruler subtask on given sequence length
    - 13 subtasks × 6 sequence lengths = **78 individual tasks**
    - Each task runs as a separate SLURM job
    - Allows parallel execution and fine-grained resource management
@@ -86,24 +110,6 @@ sh ruler.sh /path/to/model --sequence-lengths "4096,8192,16384"
 # Submits 13 × 3 = 39 jobs
 ```
 
-### Running Individual Tasks
-
-To run specific individual task combinations:
-
-```bash
-# Single specific task
-python main.py --model /path/to/model ruler_niah_single_1_4096
-
-# Multiple specific tasks
-python main.py --model /path/to/model \
-    ruler_niah_single_1_4096 \
-    ruler_ruler_vt_4096 \
-    ruler_ruler_qa_hotpot_8192
-
-# Grouped task (all subtasks at one sequence length)
-python main.py --model /path/to/model ruler_4096
-```
-
 ### Custom SLURM Configuration
 
 You can customize the SLURM job parameters:
@@ -124,7 +130,7 @@ sh ruler-vllm.sh /path/to/model \
     --gres gpu:mi250:8
 ```
 
-**Important**: The scripts call `python main.py`, which internally generates SLURM job scripts and submits them using `sbatch`. Each call to `main.py` results in a separate SLURM job being queued. The scripts do NOT run the evaluations directly - they submit them to your HPC's SLURM scheduler.
+**Important**: Scripts submit SLURM jobs via `python main.py` → `sbatch`. They don't run evaluations locally.
 
 ### Backend Selection
 
@@ -137,41 +143,6 @@ sh ruler.sh /path/to/model
 # vLLM backend (faster inference)
 sh ruler-vllm.sh /path/to/model
 
-# Custom model arguments for vLLM
-python main.py --model /path/to/model --backend vllm \
-    --model_args "max_model_len=32768,gpu_memory_utilization=0.95" \
-    ruler_32768
-```
-
-## Resource Requirements
-
-Different sequence lengths have different computational requirements:
-
-| Sequence Length | Recommended Time | Recommended GPUs | Memory Requirements |
-|-----------------|------------------|------------------|---------------------|
-| 4,096           | 4-8 hours        | 4 GPUs           | ~40GB               |
-| 8,192           | 8-12 hours       | 4 GPUs           | ~50GB               |
-| 16,384          | 12-16 hours      | 4-8 GPUs         | ~70GB               |
-| 32,768          | 16-24 hours      | 8 GPUs           | ~100GB              |
-| 65,536          | 24-36 hours      | 8 GPUs           | ~150GB              |
-| 131,072         | 36-48 hours      | 8 GPUs           | ~200GB              |
-
-**Note**: These are estimates and may vary based on model size and architecture.
-
-## Using Custom lm-evaluation-harness
-
-If you need to use a specific version of lm-evaluation-harness that includes RULER tasks:
-
-```bash
-# Use a specific GitHub repository and branch
-python main.py --model /path/to/model \
-    --lm_eval https://github.com/EleutherAI/lm-evaluation-harness@main \
-    ruler_4096
-
-# Use a local development version
-python main.py --model /path/to/model \
-    --lm_eval /path/to/local/lm-evaluation-harness \
-    ruler_4096
 ```
 
 ## Monitoring and Results
@@ -192,54 +163,17 @@ python watch.py --hist --days 3
 ### View Results
 
 ```bash
-# View RULER summary of all results for a model
+# RULER-specific summary (recommended for RULER results)
 sh summary_ruler.sh output/v2/<model-name>
 
-# View other benchmark results
+# General benchmark summary (for non-RULER benchmarks)
 sh summary.sh output/v2/<model-name>
 
-# Results are stored in:
-# output/v2/<model-name>/ruler_<subtask>_<sequence_length>.json
+# List individual result files
+ls output/v2/<model-name>/ruler_*.json
 ```
 
-## Interpreting Results
-
-RULER evaluations produce accuracy scores for different task types. The overall score is an average across all subtasks. Higher scores indicate better long-context understanding:
-
-- **0.0 - 0.3**: Poor long-context handling
-- **0.3 - 0.5**: Basic long-context capabilities
-- **0.5 - 0.7**: Good long-context performance
-- **0.7 - 0.9**: Very good long-context performance
-- **0.9 - 1.0**: Excellent long-context performance
-
-## Troubleshooting
-
-### Out of Memory Errors
-
-If you encounter OOM errors:
-
-1. Reduce batch size: `--batch_size 1`
-2. Use vLLM backend with lower utilization: `--model_args "gpu_memory_utilization=0.85"`
-3. Increase GPU allocation: `--gres gpu:mi250:8`
-4. For very long sequences, consider gradient checkpointing if available
-
-### RULER Tasks Not Found
-
-If you see "Task not found" errors, ensure you're using a version of lm-evaluation-harness that includes RULER tasks:
-
-```bash
-python main.py --model /path/to/model \
-    --lm_eval https://github.com/EleutherAI/lm-evaluation-harness@main \
-    ruler_4096
-```
-
-### Very Long Run Times
-
-For the longest sequence lengths (65K, 128K), consider:
-
-1. Using vLLM backend for faster inference
-2. Running in stages (test shorter lengths first)
-3. Using `--limit` for testing: `--limit 50`
+Result files are named: `ruler_<subtask>_<seqlen>.json` or `vllm_ruler_<subtask>_<seqlen>.json`
 
 ## Examples
 
@@ -250,9 +184,8 @@ Test a few subtasks with limited samples:
 ```bash
 # Test 2 subtasks at 2 sequence lengths (4 jobs total)
 sh ruler.sh /path/to/model \
-    --subtasks "niah_single_1,vt" \
+    --subtasks "niah_single_1,ruler_vt" \
     --sequence-lengths "4096,8192" \
-    --limit 10
 ```
 
 ### Example 2: Full NIAH Evaluation
@@ -281,7 +214,6 @@ sh ruler.sh /path/to/model --sequence-lengths "4096,8192,16384"
 sh ruler.sh /path/to/model \
     --subtasks "niah_single_1" \
     --sequence-lengths "4096" \
-    --limit 10
 
 # 2. Monitor to ensure it works
 python watch.py --once
@@ -294,28 +226,6 @@ python watch.py
 
 # 5. View results when complete
 sh summary_ruler.sh output/v2/<model-name>
-```
-
-### Example 5: Specific Individual Tasks
-
-Run only specific task combinations manually:
-
-```bash
-# Run 3 specific tasks
-python main.py --model /path/to/model \
-    ruler_niah_single_1_4096 \
-    ruler_ruler_vt_8192 \
-    ruler_ruler_qa_hotpot_16384
-```
-
-### Example 6: Production Run with Optimal Settings
-
-```bash
-# Full evaluation with custom SLURM settings
-sh ruler-vllm.sh org/modelname \
-    --partition standard-g \
-    --time 48:00:00 \
-    --gres gpu:mi250:8
 ```
 
 ## References
