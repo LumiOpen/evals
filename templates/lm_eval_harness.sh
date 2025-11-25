@@ -20,7 +20,7 @@ set -euo pipefail
 
 export IMG="/scratch/{{ slurm_config.account }}/containers/vllm_v10.1.1.sif"
 export PRJ="/scratch/{{ slurm_config.account }}"   # will be /project in container
-export SCR="$PWD"                          # SCR = scratch directory, will be /workspace in container
+export SCR="$(pwd -P)"                     # SCR = scratch directory, will be /workspace in container (resolve symlinks)
 export ACC="{{ slurm_config.account }}"
 
 # Parse gres for GPU count (e.g., "gpu:mi250:4" -> 4)
@@ -72,9 +72,6 @@ export HOME=/tmp
 
 PYTHON_BIN="/opt/miniconda3/envs/pytorch/bin/python"
 export PYTHON_BIN
-
-MODEL_SAFE="${MODEL_ID//\//-}"
-MODEL_LOCAL="/project/hf_cache/models/${MODEL_SAFE}"
 
 # ---- env & caches (disable xet + telemetry) ----
 export HF_HUB_DISABLE_XET=1
@@ -158,6 +155,9 @@ ${PYTHON_BIN} /tmp/tools/stage_aiter.py
 
 export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
 
+# Install specific transformers version
+${PYTHON_BIN} -m pip install --user -q -U transformers=={{ env_vars.TRANSFORMERS_VERSION }}
+
 # ------- get LUMI harness (puts it first on sys.path) -------
 EVAL_HARNESS_DIR="/tmp/lm-eval"
 
@@ -211,7 +211,7 @@ FEWSHOT_AS_MULTITURN_FLAG=""
 
 {% if env_vars.BACKEND == "vllm" %}
 MODEL_BACKEND="vllm"
-MODEL_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP},max_model_len=4096,gpu_memory_utilization=0.90"
+MODEL_ARGS="pretrained=${MODEL_ID},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP},max_model_len=4096,gpu_memory_utilization=0.90"
 {% if env_vars.MODEL_ARGS %}
 MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
 {% endif %}
@@ -220,7 +220,7 @@ MODEL_BACKEND="dummy"
 MODEL_ARGS="pretrained={{ env_vars.MODEL }}"
 {% else %}
 MODEL_BACKEND="hf-auto"
-MODEL_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
+MODEL_ARGS="pretrained=${MODEL_ID},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
 {% if env_vars.MODEL_ARGS %}
 MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
 {% endif %}

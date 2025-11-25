@@ -115,6 +115,8 @@ def run_eval(eval_name, args):
         model, step = parse_model(args.model)
         output_dir = os.path.join(args.output_root, model, step)
 
+    output_dir = os.path.abspath(output_dir)
+
     #
     # generate slurm script
     #
@@ -139,7 +141,7 @@ def run_eval(eval_name, args):
     env_vars = {
         'MODEL': args.model,
         'TOKENIZER': args.tokenizer,
-        'OUTPUT_DIR': os.path.abspath(output_dir),
+        'OUTPUT_DIR': output_dir,
         'WORK_DIR': os.path.abspath(args.work_dir),
         'OUTPUT_FILE': output_file,
         'TRUST_REMOTE_CODE': "True" if args.trust_remote_code else "False",
@@ -152,6 +154,7 @@ def run_eval(eval_name, args):
         'LM_EVAL_REPO': lm_eval_config['LM_EVAL_REPO'],
         'LM_EVAL_REF': lm_eval_config['LM_EVAL_REF'],
         'LM_EVAL_PATH': lm_eval_config['LM_EVAL_PATH'],
+        'TRANSFORMERS_VERSION': args.transformers_version,
     }
 
     job_name = f"vllm_{eval_name}" if backend == 'vllm' else eval_name
@@ -189,8 +192,9 @@ def run_eval(eval_name, args):
         os.makedirs(args.work_dir)
     if not os.path.exists(args.log_dir):
         os.makedirs(args.log_dir)
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
+    if os.path.exists(output_dir) and not os.path.isdir(output_dir):
+        raise ValueError(f"Output directory path '{output_dir}' exists but is not a directory")
+    os.makedirs(output_dir, exist_ok=True)
 
     process = subprocess.run(['sbatch', script_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
     if process.returncode != 0:
@@ -279,6 +283,7 @@ def main():
     parser.add_argument('--limit', type=int, help='Limit the number of examples per task (for testing purposes only)')
     parser.add_argument('--batch_size', type=str, default='', help='Batch size for inference (default: auto for vLLM, 4 for HF)')
     parser.add_argument('--lm_eval', type=str, help='lm-evaluation-harness source: URL, URL@ref, or local path (default: LumiOpen/main)')
+    parser.add_argument('--transformers_version', type=str, default='4.57.1', help='Transformers version to install in container (default: 4.57.1)')
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000963", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
