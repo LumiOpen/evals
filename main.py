@@ -109,6 +109,23 @@ def parse_model(model):
     return model_name, step
 
 
+def normalize_pip_spec(raw_spec, package, default_version):
+    spec = (raw_spec or '').strip()
+    if not spec:
+        spec = default_version
+    lowered = spec.lower()
+    if spec.startswith('git+') or '://' in spec or lowered.startswith('file:'):
+        return spec
+    if spec.startswith(package) or spec.startswith(f"{package}["):
+        return spec
+    if spec[0] in "=<>!~":
+        return f"{package}{spec}"
+    spec = spec.lstrip('v')
+    if not spec:
+        return package
+    return f"{package}=={spec}"
+
+
 def run_eval(eval_name, args):
     output_dir = args.output_dir
     if not output_dir:
@@ -138,6 +155,9 @@ def run_eval(eval_name, args):
     # Parse lm-eval configuration
     lm_eval_config = parse_repo_source(args.lm_eval)
 
+    transformers_package = normalize_pip_spec(args.transformers_version, 'transformers', '4.57.1')
+    tokenizers_package = normalize_pip_spec(args.tokenizers_version, 'tokenizers', '0.23.0')
+
     env_vars = {
         'MODEL': args.model,
         'TOKENIZER': args.tokenizer,
@@ -154,7 +174,8 @@ def run_eval(eval_name, args):
         'LM_EVAL_REPO': lm_eval_config['LM_EVAL_REPO'],
         'LM_EVAL_REF': lm_eval_config['LM_EVAL_REF'],
         'LM_EVAL_PATH': lm_eval_config['LM_EVAL_PATH'],
-        'TRANSFORMERS_VERSION': args.transformers_version,
+        'TRANSFORMERS_PACKAGE': transformers_package,
+        'TOKENIZERS_PACKAGE': tokenizers_package,
     }
 
     job_name = f"vllm_{eval_name}" if backend == 'vllm' else eval_name
@@ -283,7 +304,8 @@ def main():
     parser.add_argument('--limit', type=int, help='Limit the number of examples per task (for testing purposes only)')
     parser.add_argument('--batch_size', type=str, default='', help='Batch size for inference (default: auto for vLLM, 4 for HF)')
     parser.add_argument('--lm_eval', type=str, help='lm-evaluation-harness source: URL, URL@ref, or local path (default: LumiOpen/main)')
-    parser.add_argument('--transformers_version', type=str, default='4.57.1', help='Transformers version to install in container (default: 4.57.1)')
+    parser.add_argument('--transformers_version', type=str, default='4.57.1', help='Transformers pip spec or version (e.g., 4.57.1, transformers==4.58.0.dev0, git+https://... )')
+    parser.add_argument('--tokenizers_version', type=str, default='0.23.0', help='Tokenizers pip spec or version to layer on top of the container default (e.g., 0.23.0, tokenizers>=0.22,<0.24, git+https://...)')
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000963", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")

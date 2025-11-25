@@ -155,8 +155,57 @@ ${PYTHON_BIN} /tmp/tools/stage_aiter.py
 
 export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
 
-# Install specific transformers version
-${PYTHON_BIN} -m pip install --user -q -U transformers=={{ env_vars.TRANSFORMERS_VERSION }}
+# Prepare patched config override when rope_scaling is boolean
+CONFIG_OVERRIDE_PATH="/tmp/config-override-${SLURM_JOB_ID:-$$}.json"
+cat > /tmp/tools/prepare_model_config.py <<'PY'
+import json, os, urllib.request
+
+model_id = os.environ.get("MODEL_ID", "")
+target = os.environ.get("CONFIG_OVERRIDE_PATH")
+if not model_id or model_id.count("/") != 1 or not target:
+    raise SystemExit(0)
+
+org, name = model_id.split("/", 1)
+url = f"https://huggingface.co/{org}/{name}/resolve/main/config.json"
+headers = {}
+token = os.environ.get("HF_TOKEN")
+if token:
+    headers["Authorization"] = f"Bearer {token}"
+
+req = urllib.request.Request(url, headers=headers)
+try:
+    with urllib.request.urlopen(req, timeout=30) as resp, open(target, "wb") as out:
+        out.write(resp.read())
+except Exception as exc:
+    print(f"[config] skip override: {exc}")
+    if os.path.exists(target):
+        os.remove(target)
+    raise SystemExit(0)
+
+with open(target, "r", encoding="utf-8") as fh:
+    config = json.load(fh)
+
+rope_scaling = config.get("rope_scaling")
+if isinstance(rope_scaling, bool):
+    config.pop("rope_scaling", None)
+    with open(target, "w", encoding="utf-8") as fh:
+        json.dump(config, fh)
+else:
+    os.remove(target)
+PY
+
+MODEL_CONFIG_OVERRIDE=""
+if ${PYTHON_BIN} /tmp/tools/prepare_model_config.py && [ -f "$CONFIG_OVERRIDE_PATH" ]; then
+    MODEL_CONFIG_OVERRIDE="$CONFIG_OVERRIDE_PATH"
+fi
+
+# Install requested transformers package into a writable site-packages tree and prepend to PYTHONPATH
+TRANSFORMERS_SITE="/tmp/python-packages-${SLURM_JOB_ID:-$$}"
+rm -rf "$TRANSFORMERS_SITE"
+mkdir -p "$TRANSFORMERS_SITE"
+${PYTHON_BIN} -m pip install -q -U --no-deps --target "$TRANSFORMERS_SITE" "{{ env_vars.TRANSFORMERS_PACKAGE }}"
+${PYTHON_BIN} -m pip install -q -U --no-deps --target "$TRANSFORMERS_SITE" "{{ env_vars.TOKENIZERS_PACKAGE }}"
+export PYTHONPATH="$TRANSFORMERS_SITE:${PYTHONPATH-}"
 
 # ------- get LUMI harness (puts it first on sys.path) -------
 EVAL_HARNESS_DIR="/tmp/lm-eval"
@@ -212,6 +261,9 @@ FEWSHOT_AS_MULTITURN_FLAG=""
 {% if env_vars.BACKEND == "vllm" %}
 MODEL_BACKEND="vllm"
 MODEL_ARGS="pretrained=${MODEL_ID},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP},max_model_len=4096,gpu_memory_utilization=0.90"
+if [[ -n "$MODEL_CONFIG_OVERRIDE" ]]; then
+  MODEL_ARGS="${MODEL_ARGS},hf_config_path=${MODEL_CONFIG_OVERRIDE}"
+fi
 {% if env_vars.MODEL_ARGS %}
 MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
 {% endif %}
