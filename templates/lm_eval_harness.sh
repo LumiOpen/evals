@@ -196,6 +196,13 @@ elif [[ "$OUTPUT_FILE" != /* ]]; then
 fi
 mkdir -p "$(dirname "$OUTPUT_FILE")"
 
+# Remap MODEL_ID from host paths to container paths if needed
+if [[ "$MODEL_ID" == /scratch/{{ slurm_config.account }}/* ]]; then
+  MODEL_ID="/project${MODEL_ID#/scratch/{{ slurm_config.account }}}"
+elif [[ "$MODEL_ID" == "$SCR"/* ]]; then
+  MODEL_ID="/workspace${MODEL_ID#$SCR}"
+fi
+
 # Set up chat template flags
 {% if env_vars.APPLY_CHAT_TEMPLATE %}
 CHAT_TEMPLATE_FLAG="--apply_chat_template"
