@@ -19,8 +19,8 @@ ln -sf {{ slurm_config.log_dir }}/$SLURM_JOB_ID.err {{ slurm_config.log_dir }}/l
 set -euo pipefail
 
 export IMG="/scratch/{{ slurm_config.account }}/containers/vllm_v10.1.1.sif"
-export PRJ="/scratch/{{ slurm_config.account }}"   # will be /project in container
-export SCR="$(pwd -P)"                     # SCR = scratch directory, will be /workspace in container (resolve symlinks)
+export PRJ="/scratch/{{ slurm_config.account }}"   # project scratch (mounted at same path in container)
+export SCR="$(pwd -P)"                             # working directory (mounted at same path in container)
 export ACC="{{ slurm_config.account }}"
 
 # Parse gres for GPU count (e.g., "gpu:mi250:4" -> 4)
@@ -40,28 +40,39 @@ export TP="$GPUS"
 export MODEL_ID="{{ env_vars.MODEL }}"
 
 {% if env_vars.LM_EVAL_PATH %}
-# Bind mount local lm-eval path into container
-BIND_LM_EVAL="--bind {{ env_vars.LM_EVAL_PATH }}:/workspace/lm-eval-host"
+# Bind mount local lm-eval path into container (at same path)
+BIND_LM_EVAL="--bind {{ env_vars.LM_EVAL_PATH }}:{{ env_vars.LM_EVAL_PATH }}"
 {% else %}
 BIND_LM_EVAL=""
 {% endif %}
 
+# Auto-detect if model is in a different project's scratch and bind mount it
+BIND_MODEL_PROJECT=""
+if [[ "$MODEL_ID" =~ ^/scratch/(project_[0-9]+)/ ]]; then
+  MODEL_PROJECT="${BASH_REMATCH[1]}"
+  if [[ "$MODEL_PROJECT" != "$ACC" ]]; then
+    BIND_MODEL_PROJECT="--bind /scratch/$MODEL_PROJECT:/scratch/$MODEL_PROJECT"
+  fi
+fi
+
 srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_config.time }}" --gpus-per-task="$GPUS" \
   singularity exec --rocm --cleanenv \
-    --bind "$SCR":/workspace \
-    --bind "$PRJ":/project \
+    --bind "$SCR":"$SCR" \
+    --bind "$PRJ":"$PRJ" \
     --bind /usr/share/libdrm:/usr/share/libdrm \
     $BIND_LM_EVAL \
+    $BIND_MODEL_PROJECT \
     --env SLURM_JOB_ID="$SLURM_JOB_ID" \
     --env MODEL_ID="$MODEL_ID" \
     --env TP="$TP" \
     --env SCR="$SCR" \
+    --env PRJ="$PRJ" \
     --env USER="$USER" \
-    --env HF_HOME=/project/hf_cache \
-    --env HUGGINGFACE_HUB_CACHE=/project/hf_cache/hub \
-    --env TRANSFORMERS_CACHE=/project/hf_cache/models \
-    --env HF_DATASETS_CACHE=/project/hf_cache/datasets \
-    --env XDG_CACHE_HOME=/project/hf_cache/xdg \
+    --env HF_HOME="$PRJ/hf_cache" \
+    --env HUGGINGFACE_HUB_CACHE="$PRJ/hf_cache/hub" \
+    --env TRANSFORMERS_CACHE="$PRJ/hf_cache/models" \
+    --env HF_DATASETS_CACHE="$PRJ/hf_cache/datasets" \
+    --env XDG_CACHE_HOME="$PRJ/hf_cache/xdg" \
     --env HF_TOKEN="${HF_TOKEN:-}" \
     "$IMG" bash -c '
 set -euo pipefail
@@ -80,9 +91,9 @@ export HF_HUB_DISABLE_TELEMETRY=1
 
 export PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:/opt/miniconda3/envs/pytorch/bin:/usr/local/bin:/usr/bin:/bin"
 export TORCH_EXTENSIONS_DIR=/dev/shm/torch_ext
-export TORCHINDUCTOR_CACHE_DIR=/project/hf_cache/torchinductor
-export VLLM_COMPILER_CACHE_DIR=/project/hf_cache/vllm-compile
-export TRITON_CACHE_DIR=/project/hf_cache/triton
+export TORCHINDUCTOR_CACHE_DIR="$PRJ/hf_cache/torchinductor"
+export VLLM_COMPILER_CACHE_DIR="$PRJ/hf_cache/vllm-compile"
+export TRITON_CACHE_DIR="$PRJ/hf_cache/triton"
 
 export VLLM_USE_V1=1
 export VLLM_TARGET_DEVICE=rocm
@@ -92,7 +103,7 @@ export HIP_ARCHITECTURES=gfx90a
 # Avoid the 1-GPU trap - ensure PyTorch uses all allocated GPUs
 unset HIP_VISIBLE_DEVICES
 
-mkdir -p /project/hf_cache/{hub,models,datasets,torchinductor,xdg,vllm-compile,triton} \
+mkdir -p "$PRJ/hf_cache"/{hub,models,datasets,torchinductor,xdg,vllm-compile,triton} \
          /dev/shm/torch_ext "$HOME/.aiter/jit/build" "$HOME/.aiter/jit/install" \
          /tmp/tools
 
@@ -168,7 +179,7 @@ setup_lm_eval() {
 {% if env_vars.LM_EVAL_PATH %}
     # Use local path - copy from bind-mounted location
     echo "Using local lm-evaluation-harness from: {{ env_vars.LM_EVAL_PATH }}"
-    cp -r "/workspace/lm-eval-host" "$EVAL_HARNESS_DIR"
+    cp -r "{{ env_vars.LM_EVAL_PATH }}" "$EVAL_HARNESS_DIR"
 {% else %}
     # Use git repository
     REPO_URL="{{ env_vars.LM_EVAL_REPO }}"
@@ -188,20 +199,7 @@ RANDOM_DIR="/tmp/lm_eval_$(date +%s%N)"
 mkdir -p "$RANDOM_DIR"
 
 OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
-if [[ "$OUTPUT_FILE" == "$SCR"* ]]; then
-  # map host path under $SCR to the /workspace bind mount
-  OUTPUT_FILE="/workspace${OUTPUT_FILE#$SCR}"
-elif [[ "$OUTPUT_FILE" != /* ]]; then
-  OUTPUT_FILE="/workspace/$OUTPUT_FILE"
-fi
 mkdir -p "$(dirname "$OUTPUT_FILE")"
-
-# Remap MODEL_ID from host paths to container paths if needed
-if [[ "$MODEL_ID" == /scratch/{{ slurm_config.account }}/* ]]; then
-  MODEL_ID="/project${MODEL_ID#/scratch/{{ slurm_config.account }}}"
-elif [[ "$MODEL_ID" == "$SCR"/* ]]; then
-  MODEL_ID="/workspace${MODEL_ID#$SCR}"
-fi
 
 # Set up chat template flags
 {% if env_vars.APPLY_CHAT_TEMPLATE %}
@@ -218,7 +216,7 @@ FEWSHOT_AS_MULTITURN_FLAG=""
 
 {% if env_vars.BACKEND == "vllm" %}
 MODEL_BACKEND="vllm"
-MODEL_ARGS="pretrained=${MODEL_ID},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP},max_model_len=4096,gpu_memory_utilization=0.90"
+MODEL_ARGS="pretrained=${MODEL_ID},dtype=auto,download_dir=${PRJ}/hf_cache/models,tensor_parallel_size=${TP},max_model_len=4096,gpu_memory_utilization=0.90"
 {% if env_vars.MODEL_ARGS %}
 MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
 {% endif %}
