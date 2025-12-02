@@ -34,22 +34,47 @@ else
     GPUS=4
 fi
 
+# Auto-detect alt scratch root from MODEL_ID if it’s a local path
+ALT_PROJECT=""
+if [[ "{{ env_vars.MODEL }}" == /scratch/* ]]; then
+  MODEL_PATH="{{ env_vars.MODEL }}"
+  # Primary root
+  PRIMARY_ROOT="$PRJ"
+  # If model is under /scratch/project_* but not under PRIMARY_ROOT, capture that root
+  if [[ "$MODEL_PATH" == /* ]]; then
+    # Extract "/scratch/project_<id>" prefix
+    ALT_CAND="/scratch/$(echo "$MODEL_PATH" | awk -F'/' '{print $3}')"
+    # ALT_CAND is "project_<id>"; build full root "/scratch/project_<id>"
+    ALT_PROJECT="$ALT_CAND"
+    # If ALT_PROJECT equals PRIMARY_ROOT, ignore
+    if [[ "$ALT_PROJECT" == "$PRIMARY_ROOT" ]]; then
+      ALT_PROJECT=""
+    else
+      echo "Detected alternative project root for model path: $ALT_PROJECT"
+      ALT_PROJECT="--bind $ALT_CAND"
+    fi
+  fi
+fi
+
+
 # topology & model knobs
 export N_NODES=1
 export TP="$GPUS"
 export MODEL_ID="{{ env_vars.MODEL }}"
-
+#export SINGULARITY_BIND=/scratch,/flash 
 {% if env_vars.LM_EVAL_PATH %}
 # Bind mount local lm-eval path into container
 BIND_LM_EVAL="--bind {{ env_vars.LM_EVAL_PATH }}:/workspace/lm-eval-host"
 {% else %}
 BIND_LM_EVAL=""
 {% endif %}
+#--cleanenv
 
 srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_config.time }}" --gpus-per-task="$GPUS" \
-  singularity exec --rocm --cleanenv \
+  singularity exec --rocm \
     --bind "$SCR":/workspace \
     --bind "$PRJ":/project \
+    $ALT_PROJECT \
     --bind /usr/share/libdrm:/usr/share/libdrm \
     $BIND_LM_EVAL \
     --env SLURM_JOB_ID="$SLURM_JOB_ID" \
@@ -360,7 +385,8 @@ MODEL_BACKEND="dummy"
 MODEL_ARGS="pretrained={{ env_vars.MODEL }}"
 {% else %}
 MODEL_BACKEND="hf-auto"
-BASE_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
+#BASE_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
+BASE_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},device_map=auto,dtype=auto,trust_remote_code=True,attn_implementation=sdpa"
 
 {% if env_vars.MAX_SEQ_LENGTH %}
 # RULER task: Force max_length to match RULER sequence length
@@ -387,7 +413,8 @@ MODEL_ARGS="${BASE_ARGS}"
 {% endif %}
 {% endif %}
 {% endif %}
-
+echo "Using model backend: $MODEL_BACKEND"
+echo "Model args: $MODEL_ARGS"
 # Run eval
 BATCH_SIZE="{% if env_vars.BATCH_SIZE %}{{ env_vars.BATCH_SIZE }}{% elif env_vars.BACKEND == "vllm" %}auto{% else %}4{% endif %}"
 
