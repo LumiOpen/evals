@@ -62,25 +62,27 @@ umask 002
 # Force HOME=/tmp so aiter builds ephemerally and disappears with the job
 export HOME=/tmp
 
+# Set up writable user site-packages for pip --user installs
+export PYTHONUSERBASE=/project/hf_cache/python_user
+mkdir -p "$PYTHONUSERBASE"
+
 # Find Python - different containers have different paths
-PYTHON_BIN=""
-for p in /opt/miniconda3/envs/pytorch/bin/python /opt/venv/bin/python; do
-    if [ -x "$p" ]; then
-        PYTHON_BIN="$p"
-        break
-    fi
-done
-if [ -z "$PYTHON_BIN" ]; then
+# Prefer miniconda (allows --user installs), fall back to venv
+if [ -x /opt/miniconda3/envs/pytorch/bin/python ]; then
+    PYTHON_BIN="/opt/miniconda3/envs/pytorch/bin/python"
+    PIP_USER_FLAG="--user"
+elif [ -x /opt/venv/bin/python ]; then
+    PYTHON_BIN="/opt/venv/bin/python"
+    # venv doesnt allow --user, use target dir instead
+    PIP_USER_FLAG="--target $PYTHONUSERBASE/lib/python3.12/site-packages"
+    export PYTHONPATH="$PYTHONUSERBASE/lib/python3.12/site-packages:${PYTHONPATH:-}"
+else
     echo "ERROR: No suitable Python found in container"
     exit 1
 fi
 export PYTHON_BIN
+export PIP_USER_FLAG
 echo "Using Python: $PYTHON_BIN"
-
-# Set up writable user site-packages for pip --user installs
-export PYTHONUSERBASE=/project/hf_cache/python_user
-mkdir -p "$PYTHONUSERBASE"
-export PATH="$PYTHONUSERBASE/bin:$PATH"
 
 # ---- env & caches (disable xet + telemetry) ----
 export HF_HUB_DISABLE_XET=1
@@ -109,16 +111,16 @@ export CC=/opt/rocm/llvm/bin/clang
 export CXX=/opt/rocm/llvm/bin/clang++
 
 # Make sure ninja is available
-${PYTHON_BIN} -m pip -q install --user -U ninja || true
+${PYTHON_BIN} -m pip -q install $PIP_USER_FLAG -U ninja || true
 
 # Skip aiter setup for this container (not needed for lumi-multitorch)
 echo "[aiter] Skipping aiter setup for this container"
 
 # Install EuroEval
-${PYTHON_BIN} -m pip install --user -q euroeval
+${PYTHON_BIN} -m pip install $PIP_USER_FLAG -q euroeval
 
 # Install specific transformers version
-${PYTHON_BIN} -m pip install --user -q -U transformers=={{ env_vars.TRANSFORMERS_VERSION }}
+${PYTHON_BIN} -m pip install $PIP_USER_FLAG -q -U transformers=={{ env_vars.TRANSFORMERS_VERSION }}
 
 # Remap MODEL_ID from host paths to container paths if needed
 if [[ "$MODEL_ID" == /scratch/{{ slurm_config.account }}/* ]]; then
