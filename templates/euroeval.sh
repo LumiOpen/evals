@@ -204,8 +204,8 @@ except ImportError:
 
 # Set argv and run
 sys.argv = ["euroeval"] + sys.argv[1:]
-from euroeval.cli import main
-main()
+from euroeval.cli import benchmark
+benchmark()
 WRAPPER
 
 ${PYTHON_BIN} /tmp/run_euroeval.py $EUROEVAL_ARGS
