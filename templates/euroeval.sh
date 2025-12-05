@@ -63,9 +63,11 @@ umask 002
 export HOME=/tmp
 
 # Set up writable site-packages for pip installs
+# IMPORTANT: Container packages (ROCm torch) must come FIRST in PYTHONPATH
+# so they take precedence over pip-installed CUDA packages
 export SITE_PACKAGES=/project/hf_cache/python_user/lib/python3.12/site-packages
 mkdir -p "$SITE_PACKAGES"
-export PYTHONPATH="$SITE_PACKAGES:${PYTHONPATH:-}"
+export PYTHONPATH="/opt/venv/lib/python3.12/site-packages:$SITE_PACKAGES:${PYTHONPATH:-}"
 
 # Find Python - different containers have different paths
 if [ -x /opt/miniconda3/envs/pytorch/bin/python ]; then
@@ -112,13 +114,21 @@ ${PYTHON_BIN} -m pip install --target "$SITE_PACKAGES" -q -U ninja || true
 # Skip aiter setup for this container (not needed for lumi-multitorch)
 echo "[aiter] Skipping aiter setup for this container"
 
-# Install EuroEval
-echo "Installing EuroEval to $SITE_PACKAGES..."
-${PYTHON_BIN} -m pip install --target "$SITE_PACKAGES" euroeval
+# Install EuroEval without torch/vllm deps (use container's ROCm versions)
+echo "Installing EuroEval to $SITE_PACKAGES (using container's ROCm torch/vllm)..."
+${PYTHON_BIN} -m pip install --target "$SITE_PACKAGES" --no-deps euroeval
+
+# Install EuroEval's other dependencies (excluding torch, vllm, transformers, accelerate which are in container)
+${PYTHON_BIN} -m pip install --target "$SITE_PACKAGES" \
+    bert-score click cloudpickle datasets demjson3 evaluate levenshtein litellm \
+    more-itertools numpy ollama pandas peft protobuf pydantic pyinfer python-dotenv \
+    rouge-score sacremoses scikit-learn sentencepiece seqeval setuptools tenacity \
+    termcolor huggingface-hub
 echo "EuroEval install complete"
 
-# Install specific transformers version
-${PYTHON_BIN} -m pip install --target "$SITE_PACKAGES" -U transformers=={{ env_vars.TRANSFORMERS_VERSION }}
+# Verify we're using container's ROCm torch
+echo "Checking torch version..."
+${PYTHON_BIN} -c "import torch; print('torch:', torch.__version__, '| HIP:', torch.version.hip if hasattr(torch.version, 'hip') else 'N/A')"
 
 # Remap MODEL_ID from host paths to container paths if needed
 if [[ "$MODEL_ID" == /scratch/{{ slurm_config.account }}/* ]]; then
