@@ -251,6 +251,13 @@ from euroeval.cli import benchmark
 benchmark()
 WRAPPER
 
+# Export vLLM env vars in shell BEFORE Python starts
+# This ensures they are set at the OS level before any Python import
+export VLLM_USE_V1=0
+export VLLM_TARGET_DEVICE=rocm
+export VLLM_ATTENTION_BACKEND=ROCM_FLASH
+echo "[shell] VLLM_USE_V1=$VLLM_USE_V1 VLLM_ATTENTION_BACKEND=$VLLM_ATTENTION_BACKEND"
+
 ${PYTHON_BIN} /tmp/run_euroeval.py $EUROEVAL_ARGS
 
 # Copy results to output location
