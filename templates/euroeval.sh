@@ -212,8 +212,8 @@ EUROEVAL_ARGS="$EUROEVAL_ARGS --verbose --save-results"
 
 echo "Running EuroEval with arguments: $EUROEVAL_ARGS"
 
-# Write wrapper script that patches find_spec before importing euroeval
-cat > /tmp/run_euroeval.py << WRAPPER
+# Write wrapper script that patches imports before loading euroeval
+cat > /tmp/run_euroeval.py << 'WRAPPER'
 import importlib.util
 import sys
 
@@ -222,6 +222,17 @@ _orig = importlib.util.find_spec
 def _patched(name, *a, **kw):
     return None if name == "flash_attn" else _orig(name, *a, **kw)
 importlib.util.find_spec = _patched
+
+# Patch vllm.sampling_params to add missing StructuredOutputsParams
+# (EuroEval expects newer vLLM than container has)
+import vllm.sampling_params as sp
+if not hasattr(sp, "StructuredOutputsParams"):
+    # Create a stub class
+    class StructuredOutputsParams:
+        def __init__(self, *args, **kwargs):
+            pass
+    sp.StructuredOutputsParams = StructuredOutputsParams
+    print("[patch] Added stub StructuredOutputsParams to vllm.sampling_params")
 
 # Set argv and run
 sys.argv = ["euroeval"] + sys.argv[1:]
