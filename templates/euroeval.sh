@@ -19,9 +19,9 @@ ln -sf {{ slurm_config.log_dir }}/$SLURM_JOB_ID.err {{ slurm_config.log_dir }}/l
 set -euo pipefail
 
 export IMG="/appl/local/laifs/containers/lumi-multitorch-u24r64f21m43t28-20251128_145346/lumi-multitorch-full-u24r64f21m43t28-20251128_145346.sif"
-# Use project_462000353 for cache storage regardless of billing account
-# The hf_cache and python_user directories are shared there
-export PRJ="/scratch/project_462000353"
+# Use danizaut's personal directory for cache storage
+# This works regardless of billing account since it's user-owned
+export PRJ="/scratch/project_462000353/danizaut"
 export SCR="$(pwd -P)"
 export ACC="{{ slurm_config.account }}"
 
