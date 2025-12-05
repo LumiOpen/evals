@@ -55,6 +55,11 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env HF_DATASETS_CACHE=/project/hf_cache/datasets \
     --env XDG_CACHE_HOME=/project/hf_cache/xdg \
     --env HF_TOKEN="${HF_TOKEN:-}" \
+    --env VLLM_USE_V1=0 \
+    --env VLLM_TARGET_DEVICE=rocm \
+    --env VLLM_ATTENTION_BACKEND=ROCM_FLASH \
+    --env VLLM_WORKER_MULTIPROC_METHOD=spawn \
+    --env HIP_ARCHITECTURES=gfx90a \
     "$IMG" bash -c '
 set -euo pipefail
 umask 002
