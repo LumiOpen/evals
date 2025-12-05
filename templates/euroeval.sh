@@ -93,7 +93,8 @@ export TORCHINDUCTOR_CACHE_DIR=/project/hf_cache/torchinductor
 export VLLM_COMPILER_CACHE_DIR=/project/hf_cache/vllm-compile
 export TRITON_CACHE_DIR=/project/hf_cache/triton
 
-export VLLM_USE_V1=1
+# Disable vLLM v1 engine - it is not compatible with ROCM_FLASH attention
+export VLLM_USE_V1=0
 export VLLM_TARGET_DEVICE=rocm
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export HIP_ARCHITECTURES=gfx90a
