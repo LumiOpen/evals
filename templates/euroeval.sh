@@ -63,15 +63,17 @@ umask 002
 export HOME=/tmp
 
 # Find Python - different containers have different paths
+# Prefer venv (has proper pip access) over system python
 PYTHON_BIN=""
-for p in /opt/miniconda3/envs/pytorch/bin/python /usr/bin/python3 /usr/bin/python; do
+for p in /opt/venv/bin/python /opt/miniconda3/envs/pytorch/bin/python; do
     if [ -x "$p" ]; then
         PYTHON_BIN="$p"
         break
     fi
 done
 if [ -z "$PYTHON_BIN" ]; then
-    PYTHON_BIN="python3"
+    echo "ERROR: No suitable Python found in container"
+    exit 1
 fi
 export PYTHON_BIN
 echo "Using Python: $PYTHON_BIN"
@@ -81,7 +83,7 @@ export HF_HUB_DISABLE_XET=1
 export HF_HUB_ENABLE_HF_TRANSFER=0
 export HF_HUB_DISABLE_TELEMETRY=1
 
-export PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:/usr/local/bin:/usr/bin:/bin"
+export PATH="/opt/venv/bin:/opt/rocm/llvm/bin:/opt/rocm/bin:/usr/local/bin:/usr/bin:/bin"
 export TORCH_EXTENSIONS_DIR=/dev/shm/torch_ext
 export TORCHINDUCTOR_CACHE_DIR=/project/hf_cache/torchinductor
 export VLLM_COMPILER_CACHE_DIR=/project/hf_cache/vllm-compile
