@@ -160,7 +160,7 @@ export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
 
 # EuroEval conflicts with flash_attn which is pre-installed in the container.
 # Find and remove/rename it so EuroEval doesn't detect it.
-FLASH_ATTN_PATH=$(${PYTHON_BIN} -c "import flash_attn; print(flash_attn.__path__[0])" 2>/dev/null || true)
+FLASH_ATTN_PATH=$("$PYTHON_BIN" -c "import flash_attn; print(flash_attn.__path__[0])" 2>/dev/null) || FLASH_ATTN_PATH=""
 if [ -n "$FLASH_ATTN_PATH" ] && [ -d "$FLASH_ATTN_PATH" ]; then
     echo "Disabling flash_attn at: $FLASH_ATTN_PATH"
     mv "$FLASH_ATTN_PATH" "${FLASH_ATTN_PATH}_disabled" 2>/dev/null || \
