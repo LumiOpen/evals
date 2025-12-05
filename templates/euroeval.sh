@@ -18,7 +18,7 @@ ln -sf {{ slurm_config.log_dir }}/$SLURM_JOB_ID.err {{ slurm_config.log_dir }}/l
 
 set -euo pipefail
 
-export IMG="/scratch/{{ slurm_config.account }}/containers/vllm_v10.1.1.sif"
+export IMG="/appl/local/laifs/containers/lumi-multitorch-u24r64f21m43t28-20251128_145346/lumi-multitorch-full-u24r64f21m43t28-20251128_145346.sif"
 export PRJ="/scratch/{{ slurm_config.account }}"
 export SCR="$(pwd -P)"
 export ACC="{{ slurm_config.account }}"
@@ -223,16 +223,17 @@ def _patched(name, *a, **kw):
     return None if name == "flash_attn" else _orig(name, *a, **kw)
 importlib.util.find_spec = _patched
 
-# Patch vllm.sampling_params to add missing StructuredOutputsParams
-# (EuroEval expects newer vLLM than container has)
-import vllm.sampling_params as sp
-if not hasattr(sp, "StructuredOutputsParams"):
-    # Create a stub class
-    class StructuredOutputsParams:
-        def __init__(self, *args, **kwargs):
-            pass
-    sp.StructuredOutputsParams = StructuredOutputsParams
-    print("[patch] Added stub StructuredOutputsParams to vllm.sampling_params")
+# Patch vllm.sampling_params if needed (for older vLLM versions)
+try:
+    import vllm.sampling_params as sp
+    if not hasattr(sp, "StructuredOutputsParams"):
+        class StructuredOutputsParams:
+            def __init__(self, *args, **kwargs):
+                pass
+        sp.StructuredOutputsParams = StructuredOutputsParams
+        print("[patch] Added stub StructuredOutputsParams to vllm.sampling_params")
+except ImportError:
+    print("[patch] vllm not available, skipping patch")
 
 # Set argv and run
 sys.argv = ["euroeval"] + sys.argv[1:]
