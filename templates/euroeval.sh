@@ -206,23 +206,18 @@ cat > /tmp/run_euroeval.py <<WRAPPER
 import importlib.util
 import sys
 
-# Patch find_spec to hide flash_attn from EuroEval check
+# Patch find_spec to hide flash_attn and vllm from EuroEval
+# This forces EuroEval to use HuggingFace transformers instead of vLLM
+# which avoids NVCC/CUDA issues on ROCm
 _orig = importlib.util.find_spec
 def _patched(name, *a, **kw):
-    return None if name == "flash_attn" else _orig(name, *a, **kw)
+    if name in ("flash_attn", "vllm"):
+        return None
+    return _orig(name, *a, **kw)
 importlib.util.find_spec = _patched
 
-# Patch vllm.sampling_params if needed (for older vLLM versions)
-try:
-    import vllm.sampling_params as sp
-    if not hasattr(sp, "StructuredOutputsParams"):
-        class StructuredOutputsParams:
-            def __init__(self, *args, **kwargs):
-                pass
-        sp.StructuredOutputsParams = StructuredOutputsParams
-        print("[patch] Added stub StructuredOutputsParams to vllm.sampling_params")
-except ImportError:
-    print("[patch] vllm not available, skipping patch")
+# vllm is hidden from EuroEval via find_spec patch above
+print("[patch] vllm hidden - EuroEval will use HuggingFace transformers")
 
 # Set argv and run
 sys.argv = ["euroeval"] + sys.argv[1:]
