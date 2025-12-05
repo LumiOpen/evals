@@ -158,6 +158,9 @@ ${PYTHON_BIN} /tmp/tools/stage_aiter.py
 
 export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
 
+# Uninstall flash_attn if present - EuroEval conflicts with it
+${PYTHON_BIN} -m pip uninstall -y flash_attn flash-attn 2>/dev/null || true
+
 # Install EuroEval - skip vLLM extras since we use the container vLLM
 ${PYTHON_BIN} -m pip install --user -q euroeval
 
