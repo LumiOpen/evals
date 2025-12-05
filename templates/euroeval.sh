@@ -223,7 +223,7 @@ os.environ["VLLM_TARGET_DEVICE"] = "rocm"
 os.environ["VLLM_ATTENTION_BACKEND"] = "ROCM_FLASH"
 os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
 os.environ["HIP_ARCHITECTURES"] = "gfx90a"
-print(f"[patch] vLLM env set: VLLM_USE_V1={os.environ.get('VLLM_USE_V1')}, VLLM_ATTENTION_BACKEND={os.environ.get('VLLM_ATTENTION_BACKEND')}")
+print("[patch] vLLM env set: VLLM_USE_V1=" + os.environ.get("VLLM_USE_V1", "") + ", VLLM_ATTENTION_BACKEND=" + os.environ.get("VLLM_ATTENTION_BACKEND", ""))
 
 # Patch find_spec to hide flash_attn from EuroEval
 _orig_find_spec = importlib.util.find_spec
