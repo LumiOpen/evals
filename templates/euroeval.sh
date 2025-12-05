@@ -62,15 +62,25 @@ umask 002
 # Force HOME=/tmp so aiter builds ephemerally and disappears with the job
 export HOME=/tmp
 
-PYTHON_BIN="/opt/miniconda3/envs/pytorch/bin/python"
+# Find Python - different containers have different paths
+if [ -x "/opt/miniconda3/envs/pytorch/bin/python" ]; then
+    PYTHON_BIN="/opt/miniconda3/envs/pytorch/bin/python"
+elif [ -x "/usr/bin/python3" ]; then
+    PYTHON_BIN="/usr/bin/python3"
+elif [ -x "/usr/bin/python" ]; then
+    PYTHON_BIN="/usr/bin/python"
+else
+    PYTHON_BIN=$(which python3 || which python)
+fi
 export PYTHON_BIN
+echo "Using Python: $PYTHON_BIN"
 
 # ---- env & caches (disable xet + telemetry) ----
 export HF_HUB_DISABLE_XET=1
 export HF_HUB_ENABLE_HF_TRANSFER=0
 export HF_HUB_DISABLE_TELEMETRY=1
 
-export PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:/opt/miniconda3/envs/pytorch/bin:/usr/local/bin:/usr/bin:/bin"
+export PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:$(dirname $PYTHON_BIN):/usr/local/bin:/usr/bin:/bin"
 export TORCH_EXTENSIONS_DIR=/dev/shm/torch_ext
 export TORCHINDUCTOR_CACHE_DIR=/project/hf_cache/torchinductor
 export VLLM_COMPILER_CACHE_DIR=/project/hf_cache/vllm-compile
@@ -94,8 +104,10 @@ export CXX=/opt/rocm/llvm/bin/clang++
 # Make sure ninja is available
 ${PYTHON_BIN} -m pip -q install --user -U ninja || true
 
-# ------- write helper: stage_aiter.py (NO stdin execution) -------
-cat > /tmp/tools/stage_aiter.py <<PY
+# Stage aiter if available (some containers need this, some don't)
+if ${PYTHON_BIN} -c "import aiter" 2>/dev/null; then
+    echo "[aiter] aiter module found, setting up JIT..."
+    cat > /tmp/tools/stage_aiter.py <<PY
 import os, glob, shutil, importlib, pathlib, subprocess, sys
 
 home = os.path.expanduser("~")
@@ -109,43 +121,34 @@ os.makedirs(pkg_jit, exist_ok=True)
 pathlib.Path(os.path.join(pkg_root, "__init__.py")).write_text("")
 pathlib.Path(os.path.join(pkg_jit, "__init__.py")).write_text("")
 
-# trigger a build once (ok if it raises)
 try:
     import aiter
-    from aiter.ops import enum  # will build module_aiter_enum
+    from aiter.ops import enum
 except Exception as e:
     print("[aiter] prewarm raised:", repr(e))
 
 hits = glob.glob(os.path.join(build_root, "**", "module_aiter_enum*.so"), recursive=True)
-if not hits:
-    raise SystemExit("[stage] no compiled module_aiter_enum*.so found under " + build_root)
-
-so_src = max(hits, key=os.path.getmtime)
-dst = os.path.join(pkg_jit, "module_aiter_enum.so")
-if os.path.islink(dst) or os.path.exists(dst):
-    os.remove(dst)
-try:
-    os.symlink(so_src, dst)
-    print("[stage] symlinked", dst, "->", so_src)
-except OSError:
-    shutil.copy2(so_src, dst)
-    print("[stage] copied", so_src, "->", dst)
-
-print("[ldd]")
-print(subprocess.check_output(["ldd", dst], text=True))
-
-sys.path.insert(0, inst_root)
-m = importlib.import_module("private_aiter.jit.module_aiter_enum")
-print("[stage] import OK:", m.__spec__.origin)
-
-import aiter; from aiter.ops import enum as _e
-print("[stage] aiter import OK")
+if hits:
+    so_src = max(hits, key=os.path.getmtime)
+    dst = os.path.join(pkg_jit, "module_aiter_enum.so")
+    if os.path.islink(dst) or os.path.exists(dst):
+        os.remove(dst)
+    try:
+        os.symlink(so_src, dst)
+        print("[stage] symlinked", dst, "->", so_src)
+    except OSError:
+        shutil.copy2(so_src, dst)
+        print("[stage] copied", so_src, "->", dst)
+    sys.path.insert(0, inst_root)
+    print("[stage] aiter setup complete")
+else:
+    print("[stage] no aiter .so found, skipping")
 PY
-
-# Stage aiter
-${PYTHON_BIN} /tmp/tools/stage_aiter.py
-
-export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
+    ${PYTHON_BIN} /tmp/tools/stage_aiter.py
+    export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
+else
+    echo "[aiter] aiter not found in container, skipping setup"
+fi
 
 # Install EuroEval
 ${PYTHON_BIN} -m pip install --user -q euroeval
