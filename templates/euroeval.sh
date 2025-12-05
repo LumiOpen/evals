@@ -40,7 +40,7 @@ export TP="$GPUS"
 export MODEL_ID="{{ env_vars.MODEL }}"
 
 srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_config.time }}" --gpus-per-task="$GPUS" \
-  singularity exec --rocm --cleanenv \
+  singularity exec --rocm \
     --bind "$SCR":/workspace \
     --bind "$PRJ":/project \
     --bind /usr/share/libdrm:/usr/share/libdrm \
