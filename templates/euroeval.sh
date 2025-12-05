@@ -19,7 +19,9 @@ ln -sf {{ slurm_config.log_dir }}/$SLURM_JOB_ID.err {{ slurm_config.log_dir }}/l
 set -euo pipefail
 
 export IMG="/appl/local/laifs/containers/lumi-multitorch-u24r64f21m43t28-20251128_145346/lumi-multitorch-full-u24r64f21m43t28-20251128_145346.sif"
-export PRJ="/scratch/{{ slurm_config.account }}"
+# Use project_462000353 for cache storage regardless of billing account
+# The hf_cache and python_user directories are shared there
+export PRJ="/scratch/project_462000353"
 export SCR="$(pwd -P)"
 export ACC="{{ slurm_config.account }}"
 
@@ -147,8 +149,9 @@ echo "Checking torch version..."
 ${PYTHON_BIN} -c "import torch; print(\"torch:\", torch.__version__, \"| HIP:\", torch.version.hip if hasattr(torch.version, \"hip\") else \"N/A\")"
 
 # Remap MODEL_ID from host paths to container paths if needed
-if [[ "$MODEL_ID" == /scratch/{{ slurm_config.account }}/* ]]; then
-  MODEL_ID="/project${MODEL_ID#/scratch/{{ slurm_config.account }}}"
+# PRJ is hardcoded to project_462000353 for cache storage
+if [[ "$MODEL_ID" == /scratch/project_462000353/* ]]; then
+  MODEL_ID="/project${MODEL_ID#/scratch/project_462000353}"
 elif [[ "$MODEL_ID" == "$SCR"/* ]]; then
   MODEL_ID="/workspace${MODEL_ID#$SCR}"
 fi
