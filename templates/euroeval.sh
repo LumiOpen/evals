@@ -114,11 +114,11 @@ ${PYTHON_BIN} -m pip install --target "$SITE_PACKAGES" -q -U ninja || true
 # Skip aiter setup for this container (not needed for lumi-multitorch)
 echo "[aiter] Skipping aiter setup for this container"
 
-# Install EuroEval without torch/vllm deps (use container's ROCm versions)
-echo "Installing EuroEval to $SITE_PACKAGES (using container's ROCm torch/vllm)..."
+# Install EuroEval without torch/vllm deps - use the container ROCm versions
+echo "Installing EuroEval to $SITE_PACKAGES (using the container ROCm torch/vllm)..."
 ${PYTHON_BIN} -m pip install --target "$SITE_PACKAGES" --no-deps euroeval
 
-# Install EuroEval's other dependencies (excluding torch, vllm, transformers, accelerate which are in container)
+# Install other EuroEval dependencies (excluding torch, vllm, transformers, accelerate which are in container)
 ${PYTHON_BIN} -m pip install --target "$SITE_PACKAGES" \
     bert-score click cloudpickle datasets demjson3 evaluate levenshtein litellm \
     more-itertools numpy ollama pandas peft protobuf pydantic pyinfer python-dotenv \
@@ -126,9 +126,9 @@ ${PYTHON_BIN} -m pip install --target "$SITE_PACKAGES" \
     termcolor huggingface-hub
 echo "EuroEval install complete"
 
-# Verify we're using container's ROCm torch
+# Verify we are using the container ROCm torch
 echo "Checking torch version..."
-${PYTHON_BIN} -c "import torch; print('torch:', torch.__version__, '| HIP:', torch.version.hip if hasattr(torch.version, 'hip') else 'N/A')"
+${PYTHON_BIN} -c "import torch; print(\"torch:\", torch.__version__, \"| HIP:\", torch.version.hip if hasattr(torch.version, \"hip\") else \"N/A\")"
 
 # Remap MODEL_ID from host paths to container paths if needed
 if [[ "$MODEL_ID" == /scratch/{{ slurm_config.account }}/* ]]; then
@@ -190,7 +190,7 @@ EUROEVAL_ARGS="$EUROEVAL_ARGS --verbose --save-results"
 echo "Running EuroEval with arguments: $EUROEVAL_ARGS"
 
 # Write wrapper script that patches imports before loading euroeval
-cat > /tmp/run_euroeval.py << 'WRAPPER'
+cat > /tmp/run_euroeval.py <<WRAPPER
 import importlib.util
 import sys
 
