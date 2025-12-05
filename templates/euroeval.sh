@@ -63,14 +63,15 @@ umask 002
 export HOME=/tmp
 
 # Find Python - different containers have different paths
-if [ -x "/opt/miniconda3/envs/pytorch/bin/python" ]; then
-    PYTHON_BIN="/opt/miniconda3/envs/pytorch/bin/python"
-elif [ -x "/usr/bin/python3" ]; then
-    PYTHON_BIN="/usr/bin/python3"
-elif [ -x "/usr/bin/python" ]; then
-    PYTHON_BIN="/usr/bin/python"
-else
-    PYTHON_BIN=$(which python3 || which python)
+PYTHON_BIN=""
+for p in /opt/miniconda3/envs/pytorch/bin/python /usr/bin/python3 /usr/bin/python; do
+    if [ -x "$p" ]; then
+        PYTHON_BIN="$p"
+        break
+    fi
+done
+if [ -z "$PYTHON_BIN" ]; then
+    PYTHON_BIN="python3"
 fi
 export PYTHON_BIN
 echo "Using Python: $PYTHON_BIN"
@@ -80,7 +81,7 @@ export HF_HUB_DISABLE_XET=1
 export HF_HUB_ENABLE_HF_TRANSFER=0
 export HF_HUB_DISABLE_TELEMETRY=1
 
-export PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:$(dirname $PYTHON_BIN):/usr/local/bin:/usr/bin:/bin"
+export PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:/usr/local/bin:/usr/bin:/bin"
 export TORCH_EXTENSIONS_DIR=/dev/shm/torch_ext
 export TORCHINDUCTOR_CACHE_DIR=/project/hf_cache/torchinductor
 export VLLM_COMPILER_CACHE_DIR=/project/hf_cache/vllm-compile
@@ -104,51 +105,8 @@ export CXX=/opt/rocm/llvm/bin/clang++
 # Make sure ninja is available
 ${PYTHON_BIN} -m pip -q install --user -U ninja || true
 
-# Stage aiter if available (some containers need this, some don't)
-if ${PYTHON_BIN} -c "import aiter" 2>/dev/null; then
-    echo "[aiter] aiter module found, setting up JIT..."
-    cat > /tmp/tools/stage_aiter.py <<PY
-import os, glob, shutil, importlib, pathlib, subprocess, sys
-
-home = os.path.expanduser("~")
-jit_root   = os.path.join(home, ".aiter", "jit")
-build_root = os.path.join(jit_root, "build")
-inst_root  = os.path.join(jit_root, "install")
-pkg_root   = os.path.join(inst_root, "private_aiter")
-pkg_jit    = os.path.join(pkg_root, "jit")
-
-os.makedirs(pkg_jit, exist_ok=True)
-pathlib.Path(os.path.join(pkg_root, "__init__.py")).write_text("")
-pathlib.Path(os.path.join(pkg_jit, "__init__.py")).write_text("")
-
-try:
-    import aiter
-    from aiter.ops import enum
-except Exception as e:
-    print("[aiter] prewarm raised:", repr(e))
-
-hits = glob.glob(os.path.join(build_root, "**", "module_aiter_enum*.so"), recursive=True)
-if hits:
-    so_src = max(hits, key=os.path.getmtime)
-    dst = os.path.join(pkg_jit, "module_aiter_enum.so")
-    if os.path.islink(dst) or os.path.exists(dst):
-        os.remove(dst)
-    try:
-        os.symlink(so_src, dst)
-        print("[stage] symlinked", dst, "->", so_src)
-    except OSError:
-        shutil.copy2(so_src, dst)
-        print("[stage] copied", so_src, "->", dst)
-    sys.path.insert(0, inst_root)
-    print("[stage] aiter setup complete")
-else:
-    print("[stage] no aiter .so found, skipping")
-PY
-    ${PYTHON_BIN} /tmp/tools/stage_aiter.py
-    export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
-else
-    echo "[aiter] aiter not found in container, skipping setup"
-fi
+# Skip aiter setup for this container (not needed for lumi-multitorch)
+echo "[aiter] Skipping aiter setup for this container"
 
 # Install EuroEval
 ${PYTHON_BIN} -m pip install --user -q euroeval
