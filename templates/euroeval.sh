@@ -55,9 +55,8 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env HF_DATASETS_CACHE=/project/hf_cache/datasets \
     --env XDG_CACHE_HOME=/project/hf_cache/xdg \
     --env HF_TOKEN="${HF_TOKEN:-}" \
-    --env VLLM_USE_V1=0 \
+    --env VLLM_USE_V1=1 \
     --env VLLM_TARGET_DEVICE=rocm \
-    --env VLLM_ATTENTION_BACKEND=ROCM_FLASH \
     --env VLLM_WORKER_MULTIPROC_METHOD=spawn \
     --env HIP_ARCHITECTURES=gfx90a \
     "$IMG" bash -c '
@@ -98,18 +97,12 @@ export TORCHINDUCTOR_CACHE_DIR=/project/hf_cache/torchinductor
 export VLLM_COMPILER_CACHE_DIR=/project/hf_cache/vllm-compile
 export TRITON_CACHE_DIR=/project/hf_cache/triton
 
-# Disable vLLM v1 engine - it is not compatible with ROCM_FLASH attention
-export VLLM_USE_V1=0
+# vLLM V1 works on ROCm when VLLM_ATTENTION_BACKEND is NOT set (auto-detect)
+# DO NOT set VLLM_ATTENTION_BACKEND - EuroEval sets FLASHINFER which breaks ROCm
+export VLLM_USE_V1=1
 export VLLM_TARGET_DEVICE=rocm
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export HIP_ARCHITECTURES=gfx90a
-
-# Force ROCm-compatible attention backend (FLASHINFER is CUDA-only)
-export VLLM_ATTENTION_BACKEND=ROCM_FLASH
-
-# Disable vLLM in EuroEval - use HuggingFace transformers instead
-# This avoids NVCC/CUDA issues on ROCm
-export EUROEVAL_DISABLE_VLLM=1
 
 # Avoid the 1-GPU trap - ensure PyTorch uses all allocated GPUs
 unset HIP_VISIBLE_DEVICES
@@ -216,15 +209,6 @@ import os
 import importlib.util
 import sys
 
-# CRITICAL: Force vLLM environment BEFORE any vLLM imports happen
-# This must be done in Python to ensure the values are set at import time
-os.environ["VLLM_USE_V1"] = "0"
-os.environ["VLLM_TARGET_DEVICE"] = "rocm"
-os.environ["VLLM_ATTENTION_BACKEND"] = "ROCM_FLASH"
-os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
-os.environ["HIP_ARCHITECTURES"] = "gfx90a"
-print("[patch] vLLM env set: VLLM_USE_V1=" + os.environ.get("VLLM_USE_V1", "") + ", VLLM_ATTENTION_BACKEND=" + os.environ.get("VLLM_ATTENTION_BACKEND", ""))
-
 # Patch find_spec to hide flash_attn from EuroEval
 _orig_find_spec = importlib.util.find_spec
 def _patched_find_spec(name, *a, **kw):
@@ -245,6 +229,21 @@ shutil.which = _patched_which
 
 print("[patch] flash_attn hidden, nvcc check bypassed for ROCm")
 
+# Import euroeval - this will set VLLM_USE_V1=1 and VLLM_ATTENTION_BACKEND=FLASHINFER
+# We need to import it first, then override those settings before vllm is loaded
+import euroeval  # This triggers euroeval.__init__ which sets the env vars
+
+# CRITICAL: Override EuroEval settings for ROCm compatibility
+# EuroEval sets VLLM_ATTENTION_BACKEND=FLASHINFER which is CUDA-only
+# On ROCm, we must NOT set this - let vLLM auto-detect the right backend
+# VLLM_USE_V1=1 works fine on ROCm when attention backend is not forced
+os.environ["VLLM_USE_V1"] = "1"
+os.environ["VLLM_TARGET_DEVICE"] = "rocm"
+if "VLLM_ATTENTION_BACKEND" in os.environ:
+    del os.environ["VLLM_ATTENTION_BACKEND"]  # Remove FLASHINFER, let vLLM auto-detect
+os.environ["VLLM_WORKER_MULTIPROC_METHOD"] = "spawn"
+print("[patch] ROCm vLLM env: VLLM_USE_V1=" + os.environ.get("VLLM_USE_V1", "") + ", VLLM_ATTENTION_BACKEND=" + os.environ.get("VLLM_ATTENTION_BACKEND", "auto-detect"))
+
 # Set argv and run
 sys.argv = ["euroeval"] + sys.argv[1:]
 from euroeval.cli import benchmark
@@ -252,11 +251,11 @@ benchmark()
 WRAPPER
 
 # Export vLLM env vars in shell BEFORE Python starts
-# This ensures they are set at the OS level before any Python import
-export VLLM_USE_V1=0
+# Do NOT set VLLM_ATTENTION_BACKEND - let vLLM auto-detect for ROCm
+export VLLM_USE_V1=1
 export VLLM_TARGET_DEVICE=rocm
-export VLLM_ATTENTION_BACKEND=ROCM_FLASH
-echo "[shell] VLLM_USE_V1=$VLLM_USE_V1 VLLM_ATTENTION_BACKEND=$VLLM_ATTENTION_BACKEND"
+export VLLM_WORKER_MULTIPROC_METHOD=spawn
+echo "[shell] VLLM_USE_V1=$VLLM_USE_V1 VLLM_TARGET_DEVICE=$VLLM_TARGET_DEVICE"
 
 ${PYTHON_BIN} /tmp/run_euroeval.py $EUROEVAL_ARGS
 
