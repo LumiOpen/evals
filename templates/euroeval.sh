@@ -158,8 +158,16 @@ ${PYTHON_BIN} /tmp/tools/stage_aiter.py
 
 export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
 
-# Uninstall flash_attn if present - EuroEval conflicts with it
-${PYTHON_BIN} -m pip uninstall -y flash_attn flash-attn 2>/dev/null || true
+# EuroEval conflicts with flash_attn which is pre-installed in the container.
+# We cannot uninstall it (system package), so we shadow it with a dummy module
+# that raises ImportError, making EuroEval think it is not installed.
+mkdir -p "$HOME/.local/lib/python3.12/site-packages/flash_attn"
+cat > "$HOME/.local/lib/python3.12/site-packages/flash_attn/__init__.py" << 'SHADOW'
+raise ImportError("flash_attn is disabled for EuroEval compatibility")
+SHADOW
+
+# Ensure user site-packages comes first in path
+export PYTHONPATH="$HOME/.local/lib/python3.12/site-packages:${PYTHONPATH:-}"
 
 # Install EuroEval - skip vLLM extras since we use the container vLLM
 ${PYTHON_BIN} -m pip install --user -q euroeval
