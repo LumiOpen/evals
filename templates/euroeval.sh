@@ -147,13 +147,6 @@ ${PYTHON_BIN} /tmp/tools/stage_aiter.py
 
 export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
 
-# EuroEval conflicts with flash_attn - remove it from the container
-FLASH_ATTN_PATH=$(${PYTHON_BIN} -c "import flash_attn; print(flash_attn.__path__[0])" 2>/dev/null) || FLASH_ATTN_PATH=""
-if [ -n "$FLASH_ATTN_PATH" ] && [ -d "$FLASH_ATTN_PATH" ]; then
-    echo "Disabling flash_attn at: $FLASH_ATTN_PATH"
-    rm -rf "$FLASH_ATTN_PATH" || mv "$FLASH_ATTN_PATH" "${FLASH_ATTN_PATH}_disabled" || echo "Warning: Could not disable flash_attn"
-fi
-
 # Install EuroEval
 ${PYTHON_BIN} -m pip install --user -q euroeval
 
@@ -219,8 +212,20 @@ EUROEVAL_ARGS="$EUROEVAL_ARGS --verbose --save-results"
 
 echo "Running EuroEval with arguments: $EUROEVAL_ARGS"
 
-# Run EuroEval
-${PYTHON_BIN} -m euroeval.cli $EUROEVAL_ARGS
+# Run EuroEval with find_spec patched to hide flash_attn
+# (EuroEval uses find_spec to check if flash_attn exists, not import)
+${PYTHON_BIN} -c "
+import importlib.util
+_orig = importlib.util.find_spec
+def _patched(name, *a, **kw):
+    return None if name == 'flash_attn' else _orig(name, *a, **kw)
+importlib.util.find_spec = _patched
+
+import sys
+sys.argv = ['euroeval'] + '''$EUROEVAL_ARGS'''.split()
+from euroeval.cli import main
+main()
+"
 
 # Copy results to output location
 if [ -f "euroeval_benchmark_results.jsonl" ]; then
