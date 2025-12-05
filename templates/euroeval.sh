@@ -19,8 +19,8 @@ ln -sf {{ slurm_config.log_dir }}/$SLURM_JOB_ID.err {{ slurm_config.log_dir }}/l
 set -euo pipefail
 
 export IMG="/scratch/{{ slurm_config.account }}/containers/vllm_v10.1.1.sif"
-export PRJ="/scratch/{{ slurm_config.account }}"   # project scratch (mounted at same path in container)
-export SCR="$(pwd -P)"                             # working directory (mounted at same path in container)
+export PRJ="/scratch/{{ slurm_config.account }}"
+export SCR="$(pwd -P)"
 export ACC="{{ slurm_config.account }}"
 
 # Parse gres for GPU count (e.g., "gpu:mi250:4" -> 4)
@@ -39,32 +39,21 @@ export N_NODES=1
 export TP="$GPUS"
 export MODEL_ID="{{ env_vars.MODEL }}"
 
-# Auto-detect if model is in a different project's scratch and bind mount it
-BIND_MODEL_PROJECT=""
-if [[ "$MODEL_ID" =~ ^/scratch/(project_[0-9]+)/ ]]; then
-  MODEL_PROJECT="${BASH_REMATCH[1]}"
-  if [[ "$MODEL_PROJECT" != "$ACC" ]]; then
-    BIND_MODEL_PROJECT="--bind /scratch/$MODEL_PROJECT:/scratch/$MODEL_PROJECT"
-  fi
-fi
-
 srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_config.time }}" --gpus-per-task="$GPUS" \
   singularity exec --rocm --cleanenv \
-    --bind "$SCR":"$SCR" \
-    --bind "$PRJ":"$PRJ" \
+    --bind "$SCR":/workspace \
+    --bind "$PRJ":/project \
     --bind /usr/share/libdrm:/usr/share/libdrm \
-    $BIND_MODEL_PROJECT \
     --env SLURM_JOB_ID="$SLURM_JOB_ID" \
     --env MODEL_ID="$MODEL_ID" \
     --env TP="$TP" \
     --env SCR="$SCR" \
-    --env PRJ="$PRJ" \
     --env USER="$USER" \
-    --env HF_HOME="$PRJ/hf_cache" \
-    --env HUGGINGFACE_HUB_CACHE="$PRJ/hf_cache/hub" \
-    --env TRANSFORMERS_CACHE="$PRJ/hf_cache/models" \
-    --env HF_DATASETS_CACHE="$PRJ/hf_cache/datasets" \
-    --env XDG_CACHE_HOME="$PRJ/hf_cache/xdg" \
+    --env HF_HOME=/project/hf_cache \
+    --env HUGGINGFACE_HUB_CACHE=/project/hf_cache/hub \
+    --env TRANSFORMERS_CACHE=/project/hf_cache/models \
+    --env HF_DATASETS_CACHE=/project/hf_cache/datasets \
+    --env XDG_CACHE_HOME=/project/hf_cache/xdg \
     --env HF_TOKEN="${HF_TOKEN:-}" \
     "$IMG" bash -c '
 set -euo pipefail
@@ -83,9 +72,9 @@ export HF_HUB_DISABLE_TELEMETRY=1
 
 export PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:/opt/miniconda3/envs/pytorch/bin:/usr/local/bin:/usr/bin:/bin"
 export TORCH_EXTENSIONS_DIR=/dev/shm/torch_ext
-export TORCHINDUCTOR_CACHE_DIR="$PRJ/hf_cache/torchinductor"
-export VLLM_COMPILER_CACHE_DIR="$PRJ/hf_cache/vllm-compile"
-export TRITON_CACHE_DIR="$PRJ/hf_cache/triton"
+export TORCHINDUCTOR_CACHE_DIR=/project/hf_cache/torchinductor
+export VLLM_COMPILER_CACHE_DIR=/project/hf_cache/vllm-compile
+export TRITON_CACHE_DIR=/project/hf_cache/triton
 
 export VLLM_USE_V1=1
 export VLLM_TARGET_DEVICE=rocm
@@ -95,7 +84,7 @@ export HIP_ARCHITECTURES=gfx90a
 # Avoid the 1-GPU trap - ensure PyTorch uses all allocated GPUs
 unset HIP_VISIBLE_DEVICES
 
-mkdir -p "$PRJ/hf_cache"/{hub,models,datasets,torchinductor,xdg,vllm-compile,triton} \
+mkdir -p /project/hf_cache/{hub,models,datasets,torchinductor,xdg,vllm-compile,triton,euroeval} \
          /dev/shm/torch_ext "$HOME/.aiter/jit/build" "$HOME/.aiter/jit/install" \
          /tmp/tools
 
@@ -158,29 +147,37 @@ ${PYTHON_BIN} /tmp/tools/stage_aiter.py
 
 export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
 
-# EuroEval conflicts with flash_attn which is pre-installed in the container.
-# Find and remove/rename it so EuroEval doesn't detect it.
-FLASH_ATTN_PATH=$("$PYTHON_BIN" -c "import flash_attn; print(flash_attn.__path__[0])" 2>/dev/null) || FLASH_ATTN_PATH=""
+# EuroEval conflicts with flash_attn - remove it from the container
+FLASH_ATTN_PATH=$(${PYTHON_BIN} -c "import flash_attn; print(flash_attn.__path__[0])" 2>/dev/null) || FLASH_ATTN_PATH=""
 if [ -n "$FLASH_ATTN_PATH" ] && [ -d "$FLASH_ATTN_PATH" ]; then
     echo "Disabling flash_attn at: $FLASH_ATTN_PATH"
-    mv "$FLASH_ATTN_PATH" "${FLASH_ATTN_PATH}_disabled" 2>/dev/null || \
-    rm -rf "$FLASH_ATTN_PATH" 2>/dev/null || \
-    echo "Warning: Could not disable flash_attn"
+    rm -rf "$FLASH_ATTN_PATH" || mv "$FLASH_ATTN_PATH" "${FLASH_ATTN_PATH}_disabled" || echo "Warning: Could not disable flash_attn"
 fi
 
-# Install EuroEval - skip vLLM extras since we use the container vLLM
+# Install EuroEval
 ${PYTHON_BIN} -m pip install --user -q euroeval
 
-# Install specific transformers version if needed
+# Install specific transformers version
 ${PYTHON_BIN} -m pip install --user -q -U transformers=={{ env_vars.TRANSFORMERS_VERSION }}
 
-# Create output directory
+# Remap MODEL_ID from host paths to container paths if needed
+if [[ "$MODEL_ID" == /scratch/{{ slurm_config.account }}/* ]]; then
+  MODEL_ID="/project${MODEL_ID#/scratch/{{ slurm_config.account }}}"
+elif [[ "$MODEL_ID" == "$SCR"/* ]]; then
+  MODEL_ID="/workspace${MODEL_ID#$SCR}"
+fi
+
 OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
+if [[ "$OUTPUT_FILE" == "$SCR"* ]]; then
+  OUTPUT_FILE="/workspace${OUTPUT_FILE#$SCR}"
+elif [[ "$OUTPUT_FILE" != /* ]]; then
+  OUTPUT_FILE="/workspace/$OUTPUT_FILE"
+fi
 mkdir -p "$(dirname "$OUTPUT_FILE")"
 
 # Build euroeval command arguments
 EUROEVAL_ARGS="--model ${MODEL_ID}"
-EUROEVAL_ARGS="$EUROEVAL_ARGS --cache-dir $PRJ/hf_cache/euroeval"
+EUROEVAL_ARGS="$EUROEVAL_ARGS --cache-dir /project/hf_cache/euroeval"
 
 {% if env_vars.LANGUAGE %}
 EUROEVAL_ARGS="$EUROEVAL_ARGS --language {{ env_vars.LANGUAGE }}"
@@ -214,7 +211,7 @@ EUROEVAL_ARGS="$EUROEVAL_ARGS --num-iterations {{ env_vars.NUM_ITERATIONS }}"
 EUROEVAL_ARGS="$EUROEVAL_ARGS --finetuning-batch-size {{ env_vars.BATCH_SIZE }}"
 {% endif %}
 
-# GPU memory utilization for vLLM backend
+# GPU memory utilization
 EUROEVAL_ARGS="$EUROEVAL_ARGS --gpu-memory-utilization {{ env_vars.GPU_MEMORY_UTILIZATION | default(0.85) }}"
 
 # Always use verbose and save results
@@ -226,9 +223,8 @@ echo "Running EuroEval with arguments: $EUROEVAL_ARGS"
 ${PYTHON_BIN} -m euroeval.cli $EUROEVAL_ARGS
 
 # Copy results to output location
-RESULTS_FILE="euroeval_benchmark_results.jsonl"
-if [ -f "$RESULTS_FILE" ]; then
-    cp "$RESULTS_FILE" "$OUTPUT_FILE"
+if [ -f "euroeval_benchmark_results.jsonl" ]; then
+    cp "euroeval_benchmark_results.jsonl" "$OUTPUT_FILE"
     echo "Results saved to: $OUTPUT_FILE"
 fi
 '
