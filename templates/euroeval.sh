@@ -63,9 +63,8 @@ umask 002
 export HOME=/tmp
 
 # Find Python - different containers have different paths
-# Prefer venv (has proper pip access) over system python
 PYTHON_BIN=""
-for p in /opt/venv/bin/python /opt/miniconda3/envs/pytorch/bin/python; do
+for p in /opt/miniconda3/envs/pytorch/bin/python /opt/venv/bin/python; do
     if [ -x "$p" ]; then
         PYTHON_BIN="$p"
         break
@@ -78,12 +77,17 @@ fi
 export PYTHON_BIN
 echo "Using Python: $PYTHON_BIN"
 
+# Set up writable user site-packages for pip --user installs
+export PYTHONUSERBASE=/project/hf_cache/python_user
+mkdir -p "$PYTHONUSERBASE"
+export PATH="$PYTHONUSERBASE/bin:$PATH"
+
 # ---- env & caches (disable xet + telemetry) ----
 export HF_HUB_DISABLE_XET=1
 export HF_HUB_ENABLE_HF_TRANSFER=0
 export HF_HUB_DISABLE_TELEMETRY=1
 
-export PATH="/opt/venv/bin:/opt/rocm/llvm/bin:/opt/rocm/bin:/usr/local/bin:/usr/bin:/bin"
+export PATH="$PYTHONUSERBASE/bin:/opt/rocm/llvm/bin:/opt/rocm/bin:/usr/local/bin:/usr/bin:/bin"
 export TORCH_EXTENSIONS_DIR=/dev/shm/torch_ext
 export TORCHINDUCTOR_CACHE_DIR=/project/hf_cache/torchinductor
 export VLLM_COMPILER_CACHE_DIR=/project/hf_cache/vllm-compile
