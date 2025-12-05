@@ -105,7 +105,9 @@ export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export HIP_ARCHITECTURES=gfx90a
 
 # Avoid the 1-GPU trap - ensure PyTorch uses all allocated GPUs
+# Also unset ROCR_VISIBLE_DEVICES as vLLM errors if it's set
 unset HIP_VISIBLE_DEVICES
+unset ROCR_VISIBLE_DEVICES
 
 mkdir -p /project/hf_cache/{hub,models,datasets,torchinductor,xdg,vllm-compile,triton,euroeval} \
          /dev/shm/torch_ext "$HOME/.aiter/jit/build" "$HOME/.aiter/jit/install" \
