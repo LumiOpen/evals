@@ -98,6 +98,9 @@ export VLLM_TARGET_DEVICE=rocm
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
 export HIP_ARCHITECTURES=gfx90a
 
+# Force ROCm-compatible attention backend (FLASHINFER is CUDA-only)
+export VLLM_ATTENTION_BACKEND=ROCM_FLASH
+
 # Disable vLLM in EuroEval - use HuggingFace transformers instead
 # This avoids NVCC/CUDA issues on ROCm
 export EUROEVAL_DISABLE_VLLM=1
