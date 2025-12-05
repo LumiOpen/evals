@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from .harnesses import LMEvalHarness, BigcodeEvaluationHarness, MTBenchInferenceHarness, MTBenchJudgeHarness, AlpacaEvalHarness, MultiIFHarness
+from .harnesses import LMEvalHarness, BigcodeEvaluationHarness, MTBenchInferenceHarness, MTBenchJudgeHarness, AlpacaEvalHarness, MultiIFHarness, EuroEvalHarness
 import json
 
 
@@ -126,7 +126,7 @@ class AlpacaEvalConfig(EvalConfig):
 class MultiIFConfig(EvalConfig):
     def __init__(self, batch_size=64, tensor_parallel_size=8, input_data_csv="data/multiIF_20241018_english.csv"):
         super().__init__("multi_if", "custom", MultiIFHarness(
-            batch_size=batch_size, 
+            batch_size=batch_size,
             tensor_parallel_size=tensor_parallel_size,
             input_data_csv=input_data_csv)
         )
@@ -138,6 +138,48 @@ class MultiIFConfig(EvalConfig):
         # Extract overall score from Multi-IF results
         if "results" in json_data and "english_average" in json_data["results"]:
             return json_data["results"]["english_average"]
+        return 0.0
+
+
+class EuroEvalConfig(EvalConfig):
+    """Config for EuroEval European language benchmarks.
+
+    EuroEval supports multiple European languages and task types:
+    - Languages: da, sv, no, fi, is, de, nl, en, fr, es, it, pt, pl, etc.
+    - Tasks: sentiment-classification, named-entity-recognition,
+             linguistic-acceptability, reading-comprehension,
+             knowledge, summarization, common-sense-reasoning
+    """
+    def __init__(self, name, language=None, task=None, dataset=None,
+                 few_shot=True, evaluate_test_split=False):
+        super().__init__(name, "custom", EuroEvalHarness(
+            language=language,
+            task=task,
+            dataset=dataset,
+            few_shot=few_shot,
+            evaluate_test_split=evaluate_test_split,
+        ))
+        self.language = language
+        self.task = task
+        self.dataset = dataset
+        self.few_shot = few_shot
+        self.evaluate_test_split = evaluate_test_split
+
+    def get_results_custom(self, json_data):
+        # EuroEval outputs results as JSONL, parse accordingly
+        # The results contain task scores per language
+        if isinstance(json_data, list):
+            # JSONL format - get the last result entry
+            if json_data:
+                last_result = json_data[-1]
+                if "results" in last_result:
+                    # Return the mean score across all tasks
+                    scores = []
+                    for task_results in last_result["results"].values():
+                        if "total" in task_results:
+                            scores.append(task_results["total"])
+                    if scores:
+                        return sum(scores) / len(scores)
         return 0.0
 
 
@@ -380,4 +422,55 @@ evals = {
     "alpaca_eval_en": AlpacaEvalConfig(language="en"),
     "alpaca_eval_fi": AlpacaEvalConfig(language="fi"),
     "multi_if": MultiIFConfig(),
+
+    # =========================================================================
+    # EuroEval - European Language Model Benchmarks
+    # https://euroeval.com/
+    # =========================================================================
+
+    # Full language evaluations (all tasks for a language)
+    "euroeval_da": EuroEvalConfig("euroeval_da", language="da"),
+    "euroeval_sv": EuroEvalConfig("euroeval_sv", language="sv"),
+    "euroeval_no": EuroEvalConfig("euroeval_no", language="no"),
+    "euroeval_fi": EuroEvalConfig("euroeval_fi", language="fi"),
+    "euroeval_is": EuroEvalConfig("euroeval_is", language="is"),
+    "euroeval_de": EuroEvalConfig("euroeval_de", language="de"),
+    "euroeval_nl": EuroEvalConfig("euroeval_nl", language="nl"),
+    "euroeval_en": EuroEvalConfig("euroeval_en", language="en"),
+    "euroeval_fr": EuroEvalConfig("euroeval_fr", language="fr"),
+    "euroeval_es": EuroEvalConfig("euroeval_es", language="es"),
+    "euroeval_it": EuroEvalConfig("euroeval_it", language="it"),
+    "euroeval_pt": EuroEvalConfig("euroeval_pt", language="pt"),
+    "euroeval_pl": EuroEvalConfig("euroeval_pl", language="pl"),
+    "euroeval_cs": EuroEvalConfig("euroeval_cs", language="cs"),
+    "euroeval_sk": EuroEvalConfig("euroeval_sk", language="sk"),
+    "euroeval_hu": EuroEvalConfig("euroeval_hu", language="hu"),
+    "euroeval_ro": EuroEvalConfig("euroeval_ro", language="ro"),
+    "euroeval_bg": EuroEvalConfig("euroeval_bg", language="bg"),
+    "euroeval_el": EuroEvalConfig("euroeval_el", language="el"),
+    "euroeval_et": EuroEvalConfig("euroeval_et", language="et"),
+    "euroeval_lv": EuroEvalConfig("euroeval_lv", language="lv"),
+    "euroeval_lt": EuroEvalConfig("euroeval_lt", language="lt"),
+    "euroeval_sl": EuroEvalConfig("euroeval_sl", language="sl"),
+    "euroeval_hr": EuroEvalConfig("euroeval_hr", language="hr"),
+    "euroeval_uk": EuroEvalConfig("euroeval_uk", language="uk"),
+
+    # Task-specific evaluations (all languages for a task)
+    "euroeval_sentiment": EuroEvalConfig("euroeval_sentiment", task="sentiment-classification"),
+    "euroeval_ner": EuroEvalConfig("euroeval_ner", task="named-entity-recognition"),
+    "euroeval_la": EuroEvalConfig("euroeval_la", task="linguistic-acceptability"),
+    "euroeval_rc": EuroEvalConfig("euroeval_rc", task="reading-comprehension"),
+    "euroeval_know": EuroEvalConfig("euroeval_know", task="knowledge"),
+    "euroeval_summ": EuroEvalConfig("euroeval_summ", task="summarization"),
+    "euroeval_reason": EuroEvalConfig("euroeval_reason", task="common-sense-reasoning"),
+
+    # Nordic languages bundle
+    "euroeval_nordic": EuroEvalConfig("euroeval_nordic", language="da,sv,no,fi,is"),
+
+    # Zero-shot variants
+    "euroeval_da_0shot": EuroEvalConfig("euroeval_da_0shot", language="da", few_shot=False),
+    "euroeval_sv_0shot": EuroEvalConfig("euroeval_sv_0shot", language="sv", few_shot=False),
+    "euroeval_fi_0shot": EuroEvalConfig("euroeval_fi_0shot", language="fi", few_shot=False),
+    "euroeval_en_0shot": EuroEvalConfig("euroeval_en_0shot", language="en", few_shot=False),
+    "euroeval_de_0shot": EuroEvalConfig("euroeval_de_0shot", language="de", few_shot=False),
 }

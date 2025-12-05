@@ -148,3 +148,53 @@ class MultiIFHarness:
 
         return rendered_script
 
+
+class EuroEvalHarness:
+    """Harness for running EuroEval benchmarks on LUMI.
+
+    EuroEval is a European language model benchmarking framework supporting
+    12+ European languages with tasks like sentiment classification, NER,
+    reading comprehension, and more.
+
+    See: https://euroeval.com/
+    """
+    def __init__(self, language=None, task=None, dataset=None, few_shot=True,
+                 evaluate_test_split=False, num_iterations=10, batch_size=None,
+                 gpu_memory_utilization=0.85):
+        self.language = language
+        self.task = task
+        self.dataset = dataset
+        self.few_shot = few_shot
+        self.evaluate_test_split = evaluate_test_split
+        self.num_iterations = num_iterations
+        self.batch_size = batch_size
+        self.gpu_memory_utilization = gpu_memory_utilization
+        self.harness = self
+
+    def generate_script(self, slurm_config, env_vars, backend='hf'):
+        env_vars = copy.deepcopy(env_vars)
+
+        # Add EuroEval-specific configuration
+        if self.language:
+            env_vars["LANGUAGE"] = self.language
+        if self.task:
+            env_vars["TASK"] = self.task
+        if self.dataset:
+            env_vars["DATASET"] = self.dataset
+        env_vars["FEW_SHOT"] = str(self.few_shot)
+        env_vars["EVALUATE_TEST_SPLIT"] = str(self.evaluate_test_split)
+        env_vars["NUM_ITERATIONS"] = self.num_iterations
+        if self.batch_size:
+            env_vars["BATCH_SIZE"] = self.batch_size
+        env_vars["GPU_MEMORY_UTILIZATION"] = self.gpu_memory_utilization
+
+        config = {}
+        config["env_vars"] = env_vars
+        config["slurm_config"] = slurm_config
+
+        template_str = open('templates/euroeval.sh', 'r').read()
+        template = Template(template_str)
+        rendered_script = template.render(**config)
+
+        return rendered_script
+
