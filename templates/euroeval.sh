@@ -19,7 +19,7 @@ ln -sf {{ slurm_config.log_dir }}/$SLURM_JOB_ID.err {{ slurm_config.log_dir }}/l
 set -euo pipefail
 
 export IMG="/appl/local/laifs/containers/lumi-multitorch-u24r64f21m43t28-20251128_145346/lumi-multitorch-full-u24r64f21m43t28-20251128_145346.sif"
-export PRJ="/scratch/{{ slurm_config.account }}"   # will be /project in container
+export PRJ="/scratch/project_462000353"    # always use 353 for cache, will be /project in container
 export SCR="$(pwd -P)"                     # SCR = scratch directory, will be /workspace in container (resolve symlinks)
 export ACC="{{ slurm_config.account }}"
 
@@ -147,8 +147,8 @@ echo "Checking torch version..."
 ${PYTHON_BIN} -c "import torch; print(\"torch:\", torch.__version__, \"| HIP:\", torch.version.hip if hasattr(torch.version, \"hip\") else \"N/A\")"
 
 # Remap MODEL_ID from host paths to container paths if needed
-if [[ "$MODEL_ID" == /scratch/{{ slurm_config.account }}/* ]]; then
-  MODEL_ID="/project${MODEL_ID#/scratch/{{ slurm_config.account }}}"
+if [[ "$MODEL_ID" == /scratch/project_462000353/* ]]; then
+  MODEL_ID="/project${MODEL_ID#/scratch/project_462000353}"
 elif [[ "$MODEL_ID" == "$SCR"/* ]]; then
   MODEL_ID="/workspace${MODEL_ID#$SCR}"
 fi
