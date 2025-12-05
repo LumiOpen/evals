@@ -118,12 +118,20 @@ echo "[aiter] Skipping aiter setup for this container"
 echo "Installing EuroEval to $SITE_PACKAGES (using the container ROCm torch/vllm)..."
 ${PYTHON_BIN} -m pip install --target "$SITE_PACKAGES" --no-deps euroeval
 
-# Install other EuroEval dependencies (excluding torch, vllm, transformers, accelerate which are in container)
-${PYTHON_BIN} -m pip install --target "$SITE_PACKAGES" \
+# Install other EuroEval dependencies with --no-deps to avoid pulling in CUDA torch
+# These are the direct deps that do NOT require torch/vllm/transformers (those are in container)
+${PYTHON_BIN} -m pip install --target "$SITE_PACKAGES" --no-deps \
     bert-score click cloudpickle datasets demjson3 evaluate levenshtein litellm \
     more-itertools numpy ollama pandas peft protobuf pydantic pyinfer python-dotenv \
     rouge-score sacremoses scikit-learn sentencepiece seqeval setuptools tenacity \
     termcolor huggingface-hub
+
+# Install sub-dependencies that are safe (no torch)
+${PYTHON_BIN} -m pip install --target "$SITE_PACKAGES" \
+    filelock fsspec packaging pyyaml requests tqdm regex safetensors tokenizers \
+    aiohttp httpx jinja2 typing-extensions annotated-types pydantic-core \
+    pyarrow dill multiprocess xxhash rapidfuzz joblib threadpoolctl scipy \
+    absl-py nltk six tabulate grpcio openai tiktoken jsonschema importlib-metadata
 echo "EuroEval install complete"
 
 # Verify we are using the container ROCm torch
