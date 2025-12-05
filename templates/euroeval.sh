@@ -212,20 +212,24 @@ EUROEVAL_ARGS="$EUROEVAL_ARGS --verbose --save-results"
 
 echo "Running EuroEval with arguments: $EUROEVAL_ARGS"
 
-# Run EuroEval with find_spec patched to hide flash_attn
-# (EuroEval uses find_spec to check if flash_attn exists, not import)
-${PYTHON_BIN} -c "
+# Write wrapper script that patches find_spec before importing euroeval
+cat > /tmp/run_euroeval.py << WRAPPER
 import importlib.util
+import sys
+
+# Patch find_spec to hide flash_attn from EuroEval check
 _orig = importlib.util.find_spec
 def _patched(name, *a, **kw):
-    return None if name == 'flash_attn' else _orig(name, *a, **kw)
+    return None if name == "flash_attn" else _orig(name, *a, **kw)
 importlib.util.find_spec = _patched
 
-import sys
-sys.argv = ['euroeval'] + '''$EUROEVAL_ARGS'''.split()
+# Set argv and run
+sys.argv = ["euroeval"] + sys.argv[1:]
 from euroeval.cli import main
 main()
-"
+WRAPPER
+
+${PYTHON_BIN} /tmp/run_euroeval.py $EUROEVAL_ARGS
 
 # Copy results to output location
 if [ -f "euroeval_benchmark_results.jsonl" ]; then
