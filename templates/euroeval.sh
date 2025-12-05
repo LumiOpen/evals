@@ -206,18 +206,25 @@ cat > /tmp/run_euroeval.py <<WRAPPER
 import importlib.util
 import sys
 
-# Patch find_spec to hide flash_attn and vllm from EuroEval
-# This forces EuroEval to use HuggingFace transformers instead of vLLM
-# which avoids NVCC/CUDA issues on ROCm
-_orig = importlib.util.find_spec
-def _patched(name, *a, **kw):
-    if name in ("flash_attn", "vllm"):
+# Patch find_spec to hide flash_attn from EuroEval
+_orig_find_spec = importlib.util.find_spec
+def _patched_find_spec(name, *a, **kw):
+    if name == "flash_attn":
         return None
-    return _orig(name, *a, **kw)
-importlib.util.find_spec = _patched
+    return _orig_find_spec(name, *a, **kw)
+importlib.util.find_spec = _patched_find_spec
 
-# vllm is hidden from EuroEval via find_spec patch above
-print("[patch] vllm hidden - EuroEval will use HuggingFace transformers")
+# Patch shutil.which to return a fake nvcc path for ROCm
+# EuroEval checks for nvcc but we are using ROCm/HIP which does not need nvcc
+import shutil
+_orig_which = shutil.which
+def _patched_which(cmd, *a, **kw):
+    if cmd == "nvcc":
+        return "/opt/rocm/bin/hipcc"  # Return hipcc as nvcc equivalent
+    return _orig_which(cmd, *a, **kw)
+shutil.which = _patched_which
+
+print("[patch] flash_attn hidden, nvcc check bypassed for ROCm")
 
 # Set argv and run
 sys.argv = ["euroeval"] + sys.argv[1:]
