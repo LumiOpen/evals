@@ -57,11 +57,11 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_
     --env TP="$TP" \
     --env SCR="$SCR" \
     --env USER="$USER" \
-    --env HF_HOME=/project/hf_cache \
-    --env HUGGINGFACE_HUB_CACHE=/project/hf_cache/hub \
-    --env TRANSFORMERS_CACHE=/project/hf_cache/models \
-    --env HF_DATASETS_CACHE=/project/hf_cache/datasets \
-    --env XDG_CACHE_HOME=/project/hf_cache/xdg \
+    --env HF_HOME=/project/cache/huggingface \
+    --env HUGGINGFACE_HUB_CACHE=/project/cache/huggingface/hub \
+    --env TRANSFORMERS_CACHE=/project/cache/huggingface/models \
+    --env HF_DATASETS_CACHE=/project/cache/huggingface/datasets \
+    --env XDG_CACHE_HOME=/project/cache/huggingface/xdg \
     --env HF_TOKEN="${HF_TOKEN:-}" \
     "$IMG" bash -c '
 set -euo pipefail
@@ -80,9 +80,9 @@ export HF_HUB_DISABLE_TELEMETRY=1
 
 export PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:/opt/miniconda3/envs/pytorch/bin:/usr/local/bin:/usr/bin:/bin"
 export TORCH_EXTENSIONS_DIR=/dev/shm/torch_ext
-export TORCHINDUCTOR_CACHE_DIR=/project/hf_cache/torchinductor
-export VLLM_COMPILER_CACHE_DIR=/project/hf_cache/vllm-compile
-export TRITON_CACHE_DIR=/project/hf_cache/triton
+export TORCHINDUCTOR_CACHE_DIR=/project/cache/huggingface/torchinductor
+export VLLM_COMPILER_CACHE_DIR=/project/cache/huggingface/vllm-compile
+export TRITON_CACHE_DIR=/project/cache/huggingface/triton
 
 export VLLM_USE_V1=1
 export VLLM_TARGET_DEVICE=rocm
@@ -92,7 +92,7 @@ export HIP_ARCHITECTURES=gfx90a
 # Avoid the 1-GPU trap - ensure PyTorch uses all allocated GPUs
 unset HIP_VISIBLE_DEVICES
 
-mkdir -p /project/hf_cache/{hub,models,datasets,torchinductor,xdg,vllm-compile,triton} \
+mkdir -p /project/cache/huggingface/{hub,models,datasets,torchinductor,xdg,vllm-compile,triton} \
          /dev/shm/torch_ext "$HOME/.aiter/jit/build" "$HOME/.aiter/jit/install" \
          /tmp/tools
 
@@ -218,7 +218,7 @@ FEWSHOT_AS_MULTITURN_FLAG=""
 
 {% if env_vars.BACKEND == "vllm" %}
 MODEL_BACKEND="vllm"
-MODEL_ARGS="pretrained=${MODEL_ID},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP},max_model_len=4096,gpu_memory_utilization=0.90"
+MODEL_ARGS="pretrained=${MODEL_ID},dtype=auto,download_dir=/project/cache/huggingface/models,tensor_parallel_size=${TP},max_model_len=4096,gpu_memory_utilization=0.90"
 {% if env_vars.MODEL_ARGS %}
 MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
 {% endif %}
