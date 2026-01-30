@@ -51,7 +51,7 @@ unset PYTHONPATH
 unset PYTHONHOME
 unset VIRTUAL_ENV
 
-export HF_HOME="/scratch/project_462000353/hf_cache"
+export HF_HOME="/scratch/project_462000963/cache/huggingface"
 
 # Prepare work dir
 WORK_DIR=$WORK_DIR/mtbench

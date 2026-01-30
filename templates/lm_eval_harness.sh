@@ -12,332 +12,144 @@
 #SBATCH --gres={{ slurm_config.gres }}
 #SBATCH --time={{ slurm_config.time }}
 
-# link latest log files
 ln -sf {{ slurm_config.log_dir }}/$SLURM_JOB_ID.out {{ slurm_config.log_dir }}/latest.out
 ln -sf {{ slurm_config.log_dir }}/$SLURM_JOB_ID.err {{ slurm_config.log_dir }}/latest.err
 
 set -euo pipefail
 
-export IMG="/scratch/{{ slurm_config.account }}/containers/vllm_v10.1.1.sif"
-export PRJ="/scratch/{{ slurm_config.account }}"   # will be /project in container
-export SCR="$PWD"                          # SCR = scratch directory, will be /workspace in container
+echo "Starting lm_eval job..."
+echo "Host: $(hostname)"
+echo "Job ID: $SLURM_JOB_ID"
+
+# LUMI AI Factory container (Ubuntu 24.04, ROCm 6.4, vLLM 0.12)
+export IMG="/appl/local/laifs/containers/lumi-multitorch-u24r64f21m43t29-20251209_134408/lumi-multitorch-full-u24r64f21m43t29-20251209_134408.sif"
+# Storage project (use job's account project for storage)
+export STORAGE_PRJ="/scratch/{{ slurm_config.account }}"
+export SCR="$(pwd -P)"
 export ACC="{{ slurm_config.account }}"
 
-# Parse gres for GPU count (e.g., "gpu:mi250:4" -> 4)
+# Parse gres for GPU count
 GRES="{{ slurm_config.gres }}"
 if [[ "$GRES" =~ gpu:[^:]*:([0-9]+) ]]; then
     GPUS="${BASH_REMATCH[1]}"
 elif [[ "$GRES" =~ gpu:([0-9]+) ]]; then
     GPUS="${BASH_REMATCH[1]}"
 else
-    echo "Warning: Could not parse GPU count from GRES '$GRES', defaulting to 4"
-    GPUS=4
+    GPUS=1
 fi
 
-# Auto-detect alt scratch root from MODEL_ID if it’s a local path
-ALT_PROJECT=""
-if [[ "{{ env_vars.MODEL }}" == /scratch/* ]]; then
-  MODEL_PATH="{{ env_vars.MODEL }}"
-  # Primary root
-  PRIMARY_ROOT="$PRJ"
-  # If model is under /scratch/project_* but not under PRIMARY_ROOT, capture that root
-  if [[ "$MODEL_PATH" == /* ]]; then
-    # Extract "/scratch/project_<id>" prefix
-    ALT_CAND="/scratch/$(echo "$MODEL_PATH" | awk -F'/' '{print $3}')"
-    # ALT_CAND is "project_<id>"; build full root "/scratch/project_<id>"
-    ALT_PROJECT="$ALT_CAND"
-    # If ALT_PROJECT equals PRIMARY_ROOT, ignore
-    if [[ "$ALT_PROJECT" == "$PRIMARY_ROOT" ]]; then
-      ALT_PROJECT=""
-    else
-      echo "Detected alternative project root for model path: $ALT_PROJECT"
-      ALT_PROJECT="--bind $ALT_CAND"
-    fi
-  fi
-fi
-
-
-# topology & model knobs
-export N_NODES=1
+export MODEL="{{ env_vars.MODEL }}"
 export TP="$GPUS"
-export MODEL_ID="{{ env_vars.MODEL }}"
-#export SINGULARITY_BIND=/scratch,/flash 
+
+echo "Container: $IMG"
+echo "Model: $MODEL"
+echo "GPUs: $GPUS"
+echo "Storage: $STORAGE_PRJ"
+
 {% if env_vars.LM_EVAL_PATH %}
 # Bind mount local lm-eval path into container
 BIND_LM_EVAL="--bind {{ env_vars.LM_EVAL_PATH }}:/workspace/lm-eval-host"
 {% else %}
 BIND_LM_EVAL=""
 {% endif %}
-#--cleanenv
 
-srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_config.time }}" --gpus-per-task="$GPUS" \
-  singularity exec --rocm \
+# Use srun to properly allocate GPUs to the container
+srun -A "$ACC" -p "{{ slurm_config.partition }}" -N1 -n1 -t "{{ slurm_config.time }}" --gpus-per-task="$GPUS" \
+  singularity exec --rocm --cleanenv \
     --bind "$SCR":/workspace \
-    --bind "$PRJ":/project \
-    $ALT_PROJECT \
+    --bind "$STORAGE_PRJ":/project \
+    --bind /pfs,/scratch,/projappl,/flash,/appl \
+    --bind /var/spool/slurmd \
+    --bind /opt/cray/ \
+    --bind /usr/lib64/libcxi.so.1 \
     --bind /usr/share/libdrm:/usr/share/libdrm \
     $BIND_LM_EVAL \
-    --env SLURM_JOB_ID="$SLURM_JOB_ID" \
-    --env MODEL_ID="$MODEL_ID" \
+    --env MODEL="$MODEL" \
     --env TP="$TP" \
     --env SCR="$SCR" \
     --env USER="$USER" \
-    --env HF_HOME=/project/hf_cache \
-    --env HUGGINGFACE_HUB_CACHE=/project/hf_cache/hub \
-    --env TRANSFORMERS_CACHE=/project/hf_cache/models \
-    --env HF_DATASETS_CACHE=/project/hf_cache/datasets \
-    --env XDG_CACHE_HOME=/project/hf_cache/xdg \
+    --env SLURM_JOB_ID="$SLURM_JOB_ID" \
+    --env HF_HOME=/project/cache/huggingface \
+    --env HUGGINGFACE_HUB_CACHE=/project/cache/huggingface/hub \
     --env HF_TOKEN="${HF_TOKEN:-}" \
+    --env STORAGE_PRJ="$STORAGE_PRJ" \
     "$IMG" bash -c '
 set -euo pipefail
-umask 002
+echo "Inside container..."
 
-# Force HOME=/tmp so aiter builds ephemerally and disappears with the job
+# Set HOME to /tmp for ephemeral builds
 export HOME=/tmp
 
-PYTHON_BIN="/opt/miniconda3/envs/pytorch/bin/python"
-export PYTHON_BIN
+source /opt/venv/bin/activate
+PYTHON_BIN="/opt/venv/bin/python"
 
-MODEL_SAFE="${MODEL_ID//\//-}"
-PREFETCH_LOCAL_DIR="/project/hf_cache/models/${MODEL_SAFE}"
+echo "Python: $PYTHON_BIN"
+echo "ROCR_VISIBLE_DEVICES: ${ROCR_VISIBLE_DEVICES:-not set}"
+echo "HIP_VISIBLE_DEVICES: ${HIP_VISIBLE_DEVICES:-not set}"
+$PYTHON_BIN -c "import torch; print(f\"PyTorch: {torch.__version__}, CUDA: {torch.cuda.is_available()}, Devices: {torch.cuda.device_count()}\")"
+$PYTHON_BIN -c "import vllm; print(f\"vLLM: {vllm.__version__}\")"
 
-# Initialize flag (needed for set -u)
-IS_LOCAL_MODEL=false
-
-# Detect if MODEL_ID is a local path or a HuggingFace repo
-if [[ "$MODEL_ID" == /* ]] || [[ "$MODEL_ID" == ./* ]]; then
-    # Local path - convert to container path if needed
-    echo "Detected local model path: $MODEL_ID"
-    
-    # The host bind mount is: /scratch/{{ slurm_config.account }} -> /project
-    # So we need to replace /scratch/{{ slurm_config.account }} with /project
-    HOST_PROJECT_PATH="/scratch/{{ slurm_config.account }}"
-    
-    if [[ "$MODEL_ID" == "$HOST_PROJECT_PATH"* ]]; then
-        # Path is under the bind-mounted project directory
-        MODEL_LOCAL="${MODEL_ID/$HOST_PROJECT_PATH/\/project}"
-        echo "Converted to container path: $MODEL_LOCAL"
-    elif [[ "$MODEL_ID" == /pfs/lustrep* ]]; then
-        # Alternative PFS path format
-        # Try multiple lustre versions: lustrep2, lustrep3, lustrep4
-        PFS_PROJECT="/pfs/lustrep2/scratch/{{ slurm_config.account }}"
-        if [[ "$MODEL_ID" == "$PFS_PROJECT"* ]]; then
-            MODEL_LOCAL="${MODEL_ID/$PFS_PROJECT/\/project}"
-            echo "Converted PFS path to container path: $MODEL_LOCAL"
-        else
-            PFS_PROJECT="/pfs/lustrep3/scratch/{{ slurm_config.account }}"
-            if [[ "$MODEL_ID" == "$PFS_PROJECT"* ]]; then
-                MODEL_LOCAL="${MODEL_ID/$PFS_PROJECT/\/project}"
-                echo "Converted PFS path to container path: $MODEL_LOCAL"
-            else
-                PFS_PROJECT="/pfs/lustrep4/scratch/{{ slurm_config.account }}"
-                if [[ "$MODEL_ID" == "$PFS_PROJECT"* ]]; then
-                    MODEL_LOCAL="${MODEL_ID/$PFS_PROJECT/\/project}"
-                    echo "Converted PFS path to container path: $MODEL_LOCAL"
-                else
-                    echo "WARNING: Could not convert PFS path"
-                    MODEL_LOCAL="$MODEL_ID"
-                fi
-            fi
-        fi
-    else
-        # Path is not in the bind mount - this might fail
-        echo "WARNING: Model path is not under /scratch/{{ slurm_config.account }}"
-        echo "         This may not be accessible in the container."
-        MODEL_LOCAL="$MODEL_ID"
-    fi
-    
-    IS_LOCAL_MODEL=true
-else
-    # HuggingFace repo - will be downloaded
-    echo "Detected HuggingFace model: $MODEL_ID"
-    MODEL_LOCAL="${PREFETCH_LOCAL_DIR}"
-    IS_LOCAL_MODEL=false
-fi
-
-# ---- env & caches (disable xet + telemetry) ----
 export HF_HUB_DISABLE_XET=1
-export HF_HUB_ENABLE_HF_TRANSFER=0
-export HF_HUB_DISABLE_TELEMETRY=1
-
-export PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:/opt/miniconda3/envs/pytorch/bin:/usr/local/bin:/usr/bin:/bin"
-export TORCH_EXTENSIONS_DIR=/dev/shm/torch_ext
-export TORCHINDUCTOR_CACHE_DIR=/project/hf_cache/torchinductor
-export VLLM_COMPILER_CACHE_DIR=/project/hf_cache/vllm-compile
-export TRITON_CACHE_DIR=/project/hf_cache/triton
+export MIOPEN_USER_DB_PATH=/tmp/${USER}-miopen-cache
+export MIOPEN_CUSTOM_CACHE_DIR=$MIOPEN_USER_DB_PATH
+export NCCL_SOCKET_IFNAME=hsn0,hsn1,hsn2,hsn3
+export NCCL_NET_GDR_LEVEL=3
+export PYTORCH_ROCM_ARCH=gfx90a
 
 export VLLM_USE_V1=1
 export VLLM_TARGET_DEVICE=rocm
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
-export HIP_ARCHITECTURES=gfx90a
 
-# Avoid the 1-GPU trap - ensure PyTorch uses all allocated GPUs
-unset HIP_VISIBLE_DEVICES
+mkdir -p /project/cache/huggingface/hub "$MIOPEN_USER_DB_PATH"
 
-mkdir -p /project/hf_cache/{hub,models,datasets,torchinductor,xdg,vllm-compile,triton} \
-         /dev/shm/torch_ext "$HOME/.aiter/jit/build" "$HOME/.aiter/jit/install" \
-         /tmp/tools
+# Clean up any leftover files from previous runs
+rm -rf /tmp/pip-packages /tmp/lm-eval
 
-export CC=/opt/rocm/llvm/bin/clang
-export CXX=/opt/rocm/llvm/bin/clang++
-
-# Make sure ninja is available
-${PYTHON_BIN} -m pip -q install --user -U ninja || true
-
-# ------- write helper: stage_aiter.py (NO stdin execution) -------
-cat > /tmp/tools/stage_aiter.py <<PY
-import os, glob, shutil, importlib, pathlib, subprocess, sys
-
-home = os.path.expanduser("~")
-jit_root   = os.path.join(home, ".aiter", "jit")
-build_root = os.path.join(jit_root, "build")
-inst_root  = os.path.join(jit_root, "install")
-pkg_root   = os.path.join(inst_root, "private_aiter")
-pkg_jit    = os.path.join(pkg_root, "jit")
-
-os.makedirs(pkg_jit, exist_ok=True)
-pathlib.Path(os.path.join(pkg_root, "__init__.py")).write_text("")
-pathlib.Path(os.path.join(pkg_jit, "__init__.py")).write_text("")
-
-# trigger a build once (ok if it raises)
-try:
-    import aiter
-    from aiter.ops import enum  # will build module_aiter_enum
-except Exception as e:
-    print("[aiter] prewarm raised:", repr(e))
-
-hits = glob.glob(os.path.join(build_root, "**", "module_aiter_enum*.so"), recursive=True)
-if not hits:
-    raise SystemExit("[stage] no compiled module_aiter_enum*.so found under " + build_root)
-
-so_src = max(hits, key=os.path.getmtime)
-dst = os.path.join(pkg_jit, "module_aiter_enum.so")
-if os.path.islink(dst) or os.path.exists(dst):
-    os.remove(dst)
-try:
-    os.symlink(so_src, dst)
-    print("[stage] symlinked", dst, "->", so_src)
-except OSError:
-    shutil.copy2(so_src, dst)
-    print("[stage] copied", so_src, "->", dst)
-
-print("[ldd]")
-print(subprocess.check_output(["ldd", dst], text=True))
-
-sys.path.insert(0, inst_root)
-m = importlib.import_module("private_aiter.jit.module_aiter_enum")
-print("[stage] import OK:", m.__spec__.origin)
-
-import aiter; from aiter.ops import enum as _e
-print("[stage] aiter import OK")
-PY
-
-{% if env_vars.BACKEND != "dummy" %}
-# ------- write helper: prefetch.py (only for HuggingFace models) -------
-if [[ "${IS_LOCAL_MODEL:-false}" == "false" ]]; then
-cat > /workspace/tools/prefetch.py <<PY
-from huggingface_hub import snapshot_download
-p = snapshot_download(
-  repo_id="${MODEL_ID}",
-  local_dir="${PREFETCH_LOCAL_DIR}",
-  local_dir_use_symlinks=False,
-  allow_patterns=["*.safetensors","*.json","tokenizer.*","*vocab*","*.model"]
-)
-print("prefetch OK ->", p)
-PY
-fi
-{% endif %}
-
-# ------- write helper: sanity.py -------
-cat > /workspace/tools/sanity.py <<PY
-import torch, os
-print("torch", torch.__version__, "HIP", getattr(torch.version, "hip", None))
-print("HF_HUB_DISABLE_XET =", os.getenv("HF_HUB_DISABLE_XET"))
-n = torch.cuda.device_count()
-print("cuda.device_count =", n)
-for i in range(n):
-    print("  idx", i, "->", torch.cuda.get_device_name(i))
-PY
-
-# ------- run the helpers from files (no <stdin>) -------
-python /workspace/tools/sanity.py
-${PYTHON_BIN} /tmp/tools/stage_aiter.py
-
-{% if env_vars.BACKEND != "dummy" %}
-# Prefetch model if it is a HuggingFace repo and skip for local models
-
-if [[ "${IS_LOCAL_MODEL:-false}" == "false" ]]; then
-    echo "Downloading model from HuggingFace..."
-    python /workspace/tools/prefetch.py
-    echo "Model download complete."
-else
-    echo "Using local model at: $MODEL_LOCAL"
-    # Verify the model directory exists
-    if [[ ! -d "$MODEL_LOCAL" ]]; then
-        echo "ERROR: Local model directory not found: $MODEL_LOCAL"
-        echo "Original MODEL_ID: $MODEL_ID"
-        exit 1
-    fi
-    if [[ ! -f "$MODEL_LOCAL/config.json" ]]; then
-        echo "ERROR: config.json not found in model directory: $MODEL_LOCAL"
-        echo "This does not appear to be a valid model directory."
-        exit 1
-    fi
-    echo "Local model validation passed."
-fi
-
-# Datasets will be downloaded as needed
-# Note: Datasets will be cached automatically for subsequent runs
-{% endif %}
-
-export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
-
-# ------- get LUMI harness (puts it first on sys.path) -------
-EVAL_HARNESS_DIR="/tmp/lm-eval"
-
-# Function to setup lm-evaluation-harness (no locking needed with job-specific dirs)
-setup_lm_eval() {
-    echo "Setting up lm-evaluation-harness in $EVAL_HARNESS_DIR"
-
-{% if env_vars.LM_EVAL_PATH %}
-    # Use local path - copy from bind-mounted location
-    echo "Using local lm-evaluation-harness from: {{ env_vars.LM_EVAL_PATH }}"
-    cp -r "/workspace/lm-eval-host" "$EVAL_HARNESS_DIR"
-{% else %}
-    # Use git repository
-    REPO_URL="{{ env_vars.LM_EVAL_REPO }}"
-    REPO_REF="{{ env_vars.LM_EVAL_REF }}"
-
-    echo "Cloning lm-evaluation-harness from $REPO_URL (ref: $REPO_REF)..."
-    git clone --depth 1 -b "$REPO_REF" "$REPO_URL" "$EVAL_HARNESS_DIR"
-{% endif %}
-}
-
-# Setup lm-evaluation-harness
-setup_lm_eval
-export PYTHONPATH="$EVAL_HARNESS_DIR:${PYTHONPATH-}"
+# Install transformers
+PIP_TARGET=/tmp/pip-packages
+mkdir -p "$PIP_TARGET"
+echo "Installing transformers {{ env_vars.TRANSFORMERS_VERSION }}..."
+$PYTHON_BIN -m pip install -q --target="$PIP_TARGET" "numpy<2.3" "transformers=={{ env_vars.TRANSFORMERS_VERSION }}"
+export PYTHONPATH="$PIP_TARGET:${PYTHONPATH:-}"
 
 # Install RULER dependencies if running RULER tasks
 {% if env_vars.MAX_SEQ_LENGTH %}
 echo "Installing RULER dependencies (wonderwords, nltk)..."
-pip install --no-cache-dir wonderwords nltk
+$PYTHON_BIN -m pip install -q --target="$PIP_TARGET" wonderwords nltk
 echo "RULER dependencies installed successfully"
 {% endif %}
 
-# Create a temporary directory for lm_eval output
-RANDOM_DIR="/tmp/lm_eval_$(date +%s%N)"
-mkdir -p "$RANDOM_DIR"
+EVAL_HARNESS_DIR="/tmp/lm-eval"
+echo "Setting up lm-evaluation-harness in $EVAL_HARNESS_DIR"
 
+{% if env_vars.LM_EVAL_PATH %}
+echo "Using local lm-evaluation-harness from: {{ env_vars.LM_EVAL_PATH }}"
+cp -r "/workspace/lm-eval-host" "$EVAL_HARNESS_DIR"
+{% else %}
+REPO_URL="{{ env_vars.LM_EVAL_REPO }}"
+REPO_REF="{{ env_vars.LM_EVAL_REF }}"
+echo "Cloning lm-evaluation-harness from $REPO_URL (ref: $REPO_REF)..."
+git clone --depth 1 -b "$REPO_REF" "$REPO_URL" "$EVAL_HARNESS_DIR"
+{% endif %}
+
+export PYTHONPATH="$EVAL_HARNESS_DIR:${PYTHONPATH:-}"
+
+# Remap output file path from host to container if needed
 OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
 if [[ "$OUTPUT_FILE" == "$SCR"* ]]; then
-  # map host path under $SCR to the /workspace bind mount
   OUTPUT_FILE="/workspace${OUTPUT_FILE#$SCR}"
 elif [[ "$OUTPUT_FILE" != /* ]]; then
   OUTPUT_FILE="/workspace/$OUTPUT_FILE"
 fi
 mkdir -p "$(dirname "$OUTPUT_FILE")"
 
-# Set up chat template flags
+# Remap MODEL from host paths to container paths if needed
+if [[ "$MODEL" == "$STORAGE_PRJ"/* ]]; then
+  MODEL="/project${MODEL#$STORAGE_PRJ}"
+elif [[ "$MODEL" == "$SCR"/* ]]; then
+  MODEL="/workspace${MODEL#$SCR}"
+fi
+
 {% if env_vars.APPLY_CHAT_TEMPLATE %}
 CHAT_TEMPLATE_FLAG="--apply_chat_template"
 {% else %}
@@ -352,7 +164,7 @@ FEWSHOT_AS_MULTITURN_FLAG=""
 
 {% if env_vars.BACKEND == "vllm" %}
 MODEL_BACKEND="vllm"
-BASE_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},dtype=auto,download_dir=/project/hf_cache/models,tensor_parallel_size=${TP}"
+BASE_ARGS="pretrained=${MODEL},dtype=auto,tensor_parallel_size=${TP}"
 
 {% if env_vars.MAX_SEQ_LENGTH %}
 # RULER task: Force max_model_len to match RULER sequence length
@@ -373,20 +185,17 @@ fi
 echo "RULER: Using max_model_len={{ env_vars.MAX_SEQ_LENGTH }} (matching RULER sequence length)"
 {% else %}
 # Non-RULER task: Use default or provided max_model_len
-DEFAULT_ARGS="max_model_len=4096,gpu_memory_utilization=0.90"
+MODEL_ARGS="${BASE_ARGS},gpu_memory_utilization=0.90"
 {% if env_vars.MODEL_ARGS %}
-MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS},{{ env_vars.MODEL_ARGS }}"
-{% else %}
-MODEL_ARGS="${BASE_ARGS},${DEFAULT_ARGS}"
+MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
 {% endif %}
 {% endif %}
 {% elif env_vars.BACKEND == "dummy" %}
 MODEL_BACKEND="dummy"
-MODEL_ARGS="pretrained={{ env_vars.MODEL }}"
+MODEL_ARGS="pretrained=${MODEL}"
 {% else %}
 MODEL_BACKEND="hf-auto"
-#BASE_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
-BASE_ARGS="pretrained=${MODEL_LOCAL:-${MODEL_ID}},device_map=auto,dtype=auto,trust_remote_code=True,attn_implementation=sdpa"
+BASE_ARGS="pretrained=${MODEL},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
 
 {% if env_vars.MAX_SEQ_LENGTH %}
 # RULER task: Force max_length to match RULER sequence length
@@ -413,9 +222,7 @@ MODEL_ARGS="${BASE_ARGS}"
 {% endif %}
 {% endif %}
 {% endif %}
-echo "Using model backend: $MODEL_BACKEND"
-echo "Model args: $MODEL_ARGS"
-# Run eval
+
 BATCH_SIZE="{% if env_vars.BATCH_SIZE %}{{ env_vars.BATCH_SIZE }}{% elif env_vars.BACKEND == "vllm" %}auto{% else %}4{% endif %}"
 
 {% if env_vars.MAX_SEQ_LENGTH %}
@@ -426,13 +233,14 @@ echo "Using RULER metadata for sequence length: {{ env_vars.MAX_SEQ_LENGTH }}"
 TASK_METADATA_FLAG=""
 {% endif %}
 
-${PYTHON_BIN} -m lm_eval \
+echo "Running lm_eval with model: $MODEL"
+$PYTHON_BIN -m lm_eval \
   --model "$MODEL_BACKEND" \
   --model_args "$MODEL_ARGS" \
   --tasks "{{ env_vars.TASK_LIST }}" \
   --num_fewshot {{ env_vars.NUM_FEWSHOT }} \
   --batch_size "$BATCH_SIZE" \
-  --output_path "$RANDOM_DIR" \
+  --output_path "$OUTPUT_FILE" \
   $CHAT_TEMPLATE_FLAG \
   $FEWSHOT_AS_MULTITURN_FLAG \
   $TASK_METADATA_FLAG \
@@ -441,6 +249,7 @@ ${PYTHON_BIN} -m lm_eval \
 {% if env_vars.LM_EVAL_ARGS %}  {{ env_vars.LM_EVAL_ARGS }}
 {% endif %}
 
-find "$RANDOM_DIR" -name "results_*.json" -exec mv {} "$OUTPUT_FILE" \;
-rm -rf "$RANDOM_DIR"
+echo "lm_eval completed!"
 '
+
+echo "Job finished"
