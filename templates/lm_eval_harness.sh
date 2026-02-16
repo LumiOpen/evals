@@ -109,7 +109,7 @@ rm -rf /tmp/pip-packages /tmp/lm-eval
 PIP_TARGET=/tmp/pip-packages
 mkdir -p "$PIP_TARGET"
 echo "Installing transformers {{ env_vars.TRANSFORMERS_VERSION }}..."
-$PYTHON_BIN -m pip install -q --target="$PIP_TARGET" "numpy<2.3" "transformers=={{ env_vars.TRANSFORMERS_VERSION }}"
+$PYTHON_BIN -m pip install -q --target="$PIP_TARGET" "numpy<2.3" "transformers=={{ env_vars.TRANSFORMERS_VERSION }}" "hf_transfer"
 export PYTHONPATH="$PIP_TARGET:${PYTHONPATH:-}"
 
 # Install RULER dependencies if running RULER tasks
