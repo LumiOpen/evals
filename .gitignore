@@ -6,4 +6,5 @@ command_history.jsonl
 .*.sw?
 __pycache__
 output
+test_output
 .local
