@@ -12,32 +12,39 @@
 #SBATCH --gres={{ slurm_config.gres }}
 #SBATCH --time={{ slurm_config.time }}
 
-# link latest log files
 ln -sf {{ slurm_config.log_dir }}/$SLURM_JOB_ID.out {{ slurm_config.log_dir }}/latest.out
 ln -sf {{ slurm_config.log_dir }}/$SLURM_JOB_ID.err {{ slurm_config.log_dir }}/latest.err
 
 set -euo pipefail
 
-export IMG="/scratch/{{ slurm_config.account }}/containers/vllm_v10.1.1.sif"
-export PRJ="/scratch/{{ slurm_config.account }}"   # will be /project in container
-export SCR="$(pwd -P)"                     # SCR = scratch directory, will be /workspace in container (resolve symlinks)
+echo "Starting lm_eval job..."
+echo "Host: $(hostname)"
+echo "Job ID: $SLURM_JOB_ID"
+
+# LUMI AI Factory container (Ubuntu 24.04, ROCm 6.4, vLLM 0.12)
+export IMG="/appl/local/laifs/containers/lumi-multitorch-u24r64f21m43t29-20251209_134408/lumi-multitorch-full-u24r64f21m43t29-20251209_134408.sif"
+# Storage project (use job's account project for storage)
+export STORAGE_PRJ="/scratch/{{ slurm_config.account }}"
+export SCR="$(pwd -P)"
 export ACC="{{ slurm_config.account }}"
 
-# Parse gres for GPU count (e.g., "gpu:mi250:4" -> 4)
+# Parse gres for GPU count
 GRES="{{ slurm_config.gres }}"
 if [[ "$GRES" =~ gpu:[^:]*:([0-9]+) ]]; then
     GPUS="${BASH_REMATCH[1]}"
 elif [[ "$GRES" =~ gpu:([0-9]+) ]]; then
     GPUS="${BASH_REMATCH[1]}"
 else
-    echo "Warning: Could not parse GPU count from GRES '$GRES', defaulting to 4"
-    GPUS=4
+    GPUS=1
 fi
 
-# topology & model knobs
-export N_NODES=1
+export MODEL="{{ env_vars.MODEL }}"
 export TP="$GPUS"
-export MODEL_ID="{{ env_vars.MODEL }}"
+
+echo "Container: $IMG"
+echo "Model: $MODEL"
+echo "GPUs: $GPUS"
+echo "Storage: $STORAGE_PRJ"
 
 {% if env_vars.LM_EVAL_PATH %}
 # Bind mount local lm-eval path into container
@@ -46,164 +53,103 @@ BIND_LM_EVAL="--bind {{ env_vars.LM_EVAL_PATH }}:/workspace/lm-eval-host"
 BIND_LM_EVAL=""
 {% endif %}
 
-srun -A "$ACC" -p "{{ slurm_config.partition }}" -N "$N_NODES" -n1 -t "{{ slurm_config.time }}" --gpus-per-task="$GPUS" \
+# Use srun to properly allocate GPUs to the container
+srun -A "$ACC" -p "{{ slurm_config.partition }}" -N1 -n1 -t "{{ slurm_config.time }}" --gpus-per-task="$GPUS" \
   singularity exec --rocm --cleanenv \
     --bind "$SCR":/workspace \
-    --bind "$PRJ":/project \
+    --bind "$STORAGE_PRJ":/project \
+    --bind /pfs,/scratch,/projappl,/flash,/appl \
+    --bind /var/spool/slurmd \
+    --bind /opt/cray/ \
+    --bind /usr/lib64/libcxi.so.1 \
     --bind /usr/share/libdrm:/usr/share/libdrm \
     $BIND_LM_EVAL \
-    --env SLURM_JOB_ID="$SLURM_JOB_ID" \
-    --env MODEL_ID="$MODEL_ID" \
+    --env MODEL="$MODEL" \
     --env TP="$TP" \
     --env SCR="$SCR" \
     --env USER="$USER" \
+    --env SLURM_JOB_ID="$SLURM_JOB_ID" \
     --env HF_HOME=/project/cache/huggingface \
     --env HUGGINGFACE_HUB_CACHE=/project/cache/huggingface/hub \
-    --env TRANSFORMERS_CACHE=/project/cache/huggingface/models \
-    --env HF_DATASETS_CACHE=/project/cache/huggingface/datasets \
-    --env XDG_CACHE_HOME=/project/cache/huggingface/xdg \
     --env HF_TOKEN="${HF_TOKEN:-}" \
+    --env STORAGE_PRJ="$STORAGE_PRJ" \
     "$IMG" bash -c '
 set -euo pipefail
-umask 002
+echo "Inside container..."
 
-# Force HOME=/tmp so aiter builds ephemerally and disappears with the job
+# Set HOME to /tmp for ephemeral builds
 export HOME=/tmp
 
-PYTHON_BIN="/opt/miniconda3/envs/pytorch/bin/python"
-export PYTHON_BIN
+source /opt/venv/bin/activate
+PYTHON_BIN="/opt/venv/bin/python"
 
-# ---- env & caches (disable xet + telemetry) ----
+echo "Python: $PYTHON_BIN"
+echo "ROCR_VISIBLE_DEVICES: ${ROCR_VISIBLE_DEVICES:-not set}"
+echo "HIP_VISIBLE_DEVICES: ${HIP_VISIBLE_DEVICES:-not set}"
+$PYTHON_BIN -c "import torch; print(f\"PyTorch: {torch.__version__}, CUDA: {torch.cuda.is_available()}, Devices: {torch.cuda.device_count()}\")"
+$PYTHON_BIN -c "import vllm; print(f\"vLLM: {vllm.__version__}\")"
+
 export HF_HUB_DISABLE_XET=1
-export HF_HUB_ENABLE_HF_TRANSFER=0
-export HF_HUB_DISABLE_TELEMETRY=1
-
-export PATH="/opt/rocm/llvm/bin:/opt/rocm/bin:/opt/miniconda3/envs/pytorch/bin:/usr/local/bin:/usr/bin:/bin"
-export TORCH_EXTENSIONS_DIR=/dev/shm/torch_ext
-export TORCHINDUCTOR_CACHE_DIR=/project/cache/huggingface/torchinductor
-export VLLM_COMPILER_CACHE_DIR=/project/cache/huggingface/vllm-compile
-export TRITON_CACHE_DIR=/project/cache/huggingface/triton
+export MIOPEN_USER_DB_PATH=/tmp/${USER}-miopen-cache
+export MIOPEN_CUSTOM_CACHE_DIR=$MIOPEN_USER_DB_PATH
+export NCCL_SOCKET_IFNAME=hsn0,hsn1,hsn2,hsn3
+export NCCL_NET_GDR_LEVEL=3
+export PYTORCH_ROCM_ARCH=gfx90a
 
 export VLLM_USE_V1=1
 export VLLM_TARGET_DEVICE=rocm
 export VLLM_WORKER_MULTIPROC_METHOD=spawn
-export HIP_ARCHITECTURES=gfx90a
 
-# Avoid the 1-GPU trap - ensure PyTorch uses all allocated GPUs
-unset HIP_VISIBLE_DEVICES
+mkdir -p /project/cache/huggingface/hub "$MIOPEN_USER_DB_PATH"
 
-mkdir -p /project/cache/huggingface/{hub,models,datasets,torchinductor,xdg,vllm-compile,triton} \
-         /dev/shm/torch_ext "$HOME/.aiter/jit/build" "$HOME/.aiter/jit/install" \
-         /tmp/tools
+# Clean up any leftover files from previous runs
+rm -rf /tmp/pip-packages /tmp/lm-eval
 
-export CC=/opt/rocm/llvm/bin/clang
-export CXX=/opt/rocm/llvm/bin/clang++
+# Install transformers
+PIP_TARGET=/tmp/pip-packages
+mkdir -p "$PIP_TARGET"
+echo "Installing transformers {{ env_vars.TRANSFORMERS_VERSION }}..."
+$PYTHON_BIN -m pip install -q --target="$PIP_TARGET" "numpy<2.3" "transformers=={{ env_vars.TRANSFORMERS_VERSION }}" "hf_transfer"
+export PYTHONPATH="$PIP_TARGET:${PYTHONPATH:-}"
 
-# Make sure ninja is available
-${PYTHON_BIN} -m pip -q install --user -U ninja || true
+# Install RULER dependencies if running RULER tasks
+{% if env_vars.MAX_SEQ_LENGTH %}
+echo "Installing RULER dependencies (wonderwords, nltk)..."
+$PYTHON_BIN -m pip install -q --target="$PIP_TARGET" wonderwords nltk
+echo "RULER dependencies installed successfully"
+{% endif %}
 
-# ------- write helper: stage_aiter.py (NO stdin execution) -------
-cat > /tmp/tools/stage_aiter.py <<PY
-import os, glob, shutil, importlib, pathlib, subprocess, sys
-
-home = os.path.expanduser("~")
-jit_root   = os.path.join(home, ".aiter", "jit")
-build_root = os.path.join(jit_root, "build")
-inst_root  = os.path.join(jit_root, "install")
-pkg_root   = os.path.join(inst_root, "private_aiter")
-pkg_jit    = os.path.join(pkg_root, "jit")
-
-os.makedirs(pkg_jit, exist_ok=True)
-pathlib.Path(os.path.join(pkg_root, "__init__.py")).write_text("")
-pathlib.Path(os.path.join(pkg_jit, "__init__.py")).write_text("")
-
-# trigger a build once (ok if it raises)
-try:
-    import aiter
-    from aiter.ops import enum  # will build module_aiter_enum
-except Exception as e:
-    print("[aiter] prewarm raised:", repr(e))
-
-hits = glob.glob(os.path.join(build_root, "**", "module_aiter_enum*.so"), recursive=True)
-if not hits:
-    raise SystemExit("[stage] no compiled module_aiter_enum*.so found under " + build_root)
-
-so_src = max(hits, key=os.path.getmtime)
-dst = os.path.join(pkg_jit, "module_aiter_enum.so")
-if os.path.islink(dst) or os.path.exists(dst):
-    os.remove(dst)
-try:
-    os.symlink(so_src, dst)
-    print("[stage] symlinked", dst, "->", so_src)
-except OSError:
-    shutil.copy2(so_src, dst)
-    print("[stage] copied", so_src, "->", dst)
-
-print("[ldd]")
-print(subprocess.check_output(["ldd", dst], text=True))
-
-sys.path.insert(0, inst_root)
-m = importlib.import_module("private_aiter.jit.module_aiter_enum")
-print("[stage] import OK:", m.__spec__.origin)
-
-import aiter; from aiter.ops import enum as _e
-print("[stage] aiter import OK")
-PY
-
-# Stage aiter
-${PYTHON_BIN} /tmp/tools/stage_aiter.py
-
-export PYTHONPATH="$HOME/.aiter/jit/install:${PYTHONPATH-}"
-
-# Install specific transformers version
-${PYTHON_BIN} -m pip install --user -q -U transformers=={{ env_vars.TRANSFORMERS_VERSION }}
-
-# ------- get LUMI harness (puts it first on sys.path) -------
 EVAL_HARNESS_DIR="/tmp/lm-eval"
-
-# Function to setup lm-evaluation-harness (no locking needed with job-specific dirs)
-setup_lm_eval() {
-    echo "Setting up lm-evaluation-harness in $EVAL_HARNESS_DIR"
+echo "Setting up lm-evaluation-harness in $EVAL_HARNESS_DIR"
 
 {% if env_vars.LM_EVAL_PATH %}
-    # Use local path - copy from bind-mounted location
-    echo "Using local lm-evaluation-harness from: {{ env_vars.LM_EVAL_PATH }}"
-    cp -r "/workspace/lm-eval-host" "$EVAL_HARNESS_DIR"
+echo "Using local lm-evaluation-harness from: {{ env_vars.LM_EVAL_PATH }}"
+cp -r "/workspace/lm-eval-host" "$EVAL_HARNESS_DIR"
 {% else %}
-    # Use git repository
-    REPO_URL="{{ env_vars.LM_EVAL_REPO }}"
-    REPO_REF="{{ env_vars.LM_EVAL_REF }}"
-
-    echo "Cloning lm-evaluation-harness from $REPO_URL (ref: $REPO_REF)..."
-    git clone --depth 1 -b "$REPO_REF" "$REPO_URL" "$EVAL_HARNESS_DIR"
+REPO_URL="{{ env_vars.LM_EVAL_REPO }}"
+REPO_REF="{{ env_vars.LM_EVAL_REF }}"
+echo "Cloning lm-evaluation-harness from $REPO_URL (ref: $REPO_REF)..."
+git clone --depth 1 -b "$REPO_REF" "$REPO_URL" "$EVAL_HARNESS_DIR"
 {% endif %}
-}
 
-# Setup lm-evaluation-harness
-setup_lm_eval
-export PYTHONPATH="$EVAL_HARNESS_DIR:${PYTHONPATH-}"
+export PYTHONPATH="$EVAL_HARNESS_DIR:${PYTHONPATH:-}"
 
-# Create a temporary directory for lm_eval output
-RANDOM_DIR="/tmp/lm_eval_$(date +%s%N)"
-mkdir -p "$RANDOM_DIR"
-
+# Remap output file path from host to container if needed
 OUTPUT_FILE="{{ env_vars.OUTPUT_FILE }}"
 if [[ "$OUTPUT_FILE" == "$SCR"* ]]; then
-  # map host path under $SCR to the /workspace bind mount
   OUTPUT_FILE="/workspace${OUTPUT_FILE#$SCR}"
 elif [[ "$OUTPUT_FILE" != /* ]]; then
   OUTPUT_FILE="/workspace/$OUTPUT_FILE"
 fi
 mkdir -p "$(dirname "$OUTPUT_FILE")"
 
-# Remap MODEL_ID from host paths to container paths if needed
-if [[ "$MODEL_ID" == /scratch/{{ slurm_config.account }}/* ]]; then
-  MODEL_ID="/project${MODEL_ID#/scratch/{{ slurm_config.account }}}"
-elif [[ "$MODEL_ID" == "$SCR"/* ]]; then
-  MODEL_ID="/workspace${MODEL_ID#$SCR}"
+# Remap MODEL from host paths to container paths if needed
+if [[ "$MODEL" == "$STORAGE_PRJ"/* ]]; then
+  MODEL="/project${MODEL#$STORAGE_PRJ}"
+elif [[ "$MODEL" == "$SCR"/* ]]; then
+  MODEL="/workspace${MODEL#$SCR}"
 fi
 
-# Set up chat template flags
 {% if env_vars.APPLY_CHAT_TEMPLATE %}
 CHAT_TEMPLATE_FLAG="--apply_chat_template"
 {% else %}
@@ -218,38 +164,92 @@ FEWSHOT_AS_MULTITURN_FLAG=""
 
 {% if env_vars.BACKEND == "vllm" %}
 MODEL_BACKEND="vllm"
-MODEL_ARGS="pretrained=${MODEL_ID},dtype=auto,download_dir=/project/cache/huggingface/models,tensor_parallel_size=${TP},max_model_len=4096,gpu_memory_utilization=0.90"
+BASE_ARGS="pretrained=${MODEL},dtype=auto,tensor_parallel_size=${TP}"
+
+{% if env_vars.MAX_SEQ_LENGTH %}
+# RULER task: Force max_model_len to match RULER sequence length
+# Remove any max_model_len setting from MODEL_ARGS if present, then add RULER length
+{% if env_vars.MODEL_ARGS %}
+EXTRA_ARGS="{{ env_vars.MODEL_ARGS }}"
+# Remove any max_model_len setting from extra args
+EXTRA_ARGS=$(echo "$EXTRA_ARGS" | sed "s/max_model_len=[0-9]*,\?//g" | sed "s/,,/,/g" | sed "s/^,//;s/,\$//")
+{% else %}
+EXTRA_ARGS=""
+{% endif %}
+# Add RULER max_model_len (must match sequence length for RULER)
+if [ -n "$EXTRA_ARGS" ]; then
+    MODEL_ARGS="${BASE_ARGS},${EXTRA_ARGS},max_model_len={{ env_vars.MAX_SEQ_LENGTH }},gpu_memory_utilization=0.90"
+else
+    MODEL_ARGS="${BASE_ARGS},max_model_len={{ env_vars.MAX_SEQ_LENGTH }},gpu_memory_utilization=0.90"
+fi
+echo "RULER: Using max_model_len={{ env_vars.MAX_SEQ_LENGTH }} (matching RULER sequence length)"
+{% else %}
+# Non-RULER task: Use default or provided max_model_len
+MODEL_ARGS="${BASE_ARGS},gpu_memory_utilization=0.90"
 {% if env_vars.MODEL_ARGS %}
 MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
+{% endif %}
 {% endif %}
 {% elif env_vars.BACKEND == "dummy" %}
 MODEL_BACKEND="dummy"
-MODEL_ARGS="pretrained={{ env_vars.MODEL }}"
+MODEL_ARGS="pretrained=${MODEL}"
 {% else %}
 MODEL_BACKEND="hf-auto"
-MODEL_ARGS="pretrained=${MODEL_ID},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
+BASE_ARGS="pretrained=${MODEL},device_map=auto,dtype=bfloat16,trust_remote_code=True,attn_implementation=sdpa"
+
+{% if env_vars.MAX_SEQ_LENGTH %}
+# RULER task: Force max_length to match RULER sequence length
+# Strip any max_length from MODEL_ARGS if present, then add RULER length
 {% if env_vars.MODEL_ARGS %}
-MODEL_ARGS="${MODEL_ARGS},{{ env_vars.MODEL_ARGS }}"
+EXTRA_ARGS="{{ env_vars.MODEL_ARGS }}"
+# Remove any max_length setting from extra args
+EXTRA_ARGS=$(echo "$EXTRA_ARGS" | sed "s/max_length=[0-9]*,\?//g" | sed "s/,,/,/g" | sed "s/^,//;s/,\$//")
+{% else %}
+EXTRA_ARGS=""
+{% endif %}
+if [ -n "$EXTRA_ARGS" ]; then
+    MODEL_ARGS="${BASE_ARGS},${EXTRA_ARGS},max_length={{ env_vars.MAX_SEQ_LENGTH }}"
+else
+    MODEL_ARGS="${BASE_ARGS},max_length={{ env_vars.MAX_SEQ_LENGTH }}"
+fi
+echo "RULER: Using max_length={{ env_vars.MAX_SEQ_LENGTH }} (matching RULER sequence length)"
+{% else %}
+# Non-RULER task: Use provided or default settings
+{% if env_vars.MODEL_ARGS %}
+MODEL_ARGS="${BASE_ARGS},{{ env_vars.MODEL_ARGS }}"
+{% else %}
+MODEL_ARGS="${BASE_ARGS}"
+{% endif %}
 {% endif %}
 {% endif %}
 
-# Run eval
 BATCH_SIZE="{% if env_vars.BATCH_SIZE %}{{ env_vars.BATCH_SIZE }}{% elif env_vars.BACKEND == "vllm" %}auto{% else %}4{% endif %}"
 
-${PYTHON_BIN} -m lm_eval \
+{% if env_vars.MAX_SEQ_LENGTH %}
+# Set up metadata for RULER tasks
+TASK_METADATA_FLAG="--metadata {\"max_seq_lengths\":[{{ env_vars.MAX_SEQ_LENGTH }}]}"
+echo "Using RULER metadata for sequence length: {{ env_vars.MAX_SEQ_LENGTH }}"
+{% else %}
+TASK_METADATA_FLAG=""
+{% endif %}
+
+echo "Running lm_eval with model: $MODEL"
+$PYTHON_BIN -m lm_eval \
   --model "$MODEL_BACKEND" \
   --model_args "$MODEL_ARGS" \
   --tasks "{{ env_vars.TASK_LIST }}" \
   --num_fewshot {{ env_vars.NUM_FEWSHOT }} \
   --batch_size "$BATCH_SIZE" \
-  --output_path "$RANDOM_DIR" \
+  --output_path "$OUTPUT_FILE" \
   $CHAT_TEMPLATE_FLAG \
   $FEWSHOT_AS_MULTITURN_FLAG \
+  $TASK_METADATA_FLAG \
 {% if env_vars.LIMIT %}  --limit {{ env_vars.LIMIT }} \
 {% endif %}  --log_samples \
 {% if env_vars.LM_EVAL_ARGS %}  {{ env_vars.LM_EVAL_ARGS }}
 {% endif %}
 
-find "$RANDOM_DIR" -name "results_*.json" -exec mv {} "$OUTPUT_FILE" \;
-rm -rf "$RANDOM_DIR"
+echo "lm_eval completed!"
 '
+
+echo "Job finished"

@@ -4,6 +4,15 @@ This is a script to simplify running many evals simultaneously in our slurm
 environment.  It accepts hugging face model IDs (i.e. org/modelname) or
 directory paths to models in the huggingface format.
 
+## Quick Start
+
+For common evaluation scenarios, use the pre-configured scripts:
+
+- `cpt.sh` / `cpt-vllm.sh` - Standard continuous pretraining evaluations
+- `chat.sh` - Chat model evaluations
+- `code.sh` - Code generation evaluations
+- `ruler.sh` / `ruler-vllm.sh` - **NEW:** Long context evaluations (4K-128K tokens)
+
 ## Usage
 
 Common run configs can be found in command line scripts like `cpt.sh` which you
@@ -30,6 +39,20 @@ python main.py \
     --model path/to/model_step1234 \
     eval_name1 eval_name2
 ```
+
+### RULER Long Context Evaluations
+
+RULER evaluates models on long contexts (4K-128K tokens) with 13 subtasks:
+
+```bash
+# Quick test
+sh ruler.sh /path/to/model --subtasks "niah_single_1" --sequence-lengths "4096"
+
+# Full evaluation (78 jobs: 13 subtasks × 6 sequence lengths)
+sh ruler-vllm.sh /path/to/model
+```
+
+**See [RULER_README.md](RULER_README.md) for complete documentation, examples, and troubleshooting.**
 
 ### Backend selection
 

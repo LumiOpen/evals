@@ -140,6 +140,75 @@ class MultiIFConfig(EvalConfig):
             return json_data["results"]["english_average"]
         return 0.0
 
+class RulerConfig(EvalConfig):
+    """Configuration for RULER long context evaluation tasks.
+    
+    RULER (Rule-based Long-context Understanding Evaluation) evaluates models
+    on their ability to retrieve and use information from long contexts.
+    
+    RULER includes 13 subtasks:
+    - niah_single_1, niah_single_2, niah_single_3 (Needle in a Haystack - single)
+    - niah_multikey_1, niah_multikey_2, niah_multikey_3 (NIAH - multiple keys)
+    - niah_multivalue (NIAH - multiple values)
+    - niah_multiquery (NIAH - multiple queries)
+    - ruler_vt (Variable Tracking)
+    - ruler_cwe (Common Words Extraction)
+    - ruler_fwe (Frequent Words Extraction)
+    - ruler_qa_hotpot (QA - Hotpot)
+    - ruler_qa_squad (QA - SQuADv2)
+    """
+    def __init__(self, sequence_length, subtask=None, num_fewshot=0):
+        """
+        Args:
+            sequence_length: Context length (4096, 8192, 16384, 32768, 65536, 131072)
+            subtask: Specific RULER subtask name (e.g., 'niah_single_1', 'vt', 'qa_1')
+                    If None, runs all subtasks for this sequence length
+            num_fewshot: Number of few-shot examples
+        """
+        self.sequence_length = sequence_length
+        self.subtask = subtask
+        self.num_fewshot = num_fewshot
+        
+        # RULER tasks: individual subtask names are used directly (niah_single_1, vt, qa_1, etc.)
+        # The task name "ruler" runs all subtasks
+        # Sequence length is controlled via metadata
+        if subtask:
+            # Individual subtask - task names are just the subtask names
+            # e.g., "niah_single_1", "vt", "qa_1"
+            task_name = f"ruler_{subtask}_{sequence_length}"  # Internal name for our tracking
+            lm_task_name = subtask  # Actual task name for lm-eval
+        else:
+            # All subtasks for this sequence length (run all RULER tests)
+            task_name = f"ruler_{sequence_length}"
+            lm_task_name = "ruler"
+        
+        super().__init__(task_name, "custom", LMEvalHarness([lm_task_name], num_fewshot=num_fewshot, 
+                                                             metadata={"max_seq_lengths": [sequence_length]}))
+
+    def get_results_custom(self, json_data):
+        # Get score for this specific task or average across all subtasks
+        if "results" not in json_data:
+            return 0.0
+        
+        # Collect relevant task results
+        ruler_scores = []
+        for task_name, task_results in json_data["results"].items():
+            # Match tasks that contain our sequence length
+            if f"{self.sequence_length}" in task_name or task_name.startswith("ruler"):
+                # Try different result keys that might be present
+                if "acc,none" in task_results:
+                    ruler_scores.append(task_results["acc,none"])
+                elif "acc" in task_results:
+                    ruler_scores.append(task_results["acc"])
+                elif "exact_match,none" in task_results:
+                    ruler_scores.append(task_results["exact_match,none"])
+                elif "exact_match" in task_results:
+                    ruler_scores.append(task_results["exact_match"])
+        
+        if ruler_scores:
+            return sum(ruler_scores) / len(ruler_scores)
+        return 0.0
+
 
 
 evals = {
@@ -380,4 +449,43 @@ evals = {
     "alpaca_eval_en": AlpacaEvalConfig(language="en"),
     "alpaca_eval_fi": AlpacaEvalConfig(language="fi"),
     "multi_if": MultiIFConfig(),
+
+    # RULER long context evaluations
+    # Sequence lengths: powers of 2 from 4096 to 131072 (128K)
+    # Format: ruler_<subtask>_<seqlen> for individual subtasks
+    #         ruler_<seqlen> for all subtasks at that sequence length
+    
+    # Grouped tasks (all subtasks per sequence length)
+    "ruler_4096": RulerConfig(sequence_length=4096, num_fewshot=0),
+    "ruler_8192": RulerConfig(sequence_length=8192, num_fewshot=0),
+    "ruler_16384": RulerConfig(sequence_length=16384, num_fewshot=0),
+    "ruler_32768": RulerConfig(sequence_length=32768, num_fewshot=0),
+    "ruler_65536": RulerConfig(sequence_length=65536, num_fewshot=0),
+    "ruler_131072": RulerConfig(sequence_length=131072, num_fewshot=0),
 }
+
+# Generate individual RULER subtask entries for each sequence length
+# 13 subtasks × 6 sequence lengths = 78 total task combinations
+# Task names from: https://github.com/EleutherAI/lm-evaluation-harness/tree/main/lm_eval/tasks/ruler#tasks
+_RULER_SUBTASKS = [
+    "niah_single_1",
+    "niah_single_2", 
+    "niah_single_3",
+    "niah_multikey_1",
+    "niah_multikey_2",
+    "niah_multikey_3",
+    "niah_multivalue",
+    "niah_multiquery",
+    "ruler_vt",       # Variable tracking
+    "ruler_cwe",      # Common words extraction
+    "ruler_fwe",      # Frequent words extraction
+    "ruler_qa_hotpot",  # QA Hotpot
+    "ruler_qa_squad",   # QA SQuADv2
+]
+
+_RULER_SEQUENCE_LENGTHS = [4096, 8192, 16384, 32768, 65536, 131072]
+
+for subtask in _RULER_SUBTASKS:
+    for seqlen in _RULER_SEQUENCE_LENGTHS:
+        task_key = f"ruler_{subtask}_{seqlen}"
+        evals[task_key] = RulerConfig(sequence_length=seqlen, subtask=subtask, num_fewshot=0)

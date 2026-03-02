@@ -25,7 +25,7 @@ run() {
   local tasks=( "$@" )
 
   # Build args as an array to keep quoting correct
-  local args=( python main.py --backend "$BACKEND" --project "$PROJECT" --partition "$QUEUE" --model "$MODEL" --time "$t" )
+  local args=( python3 main.py --backend "$BACKEND" --project "$PROJECT" --partition "$QUEUE" --time "$t" )
 
   # Only pass --gres if explicitly provided
   if [[ -n "$CPT_GRES" ]]; then
@@ -36,12 +36,12 @@ run() {
     args+=( --model_args "$MODEL_ARGS" )
   fi
   if [[ -n "$APPLY_CHAT_TEMPLATE" ]]; then
-    args+=( --apply_chat_template "$APPLY_CHAT_TEMPLATE" )
+    args+=( --apply_chat_template )
   fi
   if [[ -n "$FEWSHOT_AS_MULTITURN" ]]; then
-    args+=( --fewshot_as_multiturn "$FEWSHOT_AS_MULTITURN" )
+    args+=( --fewshot_as_multiturn )
   fi
-
+  args+=( --model "$MODEL" )
   args+=( "${tasks[@]}" )
 
   printf '==> '; printf '%q ' "${args[@]}"; printf '\n'

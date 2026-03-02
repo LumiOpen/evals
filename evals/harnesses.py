@@ -5,9 +5,10 @@ import os
 
 
 class LMEvalHarness:
-    def __init__(self, task_list, num_fewshot=0):
+    def __init__(self, task_list, num_fewshot=0, metadata=None):
         self.task_list = task_list
         self.num_fewshot = num_fewshot
+        self.metadata = metadata or {}
         self.harness = self # TODO remove
 
     def generate_script(self, slurm_config, env_vars, backend='hf'):
@@ -15,6 +16,30 @@ class LMEvalHarness:
         env_vars["TASK_LIST"] = ",".join(self.task_list)
         env_vars["NUM_FEWSHOT"] = self.num_fewshot
         env_vars["BACKEND"] = backend
+        
+        # Add metadata for RULER tasks
+        # Only set MAX_SEQ_LENGTH for actual RULER tasks to avoid affecting other tasks
+        is_ruler_task = any(
+            task.startswith("ruler") or 
+            task.startswith("niah_") or 
+            task in ["niah_single_1", "niah_single_2", "niah_single_3",
+                     "niah_multikey_1", "niah_multikey_2", "niah_multikey_3",
+                     "niah_multivalue", "niah_multiquery"]
+            for task in self.task_list
+        )
+        
+        if self.metadata:
+            import json
+            env_vars["TASK_METADATA"] = json.dumps(self.metadata)
+            # Extract max_seq_lengths for model args - ONLY for RULER tasks
+            if is_ruler_task and "max_seq_lengths" in self.metadata and self.metadata["max_seq_lengths"]:
+                env_vars["MAX_SEQ_LENGTH"] = str(self.metadata["max_seq_lengths"][0])
+            else:
+                env_vars["MAX_SEQ_LENGTH"] = ""
+        else:
+            env_vars["TASK_METADATA"] = ""
+            env_vars["MAX_SEQ_LENGTH"] = ""
+        
         config = {}
         config["env_vars"] = env_vars
         config["slurm_config"] = slurm_config

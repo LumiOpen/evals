@@ -154,7 +154,7 @@ def run_eval(eval_name, args):
         'LM_EVAL_REPO': lm_eval_config['LM_EVAL_REPO'],
         'LM_EVAL_REF': lm_eval_config['LM_EVAL_REF'],
         'LM_EVAL_PATH': lm_eval_config['LM_EVAL_PATH'],
-        'TRANSFORMERS_VERSION': args.transformers_version,
+        'TRANSFORMERS_VERSION': '4.57.1',  # Fixed version compatible with container's vLLM 0.12.0
     }
 
     job_name = f"vllm_{eval_name}" if backend == 'vllm' else eval_name
@@ -283,11 +283,10 @@ def main():
     parser.add_argument('--limit', type=int, help='Limit the number of examples per task (for testing purposes only)')
     parser.add_argument('--batch_size', type=str, default='', help='Batch size for inference (default: auto for vLLM, 4 for HF)')
     parser.add_argument('--lm_eval', type=str, help='lm-evaluation-harness source: URL, URL@ref, or local path (default: LumiOpen/main)')
-    parser.add_argument('--transformers_version', type=str, default='4.57.1', help='Transformers version to install in container (default: 4.57.1)')
     # slurm config
     parser.add_argument('--project', type=str, default="project_462000963", help="Project for sbatch job")
     parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
-    parser.add_argument('--gres', type=str, default="gpu:mi250:4", help="gres required for sbatch job")
+    parser.add_argument('--gres', type=str, default="gpu:mi250:8", help="gres required for sbatch job")
     parser.add_argument('--time', type=str, default="48:00:00", help="Time limit for sbatch job")
     parser.add_argument('--log_dir', type=str, default="./logs", help="Dir for slurm logs")
     parser.add_argument('--dependency', type=str, default=None, help="SLURM job dependency (e.g., afterok:12345)")
