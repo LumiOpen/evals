@@ -24,6 +24,12 @@ Examples:
   # Custom SLURM configuration
   sh ruler-vllm.sh /path/to/model --partition standard-g --time 24:00:00 --gres gpu:mi250:8
 
+  # SFT/instruct model with chat template
+  sh ruler-vllm.sh /path/to/sft-model --apply_chat_template --fewshot_as_multiturn
+
+  # SFT model via environment variables (same as cpt-vllm.sh pattern)
+  APPLY_CHAT_TEMPLATE=True FEWSHOT_AS_MULTITURN=True sh ruler-vllm.sh /path/to/sft-model
+
 Available RULER subtasks (13 total):
   Needle in a Haystack (NIAH):
     niah_single_1, niah_single_2, niah_single_3
@@ -54,6 +60,10 @@ TIME="48:00:00"
 GRES="gpu:mi250:4"
 EXTRA_ARGS=""
 
+# Chat template flags (also read from env vars, same pattern as cpt-vllm.sh)
+APPLY_CHAT_TEMPLATE="${APPLY_CHAT_TEMPLATE:-}"
+FEWSHOT_AS_MULTITURN="${FEWSHOT_AS_MULTITURN:-}"
+
 # Default: all subtasks and all sequence lengths
 # From: https://github.com/EleutherAI/lm-evaluation-harness/tree/main/lm_eval/tasks/ruler#tasks
 SUBTASKS="niah_single_1,niah_single_2,niah_single_3,niah_multikey_1,niah_multikey_2,niah_multikey_3,niah_multivalue,niah_multiquery,ruler_vt,ruler_cwe,ruler_fwe,ruler_qa_hotpot,ruler_qa_squad"
@@ -81,6 +91,14 @@ while [[ $# -gt 0 ]]; do
         --sequence-lengths)
             SEQUENCE_LENGTHS="$2"
             shift 2
+            ;;
+        --apply_chat_template|--apply-chat-template)
+            APPLY_CHAT_TEMPLATE="True"
+            shift
+            ;;
+        --fewshot_as_multiturn|--fewshot-as-multiturn)
+            FEWSHOT_AS_MULTITURN="True"
+            shift
             ;;
         *)
             EXTRA_ARGS="$EXTRA_ARGS $1"
@@ -113,6 +131,8 @@ echo "Partition: $PARTITION"
 echo "Time: $TIME"
 echo "GRES: $GRES"
 echo "Backend: vllm"
+echo "Apply chat template: ${APPLY_CHAT_TEMPLATE:-no}"
+echo "Fewshot as multiturn: ${FEWSHOT_AS_MULTITURN:-no}"
 echo "Extra args: $EXTRA_ARGS"
 echo ""
 echo "Subtasks: ${#SUBTASK_ARRAY[@]} (${SUBTASKS})"
@@ -147,6 +167,8 @@ for subtask in "${SUBTASK_ARRAY[@]}"; do
             --backend vllm \
             --model "$MODEL" \
             --model_args "max_model_len=$MAX_LEN,gpu_memory_utilization=0.95" \
+            ${APPLY_CHAT_TEMPLATE:+--apply_chat_template} \
+            ${FEWSHOT_AS_MULTITURN:+--fewshot_as_multiturn} \
             $EXTRA_ARGS \
             "$TASK_NAME"
         
