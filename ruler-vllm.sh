@@ -170,6 +170,7 @@ for subtask in "${SUBTASK_ARRAY[@]}"; do
             ${APPLY_CHAT_TEMPLATE:+--apply_chat_template} \
             ${FEWSHOT_AS_MULTITURN:+--fewshot_as_multiturn} \
             $EXTRA_ARGS \
+            -- \
             "$TASK_NAME"
         
         # Brief pause to avoid overwhelming the scheduler
