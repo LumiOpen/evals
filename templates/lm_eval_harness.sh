@@ -108,17 +108,16 @@ mkdir -p /project/cache/huggingface/hub "$MIOPEN_USER_DB_PATH"
 # Remove stale HF cache lock files that may not be group-writable (multi-user fix)
 find /project/cache/huggingface/hub/.locks -name "*.lock" -delete 2>/dev/null || true
 
-# Clean up any leftover files from previous runs
-rm -rf /tmp/pip-packages /tmp/lm-eval
+# Use per-job directories to avoid collisions when multiple jobs share a node
+PIP_TARGET="/tmp/pip-packages-${SLURM_JOB_ID}"
+EVAL_HARNESS_DIR="/tmp/lm-eval-${SLURM_JOB_ID}"
 
 # Install transformers
-PIP_TARGET=/tmp/pip-packages
 mkdir -p "$PIP_TARGET"
 echo "Installing transformers {{ env_vars.TRANSFORMERS_VERSION }}..."
 $PYTHON_BIN -m pip install -q --target="$PIP_TARGET" "numpy<2.3" "transformers=={{ env_vars.TRANSFORMERS_VERSION }}" "hf_transfer"
 export PYTHONPATH="$PIP_TARGET:${PYTHONPATH:-}"
 
-EVAL_HARNESS_DIR="/tmp/lm-eval"
 echo "Setting up lm-evaluation-harness in $EVAL_HARNESS_DIR"
 
 {% if env_vars.LM_EVAL_PATH %}
@@ -196,6 +195,9 @@ $PYTHON_BIN -m lm_eval \
 {% endif %}
 
 echo "lm_eval completed!"
+
+# Clean up per-job temp directories
+rm -rf "$PIP_TARGET" "$EVAL_HARNESS_DIR"
 '
 
 echo "Job finished"
