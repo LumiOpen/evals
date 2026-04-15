@@ -4,20 +4,11 @@ HELMET (128K) and LongPPL evaluation scripts for the TensorWave MI325X cluster.
 
 ## Setup
 
-Run once from a node with `/shared_silo/scratch` access:
+Already done — HELMET code + data and the lm-eval fork are at `/shared_silo/scratch/shared/`. If you need to re-run setup (e.g. after a data wipe):
 
 ```bash
 ssh tus1-vm-amd-misc-05
-cd /path/to/evals/tw
 bash setup.sh
-```
-
-This clones HELMET and the LumiOpen lm-eval fork, and downloads HELMET data (~34 GB).
-
-By default everything goes under `/shared_silo/scratch/$USER/`. Override with `SCRATCH`:
-
-```bash
-SCRATCH=/shared_silo/scratch/ezosa bash setup.sh
 ```
 
 ## HELMET
@@ -35,9 +26,9 @@ sbatch --export=ALL,MODEL=LumiOpen/Llama-Poro-2-Long-Base eval_helmet.sbatch
 sbatch --export=ALL,MODEL=...,CONFIGS='rag.yaml recall.yaml' eval_helmet.sbatch
 ```
 
-Base models are auto-detected (no `chat`/`instruct`/`it` suffix) and run without chat templates. Override with `OPTIONS`.
+Base models are auto-detected (no `chat`/`instruct`/`it` suffix) and run without chat templates.
 
-Results go to `$SCRATCH/HELMET/output/<model_name>/`.
+Results go to `/shared_silo/scratch/$USER/helmet_output/<model_name>/`.
 
 ## LongPPL
 
@@ -51,14 +42,24 @@ sbatch --export=ALL,MODEL=/shared_silo/scratch/models/Meta-Llama-3.1-8B eval_lon
 sbatch --export=ALL,MODEL=LumiOpen/Poro-2-8B-base,ROPE_SCALING=true eval_longppl.sbatch
 ```
 
-Results go to `$SCRATCH/eval_results/longppl/`.
+Results go to `/shared_silo/scratch/$USER/eval_results/longppl/`.
+
+## Shared vs per-user paths
+
+| Path | What |
+|------|------|
+| `/shared_silo/scratch/shared/HELMET/` | HELMET code + data (shared, read-only at runtime) |
+| `/shared_silo/scratch/shared/lm-eval-longppl/` | LumiOpen lm-eval fork (shared) |
+| `/shared_silo/scratch/$USER/helmet_output/` | Your HELMET results |
+| `/shared_silo/scratch/$USER/eval_results/longppl/` | Your LongPPL results |
 
 ## Environment variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `MODEL` | (required) | Model path or HF ID |
-| `SCRATCH` | `/shared_silo/scratch/$USER` | Scratch root directory |
+| `SHARED` | `/shared_silo/scratch/shared` | Shared data root |
+| `SCRATCH` | `/shared_silo/scratch/$USER` | Per-user scratch for outputs |
 | `IMG` | `rocm_vllm_rocm7.0.0_vllm_0.11.2_20251210.sif` | Container image |
 | `CONFIGS` | all 7 HELMET configs | Space-separated config list (HELMET only) |
 | `TAG` | `v1` | Output tag (HELMET only) |

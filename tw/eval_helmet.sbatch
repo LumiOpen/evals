@@ -17,7 +17,8 @@
 #   sbatch --export=ALL,MODEL=LumiOpen/Llama-Poro-2-Long-Base eval_helmet.sbatch
 #
 # Optional overrides:
-#   SCRATCH   — scratch root (default: /shared_silo/scratch/$USER)
+#   SHARED    — shared data root (default: /shared_silo/scratch/shared)
+#   SCRATCH   — per-user scratch (default: /shared_silo/scratch/$USER)
 #   CONFIGS   — space-separated list of HELMET configs (default: all 7)
 #   TAG       — output tag (default: v1)
 #   SEED      — random seed (default: 42)
@@ -26,14 +27,15 @@
 set -euo pipefail
 
 MODEL="${MODEL:?Set MODEL via --export=ALL,MODEL=...}"
+SHARED="${SHARED:-/shared_silo/scratch/shared}"
 SCRATCH="${SCRATCH:-/shared_silo/scratch/$USER}"
-HELMET_DIR="${SCRATCH}/HELMET"
+HELMET_DIR="${SHARED}/HELMET"
 IMG="${IMG:-/shared_silo/scratch/containers/rocm_vllm_rocm7.0.0_vllm_0.11.2_20251210.sif}"
 
 MODEL_SHORT=$(basename "$MODEL")
 TAG="${TAG:-v1}"
 SEED="${SEED:-42}"
-OUTDIR="${HELMET_DIR}/output/${MODEL_SHORT}"
+OUTDIR="${SCRATCH}/helmet_output/${MODEL_SHORT}"
 
 CONFIGS=(${CONFIGS:-recall.yaml rag.yaml longqa.yaml summ.yaml icl.yaml rerank.yaml cite.yaml})
 
@@ -55,9 +57,6 @@ echo "Output:    $OUTDIR"
 echo "Start:     $(date)"
 
 mkdir -p "$OUTDIR"
-
-# Log files next to job output
-exec > >(tee -a "${SCRATCH}/eval_results/helmet_${SLURM_JOBID}.out") 2>&1
 
 apptainer exec --rocm \
     -B /shared_silo/scratch:/shared_silo/scratch:rw \
@@ -88,7 +87,7 @@ for CONFIG in ${CONFIGS[*]}; do
     python eval.py \\
         --config configs/\$CONFIG \\
         --seed $SEED \\
-        --output_dir output/$MODEL_SHORT \\
+        --output_dir $OUTDIR \\
         --tag $TAG \\
         --model_name_or_path $MODEL \\
         --use_vllm \\

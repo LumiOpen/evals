@@ -3,15 +3,17 @@
 # Run on a node with access to /shared_silo/scratch:
 #   ssh tus1-vm-amd-misc-05
 #   bash setup.sh
+#
+# Only needs to be run once — subsequent users just submit jobs.
 set -euo pipefail
 
-SCRATCH="${SCRATCH:-/shared_silo/scratch/$USER}"
+SHARED="${SHARED:-/shared_silo/scratch/shared}"
 
 echo "=== TensorWave eval setup ==="
-echo "Scratch dir: $SCRATCH"
+echo "Shared dir: $SHARED"
 
 # 1. Clone LumiOpen lm-eval fork (crosslingual-longppl branch)
-LMEVAL_DIR=$SCRATCH/lm-eval-longppl
+LMEVAL_DIR=$SHARED/lm-eval-longppl
 if [ -d "$LMEVAL_DIR" ]; then
     echo "lm-eval-longppl already at $LMEVAL_DIR, pulling latest..."
     cd "$LMEVAL_DIR" && git pull && cd -
@@ -22,7 +24,7 @@ else
 fi
 
 # 2. Clone HELMET
-HELMET_DIR=$SCRATCH/HELMET
+HELMET_DIR=$SHARED/HELMET
 if [ -d "$HELMET_DIR" ]; then
     echo "HELMET already at $HELMET_DIR, pulling latest..."
     cd "$HELMET_DIR" && git pull && cd -
@@ -44,9 +46,6 @@ else
     cd -
 fi
 
-# 4. Create output directories
-mkdir -p "$SCRATCH/eval_results/longppl"
-mkdir -p "$SCRATCH/eval_results/helmet"
 mkdir -p "$HELMET_DIR/output"
 
 echo ""

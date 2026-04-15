@@ -18,7 +18,8 @@
 #   sbatch --export=ALL,MODEL=LumiOpen/Llama-Poro-2-Long-Base eval_longppl.sbatch
 #
 # Optional overrides:
-#   SCRATCH       — scratch root (default: /shared_silo/scratch/$USER)
+#   SHARED        — shared data root (default: /shared_silo/scratch/shared)
+#   SCRATCH       — per-user scratch (default: /shared_silo/scratch/$USER)
 #   ROPE_SCALING  — set to "true" for models needing RoPE extension (default: false)
 #   TASKS         — comma-separated lm-eval tasks (default: en + fi)
 #   IMG           — container image path
@@ -26,9 +27,10 @@
 set -euo pipefail
 
 MODEL="${MODEL:?Set MODEL via --export=ALL,MODEL=...}"
+SHARED="${SHARED:-/shared_silo/scratch/shared}"
 SCRATCH="${SCRATCH:-/shared_silo/scratch/$USER}"
 ROPE_SCALING="${ROPE_SCALING:-false}"
-LMEVAL_DIR="${SCRATCH}/lm-eval-longppl"
+LMEVAL_DIR="${SHARED}/lm-eval-longppl"
 IMG="${IMG:-/shared_silo/scratch/containers/rocm_vllm_rocm7.0.0_vllm_0.11.2_20251210.sif}"
 OUTDIR="${SCRATCH}/eval_results/longppl"
 
