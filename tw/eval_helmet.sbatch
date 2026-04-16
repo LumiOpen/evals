@@ -11,17 +11,21 @@
 #SBATCH --output=logs/%j.out
 #SBATCH --error=logs/%j.err
 
-# HELMET 128K long-context evaluation on TensorWave (MI325X).
-# Runs all 7 standard HELMET categories with vLLM (TP=8).
+# HELMET long-context evaluation on TensorWave (MI325X).
+# Runs all 8 HELMET categories at all context lengths (8k–128k) with vLLM (TP=8).
+# Short configs (8k–64k) run first, then 128k configs.
 #
 # Usage:
 #   sbatch --export=ALL,MODEL=/shared_silo/scratch/models/Meta-Llama-3.1-8B eval_helmet.sbatch
 #   sbatch --export=ALL,MODEL=LumiOpen/Llama-Poro-2-Long-Base eval_helmet.sbatch
 #
+#   # 128k only (old behavior)
+#   sbatch --export=ALL,MODEL=...,CONFIGS='recall.yaml rag.yaml longqa.yaml summ.yaml icl.yaml rerank.yaml cite.yaml' eval_helmet.sbatch
+#
 # Optional overrides:
 #   SHARED    — shared data root (default: /shared_silo/scratch/shared)
 #   SCRATCH   — per-user scratch (default: /shared_silo/scratch/$USER)
-#   CONFIGS   — space-separated list of HELMET configs (default: all 7)
+#   CONFIGS   — space-separated list of HELMET configs (default: all short + 128k)
 #   TAG       — output tag (default: v1)
 #   SEED      — random seed (default: 42)
 #   IMG       — container image path
@@ -41,7 +45,7 @@ TAG="${TAG:-v1}"
 SEED="${SEED:-42}"
 OUTDIR="${SCRATCH}/helmet_output/${MODEL_SHORT}"
 
-CONFIGS=(${CONFIGS:-recall.yaml rag.yaml longqa.yaml summ.yaml icl.yaml rerank.yaml cite.yaml})
+CONFIGS=(${CONFIGS:-recall_short.yaml recall.yaml rag_short.yaml rag.yaml longqa_short.yaml longqa.yaml summ_short.yaml summ.yaml icl_short.yaml icl.yaml rerank_short.yaml rerank.yaml cite_short.yaml cite.yaml alce_nocite_short.yaml alce_nocite.yaml})
 
 # Detect base vs instruct/chat model
 OPTIONS=""
@@ -51,7 +55,7 @@ if ! [[ $MODEL_SHORT =~ (chat|instruct|sft|it$) ]]; then
 fi
 shopt -u nocasematch
 
-echo "=== HELMET 128K evaluation ==="
+echo "=== HELMET 8K-128K evaluation ==="
 echo "Job ID:    $SLURM_JOBID"
 echo "Model:     $MODEL"
 echo "Short:     $MODEL_SHORT"
