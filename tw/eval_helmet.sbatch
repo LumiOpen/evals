@@ -8,6 +8,8 @@
 #SBATCH --mem=240G
 #SBATCH --time=24:00:00
 #SBATCH --exclusive
+#SBATCH --output=logs/%j.out
+#SBATCH --error=logs/%j.err
 
 # HELMET 128K long-context evaluation on TensorWave (MI325X).
 # Runs all 7 standard HELMET categories with vLLM (TP=8).
@@ -23,6 +25,7 @@
 #   TAG       — output tag (default: v1)
 #   SEED      — random seed (default: 42)
 #   IMG       — container image path
+#   CONFIG_DIR — path to HELMET config directory (default: $HELMET_DIR/configs)
 
 set -euo pipefail
 
@@ -30,6 +33,7 @@ MODEL="${MODEL:?Set MODEL via --export=ALL,MODEL=...}"
 SHARED="${SHARED:-/shared_silo/scratch/shared}"
 SCRATCH="${SCRATCH:-/shared_silo/scratch/$USER}"
 HELMET_DIR="${SHARED}/HELMET"
+CONFIG_DIR="${CONFIG_DIR:-${HELMET_DIR}/configs}"
 IMG="${IMG:-/shared_silo/scratch/containers/rocm_vllm_rocm7.0.0_vllm_0.11.2_20251210.sif}"
 
 MODEL_SHORT=$(basename "$MODEL")
@@ -42,7 +46,7 @@ CONFIGS=(${CONFIGS:-recall.yaml rag.yaml longqa.yaml summ.yaml icl.yaml rerank.y
 # Detect base vs instruct/chat model
 OPTIONS=""
 shopt -s nocasematch
-if ! [[ $MODEL_SHORT =~ (chat|instruct|it$) ]]; then
+if ! [[ $MODEL_SHORT =~ (chat|instruct|sft|it$) ]]; then
     OPTIONS="--use_chat_template False"
 fi
 shopt -u nocasematch
@@ -85,7 +89,7 @@ for CONFIG in ${CONFIGS[*]}; do
     echo '======================================='
 
     python eval.py \\
-        --config configs/\$CONFIG \\
+        --config $CONFIG_DIR/\$CONFIG \\
         --seed $SEED \\
         --output_dir $OUTDIR \\
         --tag $TAG \\
