@@ -1,7 +1,19 @@
-from jinja2 import Template
 import copy
-import datetime
 import os
+from pathlib import Path
+import shlex
+
+from jinja2 import Environment
+
+
+TEMPLATES_DIR = Path(__file__).resolve().parent.parent / "templates"
+
+
+def render_template(name, config):
+    environment = Environment(autoescape=False, keep_trailing_newline=True)
+    environment.filters["shellquote"] = shlex.quote
+    template = environment.from_string((TEMPLATES_DIR / name).read_text())
+    return template.render(**config)
 
 
 class LMEvalHarness:
@@ -19,13 +31,7 @@ class LMEvalHarness:
         config["env_vars"] = env_vars
         config["slurm_config"] = slurm_config
 
-        template_file = 'templates/lm_eval_harness.sh'
-
-        template_str = open(template_file, 'r').read()
-        template = Template(template_str)
-        rendered_script = template.render(**config)
-
-        return rendered_script
+        return render_template('lm_eval_harness.sh', config)
 
 class BigcodeEvaluationHarness:
     def __init__(self, task_list, n_samples=1):
@@ -41,11 +47,7 @@ class BigcodeEvaluationHarness:
         config["env_vars"] = env_vars
         config["slurm_config"] = slurm_config
 
-        template_str = open('templates/bigcode_eval_harness.sh', 'r').read()
-        template = Template(template_str)
-        rendered_script = template.render(**config)
-
-        return rendered_script
+        return render_template('bigcode_eval_harness.sh', config)
 
 class MTBenchInferenceHarness:
     def __init__(self, language="en"):
@@ -61,11 +63,7 @@ class MTBenchInferenceHarness:
         config["env_vars"] = env_vars
         config["slurm_config"] = slurm_config
 
-        template_str = open('templates/mtbench_inference.sh', 'r').read()
-        template = Template(template_str)
-        rendered_script = template.render(**config)
-
-        return rendered_script
+        return render_template('mtbench_inference.sh', config)
 
 class MTBenchJudgeHarness:
     def __init__(self, language="en", judge_model="gpt-4o-2024-08-06"):
@@ -87,11 +85,7 @@ class MTBenchJudgeHarness:
         config["env_vars"] = env_vars
         config["slurm_config"] = slurm_config
 
-        template_str = open('templates/mtbench_judge.sh', 'r').read()
-        template = Template(template_str)
-        rendered_script = template.render(**config)
-
-        return rendered_script
+        return render_template('mtbench_judge.sh', config)
 
 class AlpacaEvalHarness:
     def __init__(self, language="en", annotator_config="weighted_alpaca_eval_gpt-4o-2024-08-06"):
@@ -120,11 +114,7 @@ class AlpacaEvalHarness:
         config["env_vars"] = env_vars
         config["slurm_config"] = slurm_config
 
-        template_str = open('templates/alpaca_eval.sh', 'r').read()
-        template = Template(template_str)
-        rendered_script = template.render(**config)
-
-        return rendered_script
+        return render_template('alpaca_eval.sh', config)
 
 class MultiIFHarness:
     def __init__(self, batch_size=64, tensor_parallel_size=8, input_data_csv="data/multiIF_20241018_english.csv"):
@@ -142,9 +132,5 @@ class MultiIFHarness:
         config["env_vars"] = env_vars
         config["slurm_config"] = slurm_config
 
-        template_str = open('templates/multi_if.sh', 'r').read()
-        template = Template(template_str)
-        rendered_script = template.render(**config)
-
-        return rendered_script
+        return render_template('multi_if.sh', config)
 

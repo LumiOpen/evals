@@ -3,7 +3,7 @@
 set -euo pipefail
 
 # Config from env, with sane defaults
-PROJECT="${PROJECT:-project_462000963}"
+PROJECT="${PROJECT:-${LUMI_PROJECT:?set PROJECT or LUMI_PROJECT}}"
 QUEUE="${QUEUE:-standard-g}"
 MODEL="${1:?usage: $0 <model_id_or_path>}"
 

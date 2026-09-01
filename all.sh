@@ -1,5 +1,5 @@
-QUEUE=standard-g
-PROJECT=project_462000963
+QUEUE="${QUEUE:-standard-g}"
+PROJECT="${PROJECT:-${LUMI_PROJECT:?set PROJECT or LUMI_PROJECT}}"
 # we decine shorter time periods to allow evals to get scheduled more quickly
 # via backfill when the cluster is full.
 # times are based on a 70B model

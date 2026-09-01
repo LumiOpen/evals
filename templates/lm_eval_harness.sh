@@ -1,8 +1,8 @@
 #!/bin/bash
 #SBATCH --job-name={{ slurm_config.name }}
 #SBATCH --ntasks=1
-#SBATCH --mem=0
-#SBATCH --cpus-per-task=32
+#SBATCH --mem={{ slurm_config.mem }}
+#SBATCH --cpus-per-task={{ slurm_config.cpus_per_task }}
 
 #SBATCH --output={{ slurm_config.log_dir }}/%j.out
 #SBATCH --error={{ slurm_config.log_dir }}/%j.err
@@ -21,8 +21,8 @@ echo "Starting lm_eval job..."
 echo "Host: $(hostname)"
 echo "Job ID: $SLURM_JOB_ID"
 
-# LUMI AI Factory container (Ubuntu 24.04, ROCm 6.4, vLLM 0.12)
-export IMG="/appl/local/laifs/containers/lumi-multitorch-u24r64f21m43t29-20251209_134408/lumi-multitorch-full-u24r64f21m43t29-20251209_134408.sif"
+# LUMI AI Factory container
+export IMG={{ env_vars.CONTAINER | shellquote }}
 # Storage project (use job's account project for storage)
 export STORAGE_PRJ="/scratch/{{ slurm_config.account }}"
 export SCR="$(pwd -P)"
@@ -38,7 +38,7 @@ else
     GPUS=1
 fi
 
-export MODEL="{{ env_vars.MODEL }}"
+export MODEL={{ env_vars.MODEL | shellquote }}
 export TP="$GPUS"
 
 echo "Container: $IMG"
@@ -48,9 +48,12 @@ echo "Storage: $STORAGE_PRJ"
 
 {% if env_vars.LM_EVAL_PATH %}
 # Bind mount local lm-eval path into container
-BIND_LM_EVAL="--bind {{ env_vars.LM_EVAL_PATH }}:/workspace/lm-eval-host"
+BIND_LM_EVAL="--bind {{ env_vars.LM_EVAL_PATH | shellquote }}:/workspace/lm-eval-host"
 {% else %}
 BIND_LM_EVAL=""
+{% endif %}
+HF_TOKEN_ARGS=()
+{% if env_vars.FORWARD_HF_TOKEN %}HF_TOKEN_ARGS=(--env "HF_TOKEN=${HF_TOKEN:-}")
 {% endif %}
 
 # Use srun to properly allocate GPUs to the container
@@ -71,7 +74,7 @@ srun -A "$ACC" -p "{{ slurm_config.partition }}" -N1 -n1 -t "{{ slurm_config.tim
     --env SLURM_JOB_ID="$SLURM_JOB_ID" \
     --env HF_HOME=/project/cache/huggingface \
     --env HUGGINGFACE_HUB_CACHE=/project/cache/huggingface/hub \
-    --env HF_TOKEN="${HF_TOKEN:-}" \
+    "${HF_TOKEN_ARGS[@]}" \
     --env STORAGE_PRJ="$STORAGE_PRJ" \
     "$IMG" bash -c '
 set -euo pipefail
@@ -80,8 +83,12 @@ echo "Inside container..."
 # Group-writable files for shared project cache (locks, downloaded weights)
 umask 002
 
-# Set HOME to /tmp for ephemeral builds
-export HOME=/tmp
+# Use a job-scoped home and runtime directory because multiple jobs may share a node.
+export JOB_TMP="${TMPDIR:-/tmp}/lumi-evals-${SLURM_JOB_ID}"
+rm -rf "$JOB_TMP"
+mkdir -p "$JOB_TMP/home"
+trap "rm -rf $JOB_TMP" EXIT
+export HOME="$JOB_TMP/home"
 
 source /opt/venv/bin/activate
 PYTHON_BIN="/opt/venv/bin/python"
@@ -93,8 +100,8 @@ $PYTHON_BIN -c "import torch; print(f\"PyTorch: {torch.__version__}, CUDA: {torc
 $PYTHON_BIN -c "import vllm; print(f\"vLLM: {vllm.__version__}\")"
 
 export HF_HUB_DISABLE_XET=1
-export MIOPEN_USER_DB_PATH=/tmp/${USER}-miopen-cache
-export MIOPEN_CUSTOM_CACHE_DIR=$MIOPEN_USER_DB_PATH
+export MIOPEN_USER_DB_PATH="$JOB_TMP/miopen-cache"
+export MIOPEN_CUSTOM_CACHE_DIR="$MIOPEN_USER_DB_PATH"
 export NCCL_SOCKET_IFNAME=hsn0,hsn1,hsn2,hsn3
 export NCCL_NET_GDR_LEVEL=3
 export PYTORCH_ROCM_ARCH=gfx90a
@@ -105,30 +112,31 @@ export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
 mkdir -p /project/cache/huggingface/hub "$MIOPEN_USER_DB_PATH"
 
-# Remove stale HF cache lock files that may not be group-writable (multi-user fix)
-find /project/cache/huggingface/hub/.locks -name "*.lock" -delete 2>/dev/null || true
+# Shared cache locks belong to other jobs and users; never delete them here.
 
-# Clean up any leftover files from previous runs
-rm -rf /tmp/pip-packages /tmp/lm-eval
-
-# Install transformers
-PIP_TARGET=/tmp/pip-packages
+# Install job-specific Python packages.
+PIP_TARGET="$JOB_TMP/pip-packages"
 mkdir -p "$PIP_TARGET"
 echo "Installing transformers {{ env_vars.TRANSFORMERS_VERSION }}..."
 $PYTHON_BIN -m pip install -q --target="$PIP_TARGET" "numpy<2.3" "transformers=={{ env_vars.TRANSFORMERS_VERSION }}" "hf_transfer"
+{% for package in env_vars.EXTRA_PIP_PACKAGES %}$PYTHON_BIN -m pip install -q --upgrade --target="$PIP_TARGET" "{{ package }}"
+{% endfor %}
 export PYTHONPATH="$PIP_TARGET:${PYTHONPATH:-}"
 
-EVAL_HARNESS_DIR="/tmp/lm-eval"
+EVAL_HARNESS_DIR="$JOB_TMP/lm-eval"
 echo "Setting up lm-evaluation-harness in $EVAL_HARNESS_DIR"
 
 {% if env_vars.LM_EVAL_PATH %}
 echo "Using local lm-evaluation-harness from: {{ env_vars.LM_EVAL_PATH }}"
 cp -r "/workspace/lm-eval-host" "$EVAL_HARNESS_DIR"
 {% else %}
-REPO_URL="{{ env_vars.LM_EVAL_REPO }}"
-REPO_REF="{{ env_vars.LM_EVAL_REF }}"
-echo "Cloning lm-evaluation-harness from $REPO_URL (ref: $REPO_REF)..."
-git clone --depth 1 -b "$REPO_REF" "$REPO_URL" "$EVAL_HARNESS_DIR"
+REPO_URL={{ env_vars.LM_EVAL_REPO | shellquote }}
+REPO_REF={{ env_vars.LM_EVAL_REF | shellquote }}
+echo "Fetching lm-evaluation-harness from $REPO_URL (ref: $REPO_REF)..."
+git init -q "$EVAL_HARNESS_DIR"
+git -C "$EVAL_HARNESS_DIR" remote add origin "$REPO_URL"
+git -C "$EVAL_HARNESS_DIR" fetch -q --depth=1 origin "$REPO_REF"
+git -C "$EVAL_HARNESS_DIR" checkout -q --detach FETCH_HEAD
 {% endif %}
 
 export PYTHONPATH="$EVAL_HARNESS_DIR:${PYTHONPATH:-}"

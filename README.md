@@ -4,6 +4,36 @@ This is a script to simplify running many evals simultaneously in our slurm
 environment.  It accepts hugging face model IDs (i.e. org/modelname) or
 directory paths to models in the huggingface format.
 
+
+Set the active LUMI billing project before submitting jobs. The launcher no
+longer defaults to a historical project:
+
+```bash
+export LUMI_PROJECT=project_123456789
+```
+
+For partial-node GPU jobs, request CPU and memory in proportion to the GPU
+allocation instead of reserving the whole node:
+
+```bash
+python main.py arc_easy \
+    --model org/model \
+    --backend vllm \
+    --partition dev-g \
+    --gres gpu:mi250:1 \
+    --cpus-per-task 7 \
+    --mem 60G \
+    --time 00:10:00
+```
+
+Generated sbatch scripts are kept under `--work_dir`, and successful
+submissions print and record a JSON receipt containing the parsable Slurm job
+ID and the effective resource/runtime settings. Temporary container state is
+isolated by Slurm job ID, so multiple evaluations may safely share a node.
+
+`HF_TOKEN` is not forwarded into containers by default. Use
+`--forward-hf-token` only for models that require authentication.
+
 ## Usage
 
 Common run configs can be found in command line scripts like `cpt.sh` which you
@@ -70,6 +100,9 @@ python main.py arc_challenge --model path/to/model \
 python main.py arc_challenge --model path/to/model \
     --lm_eval /path/to/local/lm-evaluation-harness
 ```
+
+Refs may be branch names, tags, or exact commit SHAs. Exact commits are fetched
+directly and checked out detached. Pin a reviewed commit for reproducible runs.
 
 ### Testing with limited examples
 

@@ -10,6 +10,70 @@ import tempfile
 from evals.evals import evals
 from evals.slurm import identify_scheduled_tasks
 
+DEFAULT_CONTAINER = "/appl/local/laifs/containers/lumi-multitorch-u24r64f21m43t29-20251209_134408/lumi-multitorch-full-u24r64f21m43t29-20251209_134408.sif"
+
+
+def extra_packages_for_eval(eval_name):
+    if eval_name.startswith("ifeval"):
+        return ["langdetect", "immutabledict", "nltk>=3.9.1"]
+    return []
+
+def parse_project(value):
+    if not re.fullmatch(r"project_\d+", value or ""):
+        raise argparse.ArgumentTypeError("project must match project_<digits>")
+    return value
+
+
+def parse_partition(value):
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", value or ""):
+        raise argparse.ArgumentTypeError("partition contains unsupported characters")
+    return value
+
+
+def parse_gres(value):
+    match = re.fullmatch(r"gpu:(?:[A-Za-z0-9_.-]+:)?([1-8])", value or "")
+    if not match:
+        raise argparse.ArgumentTypeError("gres must look like gpu:1 or gpu:mi250:8")
+    return value
+
+
+def parse_memory(value):
+    if not re.fullmatch(r"(?:0|[1-9]\d*[KMGT])", value or "", re.IGNORECASE):
+        raise argparse.ArgumentTypeError("memory must be 0 or a Slurm size such as 60G")
+    return value.upper()
+
+
+def parse_positive_int(value):
+    number = int(value)
+    if number < 1:
+        raise argparse.ArgumentTypeError("value must be positive")
+    return number
+
+
+def parse_time_limit(value):
+    match = re.fullmatch(r"\d+:([0-5]\d):([0-5]\d)", value or "")
+    if not match:
+        raise argparse.ArgumentTypeError("time must use HH:MM:SS")
+    return value
+
+
+def submit_slurm(script_name):
+    process = subprocess.run(
+        ["sbatch", "--parsable", script_name],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        universal_newlines=True,
+    )
+    if process.returncode != 0:
+        detail = process.stderr.strip() or process.stdout.strip()
+        raise RuntimeError(f"sbatch failed with exit code {process.returncode}: {detail}")
+
+    result = process.stdout.strip()
+    match = re.fullmatch(r"(\d+)(?:;[^\s]+)?", result)
+    if not match:
+        raise RuntimeError(f"unexpected sbatch --parsable output: {result!r}")
+    return match.group(1)
+
 def parse_repo_source(repo_arg):
     """Parse repo argument into repo URL, ref, and local path components."""
     if not repo_arg:
@@ -135,6 +199,14 @@ def run_eval(eval_name, args):
         print(f"Output file {output_file} already exists and --force not specified, skipping...")
         return
 
+    work_dir = os.path.abspath(args.work_dir)
+    log_dir = os.path.abspath(args.log_dir)
+    if os.path.exists(output_dir) and not os.path.isdir(output_dir):
+        raise ValueError(f"Output directory path '{output_dir}' exists and is not a directory")
+    os.makedirs(work_dir, exist_ok=True)
+    os.makedirs(log_dir, exist_ok=True)
+    os.makedirs(output_dir, exist_ok=True)
+
     # Parse lm-eval configuration
     lm_eval_config = parse_repo_source(args.lm_eval)
 
@@ -142,7 +214,7 @@ def run_eval(eval_name, args):
         'MODEL': args.model,
         'TOKENIZER': args.tokenizer,
         'OUTPUT_DIR': output_dir,
-        'WORK_DIR': os.path.abspath(args.work_dir),
+        'WORK_DIR': work_dir,
         'OUTPUT_FILE': output_file,
         'TRUST_REMOTE_CODE': "True" if args.trust_remote_code else "False",
         'APPLY_CHAT_TEMPLATE': args.apply_chat_template,
@@ -155,6 +227,9 @@ def run_eval(eval_name, args):
         'LM_EVAL_REF': lm_eval_config['LM_EVAL_REF'],
         'LM_EVAL_PATH': lm_eval_config['LM_EVAL_PATH'],
         'TRANSFORMERS_VERSION': '4.57.1',  # Fixed version compatible with container's vLLM 0.12.0
+        'EXTRA_PIP_PACKAGES': extra_packages_for_eval(eval_name),
+        'CONTAINER': args.container,
+        'FORWARD_HF_TOKEN': args.forward_hf_token,
     }
 
     job_name = f"vllm_{eval_name}" if backend == 'vllm' else eval_name
@@ -165,8 +240,10 @@ def run_eval(eval_name, args):
         'partition': args.partition,
         'gres': args.gres,
         'time': args.time,
-        'log_dir': os.path.abspath(args.log_dir),
+        'log_dir': log_dir,
         'dependency': args.dependency,
+        'mem': args.mem,
+        'cpus_per_task': args.cpus_per_task,
     }
 
     # eval is a reserved keyword, so we'll use tester instead.
@@ -174,7 +251,13 @@ def run_eval(eval_name, args):
     harness = tester.harness
     script = harness.generate_script(slurm_config, env_vars, backend)
 
-    with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp:
+    with tempfile.NamedTemporaryFile(
+        mode='w',
+        prefix=f"{eval_name}-",
+        suffix=".sbatch",
+        dir=work_dir,
+        delete=False,
+    ) as temp:
         temp.write(script)
         script_name = temp.name
 
@@ -188,48 +271,36 @@ def run_eval(eval_name, args):
     # slurm job execution
     #
 
-    if not os.path.exists(args.work_dir):
-        os.makedirs(args.work_dir)
-    if not os.path.exists(args.log_dir):
-        os.makedirs(args.log_dir)
-    if os.path.exists(output_dir) and not os.path.isdir(output_dir):
-        raise ValueError(f"Output directory path '{output_dir}' exists but is not a directory")
-    os.makedirs(output_dir, exist_ok=True)
 
-    process = subprocess.run(['sbatch', script_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-    if process.returncode != 0:
-        print(f"Error: sbatch command failed with return code {process.returncode}")
-        print(process.stderr)
-        return
-
-    # parse the jobid from stdout
-    job_id_search = re.search(r"Submitted batch job (\d+)", process.stdout)
-    if job_id_search:
-        job_id = job_id_search.group(1)
-    else:
-        print("Failed to parse job id from sbatch output:")
-        print(process.stderr)
-        # we could possibly return here instead of logging this entry, as we do
-        # for a return code != 0
-        job_id = None
+    job_id = submit_slurm(script_name)
 
     # save to command log to help figure out which jobs were which commands
     log_entry = {
+        "status": "submitted",
         "timestamp": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
         "script_name": script_name,
-        "job_id": job_id, 
+        "job_id": job_id,
         "eval": eval_name,
         "model": args.model,
         "tokenizer": args.tokenizer,
         "backend": backend,
-        "err_log": os.path.join(os.path.abspath(args.log_dir), f"{job_id}.err"),
-        "out_log": os.path.join(os.path.abspath(args.log_dir), f"{job_id}.out"),
+        "account": args.project,
+        "partition": args.partition,
+        "gres": args.gres,
+        "mem": args.mem,
+        "cpus_per_task": args.cpus_per_task,
+        "time_limit": args.time,
+        "container": args.container,
+        "lm_eval_ref": lm_eval_config['LM_EVAL_REF'],
+        "err_log": os.path.join(log_dir, f"{job_id}.err"),
+        "out_log": os.path.join(log_dir, f"{job_id}.out"),
         "output_file": output_file,
         "comment": args.comment,
     }
     with open("command_history.jsonl", "a") as f:
         f.write(json.dumps(log_entry) + "\n")
-    print(json.dumps(log_entry, indent=4))
+    print(json.dumps(log_entry, indent=4, sort_keys=True))
+    return log_entry
 
 def parse_chat_flag(v):
     if v is None:  # flag supplied without value -> True
@@ -284,12 +355,16 @@ def main():
     parser.add_argument('--batch_size', type=str, default='', help='Batch size for inference (default: auto for vLLM, 4 for HF)')
     parser.add_argument('--lm_eval', type=str, help='lm-evaluation-harness source: URL, URL@ref, or local path (default: LumiOpen/main)')
     # slurm config
-    parser.add_argument('--project', type=str, default="project_462000963", help="Project for sbatch job")
-    parser.add_argument('--partition', type=str, default="small-g", help="Partition for sbatch job")
-    parser.add_argument('--gres', type=str, default="gpu:mi250:8", help="gres required for sbatch job")
-    parser.add_argument('--time', type=str, default="48:00:00", help="Time limit for sbatch job")
+    parser.add_argument('--project', type=parse_project, default=os.environ.get("LUMI_PROJECT"), help="Project for sbatch job; defaults to LUMI_PROJECT")
+    parser.add_argument('--partition', type=parse_partition, default="small-g", help="Partition for sbatch job")
+    parser.add_argument('--gres', type=parse_gres, default="gpu:mi250:8", help="gres required for sbatch job")
+    parser.add_argument('--time', type=parse_time_limit, default="48:00:00", help="Time limit for sbatch job")
+    parser.add_argument('--mem', type=parse_memory, default="0", help="Slurm memory request, for example 60G")
+    parser.add_argument('--cpus-per-task', type=parse_positive_int, default=32, help="CPU cores requested per task")
+    parser.add_argument('--container', type=str, default=DEFAULT_CONTAINER, help="LUMI AI Factory container path")
+    parser.add_argument('--forward-hf-token', action='store_true', help="Forward the submit environment's HF_TOKEN into the container")
     parser.add_argument('--log_dir', type=str, default="./logs", help="Dir for slurm logs")
-    parser.add_argument('--dependency', type=str, default=None, help="SLURM job dependency (e.g., afterok:12345)")
+    parser.add_argument('--dependency', type=str, default=None, help="SLURM job dependency (e.g. afterok:12345)")
 
     # other options
     parser.add_argument('--comment', type=str, default=None, help="Comment to add to the command history")
@@ -297,6 +372,9 @@ def main():
     parser.add_argument('--force', action='store_true', default=False, help="Run even if output file already exists")
 
     args = parser.parse_args()
+    if not args.project:
+        parser.error("--project is required unless LUMI_PROJECT is set")
+    args.project = parse_project(args.project)
     if args.tokenizer == "":
         args.tokenizer = args.model
 

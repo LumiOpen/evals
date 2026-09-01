@@ -1,5 +1,5 @@
-QUEUE=standard-g
-PROJECT=project_462000963
+QUEUE="${QUEUE:-standard-g}"
+PROJECT="${PROJECT:-${LUMI_PROJECT:?set PROJECT or LUMI_PROJECT}}"
 LANGUAGE=${2:-en}
 
 # IFEval, AlpacaEval, Multi-IF run in parallel
