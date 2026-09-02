@@ -10,7 +10,7 @@ import tempfile
 from evals.evals import evals
 from evals.slurm import identify_scheduled_tasks
 
-DEFAULT_CONTAINER = "/appl/local/laifs/containers/lumi-multitorch-u24r64f21m43t29-20251209_134408/lumi-multitorch-full-u24r64f21m43t29-20251209_134408.sif"
+DEFAULT_CONTAINER = "/appl/local/laifs/containers/lumi-multitorch-u24r70f21m50t210-20260513_121430/lumi-multitorch-full-u24r70f21m50t210-20260513_121430.sif"
 
 
 def extra_packages_for_eval(eval_name):
